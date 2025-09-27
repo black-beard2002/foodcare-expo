@@ -1,16 +1,7 @@
 import {create} from 'zustand';
-import { CartItem, Offer } from './appStore';
+import { Order } from '@/types/appTypes';
 
-export interface Order {
-  id: string; // unique order id
-  customerName: string;
-  customerPhone: string;
-  pickupTime?: string;
-  specialInstructions?: string;
-  offers: CartItem[];
-  total: number;
-  createdAt: string;
-}
+
 
 interface OrderStore {
   orders: Order[];

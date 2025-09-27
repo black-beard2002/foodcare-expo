@@ -8,10 +8,10 @@ import {
   FlatList,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Order, useOrderStore } from '@/stores/orderStore';
+import { useOrderStore } from '@/stores/orderStore';
 import { CheckCircle } from 'lucide-react-native';
 import { useAlert } from '@/providers/AlertProvider';
-import { CartItem, Offer } from '@/stores/appStore';
+import { CartItem, Order } from '@/types/appTypes';
 
 export default function OrderHistoryScreen() {
   const colorScheme = useColorScheme();

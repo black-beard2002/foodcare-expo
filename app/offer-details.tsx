@@ -11,9 +11,10 @@ import {
 } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import { ArrowLeft, Star, Clock, MapPin, Plus } from 'lucide-react-native';
-import { useAppStore, Offer } from '@/stores/appStore';
+import { useAppStore } from '@/stores/appStore';
 import { dummyOffers } from '@/data/dummyData';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Offer } from '@/types/appTypes';
 
 export default function OfferDetailsScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();

@@ -10,9 +10,9 @@ import {
 } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import { ArrowLeft, Leaf, Zap, Clock, Plus } from 'lucide-react-native';
-import { Item } from '@/stores/appStore';
 import { dummyItems } from '@/data/dummyData';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Item } from '@/types/appTypes';
 
 export default function ItemDetailsScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
