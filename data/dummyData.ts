@@ -1,11 +1,12 @@
 import { Restaurant, Category, Offer, Item } from '@/stores/appStore';
+import { images } from '@/constants';
 
 export const dummyCategories: Category[] = [
   {
     id: '1',
     name: 'Pizza',
     description: 'Delicious pizzas with fresh toppings',
-    image_url: 'https://images.pexels.com/photos/315755/pexels-photo-315755.jpeg',
+    image_url: images.category1,
     icon: 'pizza',
     color: '#FF6B35',
     created_at: '2024-01-01T00:00:00Z',
@@ -14,7 +15,7 @@ export const dummyCategories: Category[] = [
     id: '2',
     name: 'Burgers',
     description: 'Juicy burgers and sandwiches',
-    image_url: 'https://images.pexels.com/photos/1639557/pexels-photo-1639557.jpeg',
+    image_url: images.category2,
     icon: 'burger',
     color: '#4ECDC4',
     created_at: '2024-01-01T00:00:00Z',
@@ -23,7 +24,7 @@ export const dummyCategories: Category[] = [
     id: '3',
     name: 'Asian',
     description: 'Authentic Asian cuisine',
-    image_url: 'https://images.pexels.com/photos/1640777/pexels-photo-1640777.jpeg',
+    image_url: images.category3,
     icon: 'noodles',
     color: '#45B7D1',
     created_at: '2024-01-01T00:00:00Z',
@@ -32,7 +33,7 @@ export const dummyCategories: Category[] = [
     id: '4',
     name: 'Desserts',
     description: 'Sweet treats and desserts',
-    image_url: 'https://images.pexels.com/photos/291528/pexels-photo-291528.jpeg',
+    image_url: images.category4,
     icon: 'cake',
     color: '#F7931E',
     created_at: '2024-01-01T00:00:00Z',
@@ -41,7 +42,7 @@ export const dummyCategories: Category[] = [
     id: '5',
     name: 'Mexican',
     description: 'Spicy Mexican flavors',
-    image_url: 'https://images.pexels.com/photos/461198/pexels-photo-461198.jpeg',
+    image_url: images.category5,
     icon: 'taco',
     color: '#96CEB4',
     created_at: '2024-01-01T00:00:00Z',
@@ -50,7 +51,7 @@ export const dummyCategories: Category[] = [
     id: '6',
     name: 'Healthy',
     description: 'Nutritious and fresh meals',
-    image_url: 'https://images.pexels.com/photos/1640772/pexels-photo-1640772.jpeg',
+    image_url: images.category6,
     icon: 'salad',
     color: '#FFEAA7',
     created_at: '2024-01-01T00:00:00Z',
