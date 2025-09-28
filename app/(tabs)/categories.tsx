@@ -74,7 +74,7 @@ export default function CategoriesScreen() {
       }
     >
       <Image
-        source={{ uri: category.image_url }}
+        source={ category.image_url }
         style={styles.categoryImage}
       />
       <View style={styles.categoryContent}>
@@ -98,7 +98,7 @@ export default function CategoriesScreen() {
       ]}
       onPress={() => router.push(`/offer-details?id=${offer.id}`)}
     >
-      <Image source={{ uri: offer.image_url }} style={styles.offerImage} />
+      <Image source={ offer.image_url } style={styles.offerImage} />
       <View style={styles.discountBadge}>
         <Text style={styles.discountText}>
           {offer.discount_percentage}% OFF

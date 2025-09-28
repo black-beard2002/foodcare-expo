@@ -123,7 +123,7 @@ export default function HomeScreen(): JSX.Element {
       activeOpacity={0.8}
     >
       <View style={styles.offerImageContainer}>
-        <Image source={{ uri: offer.image_url }} style={styles.offerImage} />
+        <Image source={ offer.image_url } style={styles.offerImage} />
         <TouchableOpacity style={styles.favoriteButton}>
           <Heart color={theme.textSecondary} size={16} />
         </TouchableOpacity>
@@ -188,7 +188,7 @@ export default function HomeScreen(): JSX.Element {
       activeOpacity={0.8}
     >
       <View style={styles.featuredImageContainer}>
-        <Image source={{ uri: offer.image_url }} style={styles.featuredImage} />
+        <Image source={ offer.image_url } style={styles.featuredImage} />
         <View
           style={[styles.featuredBadge, { backgroundColor: theme.primary }]}
         >
@@ -273,7 +273,7 @@ export default function HomeScreen(): JSX.Element {
       activeOpacity={0.7}
     >
       <Image
-        source={{ uri: item.image_url }}
+        source={ item.image_url }
         resizeMode="cover"
         style={{
           width: 50,

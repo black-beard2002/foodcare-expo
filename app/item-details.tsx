@@ -103,7 +103,7 @@ export default function ItemDetailsScreen() {
       </View>
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-        <Image source={{ uri: item.image_url }} style={styles.itemImage} />
+        <Image source={ item.image_url } style={styles.itemImage} />
 
         <View
           style={[
@@ -116,7 +116,7 @@ export default function ItemDetailsScreen() {
               {item.name}
             </Text>
             <Text style={[styles.itemPrice, { color: theme.primary }]}>
-              ${item.price.toFixed(2)}
+              {/* ${item.price.toFixed(2)} */}
             </Text>
           </View>
 

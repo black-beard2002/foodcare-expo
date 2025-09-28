@@ -73,7 +73,7 @@ export default function OfferDetailsScreen() {
       ]}
       onPress={() => router.push(`/item-details?id=${item.id}`)}
     >
-      <Image source={{ uri: item.image_url }} style={styles.itemImage} />
+      <Image source={ item.image_url } style={styles.itemImage} />
       <View style={styles.itemContent}>
         <Text
           style={[styles.itemName, { color: theme.text }]}
@@ -116,7 +116,7 @@ export default function OfferDetailsScreen() {
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         <View style={styles.imageContainer}>
-          <Image source={{ uri: offer.image_url }} style={styles.offerImage} />
+          <Image source={ offer.image_url } style={styles.offerImage} />
           <View style={styles.discountBadge}>
             <Text style={styles.discountText}>
               {offer.discount_percentage}% OFF
