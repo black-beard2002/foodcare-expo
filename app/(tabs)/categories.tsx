@@ -11,45 +11,29 @@ import {
 import { router } from 'expo-router';
 import { useAppStore } from '@/stores/appStore';
 import { dummyOffers, dummyCategories } from '@/data/dummyData';
+import { useTheme } from '@/hooks/useTheme';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function CategoriesScreen() {
-  const colorScheme = useColorScheme();
+  const { theme } = useTheme();
   const {
     categories,
     offers,
-    setCategories,
-    setOffers,
+    isLoading,
+    error,
+    fetchCategories,
+    fetchOffers,
     selectedCategory,
     setSelectedCategory,
   } = useAppStore();
 
-  const colors = {
-    light: {
-      background: '#FFFFFF',
-      primary: '#FF6B35',
-      text: '#1A1A1A',
-      textSecondary: '#666666',
-      card: '#FFFFFF',
-      border: '#E5E5EA',
-      selected: 'rgba(253, 157, 123, 1)',
-    },
-    dark: {
-      background: '#000000',
-      primary: '#FF6B35',
-      text: '#FFFFFF',
-      textSecondary: '#8E8E93',
-      card: '#1C1C1E',
-      border: '#2C2C2E',
-      selected: 'rgba(255, 114, 62, 0.2)',
-    },
-  };
-
-  const theme = colors[colorScheme ?? 'light'];
-
   useEffect(() => {
-    setCategories(dummyCategories);
-    setOffers(dummyOffers);
+    if (categories.length === 0) {
+      fetchCategories();
+    }
+    if (offers.length === 0) {
+      fetchOffers();
+    }
   }, []);
 
   const filteredOffers = selectedCategory
@@ -61,8 +45,9 @@ export default function CategoriesScreen() {
       style={[
         styles.categoryCard,
         {
-          backgroundColor:
-            selectedCategory === category.id ? theme.selected : theme.card,
+          backgroundColor: selectedCategory === category.id 
+            ? theme.primaryLight 
+            : theme.card,
           borderColor:
             selectedCategory === category.id ? theme.primary : theme.border,
         },
@@ -133,6 +118,31 @@ export default function CategoriesScreen() {
       <View style={styles.header}>
         <Text style={[styles.title, { color: theme.text }]}>Categories</Text>
       </View>
+
+      {isLoading && (
+        <View style={styles.loadingContainer}>
+          <Text style={[styles.loadingText, { color: theme.textSecondary }]}>
+            Loading categories...
+          </Text>
+        </View>
+      )}
+
+      {error && (
+        <View style={styles.errorContainer}>
+          <Text style={[styles.errorText, { color: theme.error }]}>
+            {error}
+          </Text>
+          <TouchableOpacity
+            style={[styles.retryButton, { backgroundColor: theme.primary }]}
+            onPress={() => {
+              fetchCategories();
+              fetchOffers();
+            }}
+          >
+            <Text style={styles.retryButtonText}>Retry</Text>
+          </TouchableOpacity>
+        </View>
+      )}
 
       <View style={styles.categoriesSection}>
         <FlatList
@@ -304,5 +314,33 @@ const styles = StyleSheet.create({
   discountedPrice: {
     fontSize: 16,
     fontFamily: 'Inter-Bold',
+  },
+  loadingContainer: {
+    padding: 24,
+    alignItems: 'center',
+  },
+  loadingText: {
+    fontSize: 16,
+    fontFamily: 'Inter-Regular',
+  },
+  errorContainer: {
+    padding: 24,
+    alignItems: 'center',
+  },
+  errorText: {
+    fontSize: 16,
+    fontFamily: 'Inter-Regular',
+    textAlign: 'center',
+    marginBottom: 16,
+  },
+  retryButton: {
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 8,
+  },
+  retryButtonText: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontFamily: 'Inter-Medium',
   },
 });

@@ -11,8 +11,10 @@ import {
   NativeSyntheticEvent,
   TextInputKeyPressEventData,
 } from 'react-native';
-import { router } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import { ArrowLeft, Shield } from 'lucide-react-native';
+import { useAuthStore } from '@/stores/authStore';
+import { useAlert } from '@/providers/AlertProvider';
 
 interface ColorTheme {
   background: string;
@@ -29,8 +31,13 @@ interface ColorTheme {
 export default function OTPVerificationScreen(): JSX.Element {
   const [otp, setOtp] = useState<string[]>(['', '', '', '', '', '']);
   const [timer, setTimer] = useState<number>(60);
-  const [isLoading, setIsLoading] = useState<boolean>(false);
   const [isResending, setIsResending] = useState<boolean>(false);
+  const { verificationId, phoneNumber } = useLocalSearchParams<{
+    verificationId: string;
+    phoneNumber: string;
+  }>();
+  const { verifyOtp, signInWithPhone, isLoading } = useAuthStore();
+  const { showAlert } = useAlert();
   const colorScheme = useColorScheme();
   const inputRefs = useRef<(TextInput | null)[]>([]);
 
@@ -120,41 +127,36 @@ export default function OTPVerificationScreen(): JSX.Element {
   };
 
   const simulateOtpVerification = async (otpCode: string): Promise<boolean> => {
-    // Simulate API call
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        // For demo purposes, accept any 6-digit code
-        // In real app, this would be an API call
-        resolve(otpCode.length === 6);
-      }, 1000);
-    });
+    if (!verificationId) return false;
+    
+    const result = await verifyOtp(verificationId, otpCode);
+    return result.success;
   };
 
   const handleAutoVerify = async (): Promise<void> => {
     const otpCode = otp.join('');
-    setIsLoading(true);
 
     try {
       const isValid = await simulateOtpVerification(otpCode);
 
       if (isValid) {
         // Success feedback could be added here (like a checkmark animation)
+        showAlert('Success!', 'Phone number verified successfully', 'success');
         setTimeout(() => {
           router.push('/auth/setup-security');
         }, 500);
       } else {
         // Invalid OTP
-        setIsLoading(false);
         setOtp(['', '', '', '', '', '']);
         inputRefs.current[0]?.focus();
-        Alert.alert(
-          'Invalid Code',
-          'Please enter the correct verification code.'
+        showAlert(
+          'Invalid Code', 
+          'Please enter the correct verification code.',
+          'error'
         );
       }
     } catch (error) {
-      setIsLoading(false);
-      Alert.alert('Error', 'Something went wrong. Please try again.');
+      showAlert('Error', 'Something went wrong. Please try again.', 'error');
     }
   };
 
@@ -166,31 +168,34 @@ export default function OTPVerificationScreen(): JSX.Element {
   };
 
   const simulateResendCode = async (): Promise<boolean> => {
-    // Simulate API call to resend code
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        resolve(true);
-      }, 2000);
-    });
+    if (!phoneNumber) return false;
+    
+    const result = await signInWithPhone(phoneNumber);
+    return result.success;
   };
 
   const handleCodeResend = async (): Promise<void> => {
     setIsResending(true);
 
     try {
-      await simulateResendCode();
+      const success = await simulateResendCode();
 
-      // Reset OTP and timer
-      setOtp(['', '', '', '', '', '']);
-      setTimer(60);
-      inputRefs.current[0]?.focus();
+      if (success) {
+        // Reset OTP and timer
+        setOtp(['', '', '', '', '', '']);
+        setTimer(60);
+        inputRefs.current[0]?.focus();
 
-      Alert.alert(
-        'Code Sent',
-        'A new verification code has been sent to your phone.'
-      );
+        showAlert(
+          'Code Sent',
+          'A new verification code has been sent to your phone.',
+          'success'
+        );
+      } else {
+        showAlert('Error', 'Failed to resend code. Please try again.', 'error');
+      }
     } catch (error) {
-      Alert.alert('Error', 'Failed to resend code. Please try again.');
+      showAlert('Error', 'Failed to resend code. Please try again.', 'error');
     } finally {
       setIsResending(false);
     }

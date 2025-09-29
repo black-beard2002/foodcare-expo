@@ -24,42 +24,14 @@ import {
 } from 'lucide-react-native';
 import { useAuthStore } from '@/stores/authStore';
 import { useSettingsStore } from '@/stores/settingsStore';
-import { useThemeStore } from '@/stores/themeStore';
+import { useTheme } from '@/hooks/useTheme';
 
 export default function ProfileScreen() {
-  const systemScheme = useColorScheme();
-  const colorScheme = useColorScheme();
+  const { theme, isDark, toggleTheme, setTheme: setAppTheme, currentTheme } = useTheme();
   const { user, signOut } = useAuthStore();
   const { biometricEnabled, setBiometricEnabled, pinEnabled, setPinEnabled } =
     useSettingsStore();
 
-  const { theme: userTheme, setTheme } = useThemeStore();
-
-  // 👇 Decide final theme
-  const effectiveScheme =
-    userTheme === 'system' ? systemScheme ?? 'light' : userTheme;
-
-  const colors = {
-    light: {
-      background: '#FFFFFF',
-      primary: '#FF6B35',
-      text: '#1A1A1A',
-      textSecondary: '#666666',
-      card: '#FFFFFF',
-      border: '#E5E5EA',
-      danger: '#FF3B30',
-    },
-    dark: {
-      background: '#000000',
-      primary: '#FF6B35',
-      text: '#FFFFFF',
-      textSecondary: '#8E8E93',
-      card: '#1C1C1E',
-      border: '#2C2C2E',
-      danger: '#FF453A',
-    },
-  };
-  const theme = colors[effectiveScheme];
   const profileSections = [
     {
       title: 'Account',
@@ -67,17 +39,26 @@ export default function ProfileScreen() {
         {
           icon: User,
           label: 'Personal Information',
-          action: () => console.log('Personal Info'),
+          action: () => {
+            // Navigate to personal info screen
+            console.log('Personal Info');
+          },
         },
         {
           icon: MapPin,
           label: 'Addresses',
-          action: () => console.log('Addresses'),
+          action: () => {
+            // Navigate to addresses screen
+            console.log('Addresses');
+          },
         },
         {
           icon: CreditCard,
           label: 'Payment Methods',
-          action: () => console.log('Payment'),
+          action: () => {
+            // Navigate to payment methods screen
+            console.log('Payment');
+          },
         },
       ],
     },
@@ -87,15 +68,25 @@ export default function ProfileScreen() {
         {
           icon: Bell,
           label: 'Notifications',
-          action: () => console.log('Notifications'),
+          action: () => {
+            // Navigate to notifications settings
+            console.log('Notifications');
+          },
         },
         {
           icon: Moon,
           label: 'Dark Mode',
           hasSwitch: true,
-          value: effectiveScheme === 'dark',
-          onValueChange: () =>
-            setTheme(userTheme === 'dark' ? 'light' : 'dark'),
+          value: isDark,
+          onValueChange: toggleTheme,
+        },
+        {
+          icon: Settings,
+          label: 'Theme Settings',
+          action: () => {
+            // Show theme picker (Light/Dark/System)
+            console.log('Theme Settings');
+          },
         },
       ],
     },
@@ -124,12 +115,18 @@ export default function ProfileScreen() {
         {
           icon: HelpCircle,
           label: 'Help Center',
-          action: () => console.log('Help'),
+          action: () => {
+            // Navigate to help center
+            console.log('Help');
+          },
         },
         {
           icon: Settings,
           label: 'Settings',
-          action: () => console.log('Settings'),
+          action: () => {
+            // Navigate to general settings
+            console.log('Settings');
+          },
         },
       ],
     },

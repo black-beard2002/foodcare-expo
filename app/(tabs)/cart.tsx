@@ -11,10 +11,13 @@ import {
 import { router } from 'expo-router';
 import { Plus, Minus, Trash2 } from 'lucide-react-native';
 import { useAppStore } from '@/stores/appStore';
+import { useTheme } from '@/hooks/useTheme';
+import { useAlert } from '@/providers/AlertProvider';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function CartScreen() {
-  const colorScheme = useColorScheme();
+  const { theme } = useTheme();
+  const { showAlert } = useAlert();
   const {
     cart,
     updateCartItem,
@@ -22,29 +25,6 @@ export default function CartScreen() {
     getCartTotal,
     getCartItemCount,
   } = useAppStore();
-
-  const colors = {
-    light: {
-      background: '#FFFFFF',
-      primary: '#FF6B35',
-      text: '#1A1A1A',
-      textSecondary: '#666666',
-      card: '#FFFFFF',
-      border: '#E5E5EA',
-      danger: '#FF3B30',
-    },
-    dark: {
-      background: '#000000',
-      primary: '#FF6B35',
-      text: '#FFFFFF',
-      textSecondary: '#8E8E93',
-      card: '#1C1C1E',
-      border: '#2C2C2E',
-      danger: '#FF453A',
-    },
-  };
-
-  const theme = colors[colorScheme ?? 'light'];
 
   const renderCartItem = ({ item }: { item: any }) => (
     <View
@@ -72,13 +52,16 @@ export default function CartScreen() {
 
       <View style={styles.itemActions}>
         <TouchableOpacity
-          onPress={() => removeFromCart(item.id)}
+          onPress={() => {
+            removeFromCart(item.id);
+            showAlert('Removed', 'Item removed from cart', 'info');
+          }}
           style={[
             styles.deleteButton,
-            { backgroundColor: `${theme.danger}20` },
+            { backgroundColor: `${theme.error}20` },
           ]}
         >
-          <Trash2 color={theme.danger} size={16} />
+          <Trash2 color={theme.error} size={16} />
         </TouchableOpacity>
 
         <View style={styles.quantityControls}>

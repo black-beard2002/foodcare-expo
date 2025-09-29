@@ -22,14 +22,15 @@ import {
 } from 'lucide-react-native';
 import { useAppStore } from '@/stores/appStore';
 import { useOrderStore } from '@/stores/orderStore';
+import { useTheme } from '@/hooks/useTheme';
 import { useAlert } from '@/providers/AlertProvider';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function CheckoutScreen() {
-  const colorScheme = useColorScheme();
+  const { theme } = useTheme();
   const { cart, getCartTotal, clearCart } = useAppStore();
   const { showAlert } = useAlert();
-  const { addOrder } = useOrderStore();
+  const { createOrder, isLoading } = useOrderStore();
   const [customerInfo, setCustomerInfo] = useState({
     name: '',
     phone: '',
@@ -39,32 +40,7 @@ export default function CheckoutScreen() {
   const [showOrderModal, setShowOrderModal] = useState(false);
   const [orderNumber, setOrderNumber] = useState('');
 
-  const colors = {
-    light: {
-      background: '#FFFFFF',
-      primary: '#FF6B35',
-      text: '#1A1A1A',
-      textSecondary: '#666666',
-      card: '#FFFFFF',
-      border: '#E5E5EA',
-      success: '#34C759',
-      inputBackground: '#F5F5F5',
-    },
-    dark: {
-      background: '#000000',
-      primary: '#FF6B35',
-      text: '#FFFFFF',
-      textSecondary: '#8E8E93',
-      card: '#1C1C1E',
-      border: '#2C2C2E',
-      success: '#30D158',
-      inputBackground: '#1C1C1E',
-    },
-  };
-
-  const theme = colors[colorScheme ?? 'light'];
-
-  const handleReserveOrder = () => {
+  const handleReserveOrder = async () => {
     if (!customerInfo.name.trim() || !customerInfo.phone.trim()) {
       showAlert(
         'Missing Information',
@@ -74,39 +50,46 @@ export default function CheckoutScreen() {
       return;
     }
 
-    // Generate random order number
-    const generatedOrderNumber = `ORD${Math.floor(
-      100000 + Math.random() * 900000
-    )}`;
-    setOrderNumber(generatedOrderNumber);
-
     // Prepare order object
-    const newOrder = {
-      id: generatedOrderNumber,
+    const orderData = {
       customerName: customerInfo.name,
       customerPhone: customerInfo.phone,
       pickupTime: customerInfo.pickupTime,
       specialInstructions: customerInfo.specialInstructions,
-      offers: cart, // assuming `cart` is the array of Offer objects
+      offers: cart,
       total: getCartTotal(),
     };
 
-    // Add order to store
-    addOrder(newOrder);
-
-    // Show modal with order details
-    setShowOrderModal(true);
-
-    // Clear cart after showing modal
-    clearCart();
+    // Create order using API
+    const result = await createOrder(orderData);
+    
+    if (result.success && result.orderId) {
+      setOrderNumber(result.orderId);
+      setShowOrderModal(true);
+      clearCart();
+      
+      showAlert(
+        'Order Created!',
+        `Your order ${result.orderId} has been placed successfully.`,
+        'success'
+      );
+    } else {
+      showAlert(
+        'Order Failed',
+        result.error || 'Failed to create order. Please try again.',
+        'error'
+      );
+    }
   };
 
   const deliveryFee = 2.99;
   const subtotal = getCartTotal();
   const total = subtotal + deliveryFee;
 
-  const isReserveDisabled =
-    !customerInfo.name.trim() || !customerInfo.phone.trim();
+  const isReserveDisabled = 
+    !customerInfo.name.trim() || 
+    !customerInfo.phone.trim() || 
+    isLoading;
 
   return (
     <SafeAreaView
@@ -285,13 +268,16 @@ export default function CheckoutScreen() {
         <TouchableOpacity
           style={[
             styles.reserveButton,
-            { backgroundColor: isReserveDisabled ? '#ccc' : theme.primary },
+            { 
+              backgroundColor: isReserveDisabled ? theme.disabled : theme.primary,
+              opacity: isLoading ? 0.7 : 1,
+            },
           ]}
           onPress={handleReserveOrder}
           disabled={isReserveDisabled}
         >
           <Text style={styles.reserveButtonText}>
-            Reserve Order - ${total.toFixed(2)}
+            {isLoading ? 'Creating Order...' : `Reserve Order - $${total.toFixed(2)}`}
           </Text>
         </TouchableOpacity>
       </View>

@@ -43,6 +43,7 @@ export default function RootLayout() {
           <Stack.Screen name="offer-details" />
           <Stack.Screen name="item-details" />
           <Stack.Screen name="checkout" />
+          <Stack.Screen name="settings" />
           <Stack.Screen name="+not-found" />
         </Stack>
       </AlertProvider>

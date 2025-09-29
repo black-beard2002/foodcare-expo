@@ -10,14 +10,19 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useOrderStore } from '@/stores/orderStore';
 import { CheckCircle } from 'lucide-react-native';
+import { useTheme } from '@/hooks/useTheme';
 import { useAlert } from '@/providers/AlertProvider';
 import { CartItem, Order } from '@/types/appTypes';
 
 export default function OrderHistoryScreen() {
-  const colorScheme = useColorScheme();
-  const theme = colorScheme === 'dark' ? darkTheme : lightTheme;
-  const { orders, removeOrder, clearOrders } = useOrderStore();
+  const { theme } = useTheme();
+  const { orders, removeOrder, clearOrders, isLoading, fetchOrders } = useOrderStore();
   const { showAlert } = useAlert();
+
+  useEffect(() => {
+    // Fetch orders when component mounts
+    fetchOrders();
+  }, []);
 
   const renderOrder = ({ item: order }: { item: Order }) => (
     <View
@@ -117,9 +122,15 @@ export default function OrderHistoryScreen() {
 
       {orders.length === 0 ? (
         <View style={styles.emptyContainer}>
-          <Text style={[styles.emptyText, { color: theme.textSecondary }]}>
-            No orders yet.
-          </Text>
+          {isLoading ? (
+            <Text style={[styles.emptyText, { color: theme.textSecondary }]}>
+              Loading orders...
+            </Text>
+          ) : (
+            <Text style={[styles.emptyText, { color: theme.textSecondary }]}>
+              No orders yet.
+            </Text>
+          )}
         </View>
       ) : (
         <FlatList
@@ -132,26 +143,6 @@ export default function OrderHistoryScreen() {
     </SafeAreaView>
   );
 }
-
-const lightTheme = {
-  background: '#FFFFFF',
-  card: '#FFFFFF',
-  border: '#E5E5EA',
-  text: '#1A1A1A',
-  textSecondary: '#666666',
-  primary: '#FF6B35',
-  success: '#34C759',
-};
-
-const darkTheme = {
-  background: '#000000',
-  card: '#1C1C1E',
-  border: '#2C2C2E',
-  text: '#FFFFFF',
-  textSecondary: '#8E8E93',
-  primary: '#FF6B35',
-  success: '#30D158',
-};
 
 const styles = StyleSheet.create({
   container: {

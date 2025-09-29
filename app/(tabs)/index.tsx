@@ -27,6 +27,7 @@ import {
   dummyCategories,
   dummyRestaurants,
 } from '@/data/dummyData';
+import { useTheme } from '@/hooks/useTheme';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 const { width } = Dimensions.get('window');
@@ -64,47 +65,23 @@ interface Offer {
 }
 
 export default function HomeScreen(): JSX.Element {
-  const colorScheme = useColorScheme();
-  const { offers, setOffers, setCategories, setRestaurants } = useAppStore();
-
-  const colors: Record<'light' | 'dark', ColorTheme> = {
-    light: {
-      background: '#F8F9FA',
-      primary: '#22C55E',
-      primaryLight: '#DCFCE7',
-      secondary: '#16A34A',
-      text: '#1A1A1A',
-      textSecondary: '#6B7280',
-      card: '#FFFFFF',
-      border: '#E5E7EB',
-      shadow: '#000000',
-      accent: '#F59E0B',
-      success: '#10B981',
-      gradient: ['#22C55E', '#16A34A'],
-    },
-    dark: {
-      background: '#0e0e0eff',
-      primary: '#22C55E',
-      primaryLight: '#052E16',
-      secondary: '#16A34A',
-      text: '#F8FAFC',
-      textSecondary: '#94A3B8',
-      card: '#202428ff',
-      border: '#334155',
-      shadow: '#000000',
-      accent: '#F59E0B',
-      success: '#10B981',
-      gradient: ['#22C55E', '#16A34A'],
-    },
-  };
-
-  const theme: ColorTheme = colors[colorScheme ?? 'light'];
+  const { theme } = useTheme();
+  const { 
+    offers, 
+    categories,
+    isLoading,
+    error,
+    fetchCategories,
+    fetchOffers,
+    refreshData,
+    setOffers, 
+    setCategories, 
+    setRestaurants 
+  } = useAppStore();
 
   useEffect(() => {
-    // Load dummy data
-    setOffers(dummyOffers);
-    setCategories(dummyCategories);
-    setRestaurants(dummyRestaurants);
+    // Load data using API
+    refreshData();
   }, []);
 
   const featuredOffers = offers.filter((offer: Offer) => offer.is_featured);
@@ -298,7 +275,7 @@ export default function HomeScreen(): JSX.Element {
       style={[styles.container, { backgroundColor: theme.background }]}
     >
       <StatusBar
-        barStyle={colorScheme === 'dark' ? 'light-content' : 'dark-content'}
+        barStyle={theme === darkTheme ? 'light-content' : 'dark-content'}
         backgroundColor={theme.background}
       />
 
@@ -321,6 +298,10 @@ export default function HomeScreen(): JSX.Element {
               styles.headerButton,
               { backgroundColor: theme.card, borderColor: theme.border },
             ]}
+            onPress={() => {
+              // Handle notifications
+              console.log('Notifications pressed');
+            }}
           >
             <Bell color={theme.text} size={20} />
           </TouchableOpacity>
@@ -329,6 +310,10 @@ export default function HomeScreen(): JSX.Element {
               styles.headerButton,
               { backgroundColor: theme.card, borderColor: theme.border },
             ]}
+            onPress={() => {
+              // Handle filter
+              console.log('Filter pressed');
+            }}
           >
             <Filter color={theme.text} size={20} />
           </TouchableOpacity>
@@ -342,7 +327,10 @@ export default function HomeScreen(): JSX.Element {
             styles.searchBar,
             { backgroundColor: theme.card, borderColor: theme.border },
           ]}
-          // onPress={() => router.push("/search")}
+          onPress={() => {
+            // Handle search
+            console.log('Search pressed');
+          }}
         >
           <Search color={theme.textSecondary} size={20} />
           <Text
@@ -369,7 +357,7 @@ export default function HomeScreen(): JSX.Element {
             Categories
           </Text>
           <FlatList
-            data={dummyCategories}
+            data={categories}
             renderItem={renderCategoryItem}
             keyExtractor={(item) => item.id}
             horizontal
@@ -384,7 +372,7 @@ export default function HomeScreen(): JSX.Element {
             <Text style={[styles.sectionTitle, { color: theme.text }]}>
               Featured Deals
             </Text>
-            <TouchableOpacity>
+            <TouchableOpacity onPress={() => router.push('/(tabs)/categories')}>
               <Text style={[styles.viewAllText, { color: theme.primary }]}>
                 View All
               </Text>
@@ -408,7 +396,7 @@ export default function HomeScreen(): JSX.Element {
             <Text style={[styles.sectionTitle, { color: theme.text }]}>
               Popular Near You
             </Text>
-            <TouchableOpacity>
+            <TouchableOpacity onPress={() => router.push('/(tabs)/categories')}>
               <Text style={[styles.viewAllText, { color: theme.primary }]}>
                 View All
               </Text>

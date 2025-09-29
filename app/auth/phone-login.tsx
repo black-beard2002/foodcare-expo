@@ -21,6 +21,8 @@ import {
 } from 'lucide-react-native';
 import { CountryPicker } from 'react-native-country-codes-picker';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useAuthStore } from '@/stores/authStore';
+import { useAlert } from '@/providers/AlertProvider';
 
 interface Country {
   code: string;
@@ -47,6 +49,8 @@ export default function PhoneLoginScreen(): JSX.Element {
   const [phoneNumber, setPhoneNumber] = useState<string>('');
   const [isValidNumber, setIsValidNumber] = useState<boolean>(false);
   const [show, setShow] = useState<boolean>(false);
+  const { signInWithPhone, isLoading } = useAuthStore();
+  const { showAlert } = useAlert();
   const [country, setCountry] = useState<Country>({
     code: '961',
     flag: '🇱🇧',
@@ -126,7 +130,7 @@ export default function PhoneLoginScreen(): JSX.Element {
   };
 
   const handleContinue = (): void => {
-    if (!isValidNumber) {
+    if (!isValidNumber || isLoading) {
       Vibration.vibrate(500);
       Alert.alert(
         'Invalid Phone Number',
@@ -136,8 +140,27 @@ export default function PhoneLoginScreen(): JSX.Element {
       return;
     }
 
-    // Here you would typically make an API call to send OTP
-    router.push('/auth/otp-verification');
+    handlePhoneSignIn();
+  };
+
+  const handlePhoneSignIn = async (): Promise<void> => {
+    const fullPhoneNumber = `+${country.code}${phoneNumber.replace(/\s/g, '')}`;
+    
+    const result = await signInWithPhone(fullPhoneNumber);
+    
+    if (result.success && result.verificationId) {
+      // Store verification ID for OTP screen
+      router.push({
+        pathname: '/auth/otp-verification',
+        params: { verificationId: result.verificationId, phoneNumber: fullPhoneNumber }
+      });
+    } else {
+      showAlert(
+        'Error',
+        result.error || 'Failed to send verification code. Please try again.',
+        'error'
+      );
+    }
   };
 
   const handleCountrySelect = (item: any): void => {
@@ -296,23 +319,24 @@ export default function PhoneLoginScreen(): JSX.Element {
             style={[
               styles.continueButton,
               {
-                backgroundColor: isValidNumber ? theme.primary : theme.border,
+                backgroundColor: (isValidNumber && !isLoading) ? theme.primary : theme.border,
                 shadowColor: isValidNumber ? theme.primary : 'transparent',
+                opacity: isLoading ? 0.7 : 1,
               },
             ]}
             onPress={handleContinue}
-            disabled={!isValidNumber}
+            disabled={!isValidNumber || isLoading}
             activeOpacity={0.8}
           >
             <Text
               style={[
                 styles.continueButtonText,
                 {
-                  color: isValidNumber ? '#FFFFFF' : theme.textSecondary,
+                  color: (isValidNumber && !isLoading) ? '#FFFFFF' : theme.textSecondary,
                 },
               ]}
             >
-              Send Verification Code
+              {isLoading ? 'Sending...' : 'Send Verification Code'}
             </Text>
           </TouchableOpacity>
 
