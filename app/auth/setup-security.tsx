@@ -18,6 +18,7 @@ import { useAuthStore } from '@/stores/authStore';
 import { useSettingsStore } from '@/stores/settingsStore';
 import { useAlert } from '@/providers/AlertProvider';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useTheme } from '@/hooks/useTheme';
 
 interface ColorTheme {
   background: string;
@@ -56,36 +57,7 @@ export default function SetupSecurityScreen(): JSX.Element {
   const [biometricType, setBiometricType] = useState<string>('');
   const [isTestingBiometric, setIsTestingBiometric] = useState<boolean>(false);
   const { showAlert } = useAlert();
-  const colors: Record<'light' | 'dark', ColorTheme> = {
-    light: {
-      background: '#FFFFFF',
-      primary: '#22C55E',
-      primaryLight: '#16A34A',
-      text: '#1A1A1A',
-      textSecondary: '#666666',
-      card: '#F8F9FA',
-      border: '#E5E5EA',
-      success: '#10B981',
-      error: '#EF4444',
-      modalBackground: '#FFFFFF',
-      overlay: 'rgba(0, 0, 0, 0.5)',
-    },
-    dark: {
-      background: '#000000',
-      primary: '#22C55E',
-      primaryLight: '#16A34A',
-      text: '#FFFFFF',
-      textSecondary: '#8E8E93',
-      card: '#1C1C1E',
-      border: '#2C2C2E',
-      success: '#10B981',
-      error: '#EF4444',
-      modalBackground: '#1C1C1E',
-      overlay: 'rgba(0, 0, 0, 0.7)',
-    },
-  };
-
-  const theme: ColorTheme = colors[colorScheme ?? 'light'];
+  const { theme } = useTheme();
 
   // Check biometric availability on component mount
   useEffect(() => {
@@ -423,12 +395,7 @@ export default function SetupSecurityScreen(): JSX.Element {
         onRequestClose={closePinModal}
       >
         <View style={[styles.modalOverlay, { backgroundColor: theme.overlay }]}>
-          <View
-            style={[
-              styles.modalContent,
-              { backgroundColor: theme.modalBackground },
-            ]}
-          >
+          <View style={[styles.modalContent, { backgroundColor: theme.card }]}>
             <View style={styles.modalHeader}>
               <Text style={[styles.modalTitle, { color: theme.text }]}>
                 {isConfirmingPin ? 'Confirm Your PIN' : 'Create Your PIN'}

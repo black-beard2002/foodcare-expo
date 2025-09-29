@@ -15,35 +15,14 @@ import { useAppStore } from '@/stores/appStore';
 import { dummyOffers } from '@/data/dummyData';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Offer } from '@/types/appTypes';
+import { useTheme } from '@/hooks/useTheme';
 
 export default function OfferDetailsScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const [offer, setOffer] = useState<Offer | null>(null);
   const colorScheme = useColorScheme();
+  const { theme } = useTheme();
   const { addToCart } = useAppStore();
-
-  const colors = {
-    light: {
-      background: '#FFFFFF',
-      primary: '#FF6B35',
-      text: '#1A1A1A',
-      textSecondary: '#666666',
-      card: '#FFFFFF',
-      border: '#E5E5EA',
-      success: '#34C759',
-    },
-    dark: {
-      background: '#000000',
-      primary: '#FF6B35',
-      text: '#FFFFFF',
-      textSecondary: '#8E8E93',
-      card: '#1C1C1E',
-      border: '#2C2C2E',
-      success: '#30D158',
-    },
-  };
-
-  const theme = colors[colorScheme ?? 'light'];
 
   useEffect(() => {
     const foundOffer = dummyOffers.find((o) => o.id === id);
@@ -73,7 +52,7 @@ export default function OfferDetailsScreen() {
       ]}
       onPress={() => router.push(`/item-details?id=${item.id}`)}
     >
-      <Image source={ item.image_url } style={styles.itemImage} />
+      <Image source={item.image_url} style={styles.itemImage} />
       <View style={styles.itemContent}>
         <Text
           style={[styles.itemName, { color: theme.text }]}
@@ -108,16 +87,21 @@ export default function OfferDetailsScreen() {
       <View style={styles.header}>
         <TouchableOpacity
           onPress={() => router.back()}
-          style={[styles.backButton, { backgroundColor: 'rgba(0,0,0,0.5)' }]}
+          style={[
+            styles.backButton,
+            { backgroundColor: theme.backgroundSecondary },
+          ]}
         >
-          <ArrowLeft color="#FFFFFF" size={24} />
+          <ArrowLeft color={theme.textSecondary} size={24} />
         </TouchableOpacity>
       </View>
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         <View style={styles.imageContainer}>
-          <Image source={ offer.image_url } style={styles.offerImage} />
-          <View style={styles.discountBadge}>
+          <Image source={offer.image_url} style={styles.offerImage} />
+          <View
+            style={[styles.discountBadge, { backgroundColor: theme.primary }]}
+          >
             <Text style={styles.discountText}>
               {offer.discount_percentage}% OFF
             </Text>
@@ -127,7 +111,7 @@ export default function OfferDetailsScreen() {
         <View
           style={[
             styles.detailsContainer,
-            { backgroundColor: theme.background },
+            { backgroundColor: theme.backgroundSecondary },
           ]}
         >
           <Text style={[styles.offerTitle, { color: theme.text }]}>
@@ -195,7 +179,7 @@ export default function OfferDetailsScreen() {
                     { backgroundColor: `${theme.primary}20` },
                   ]}
                 >
-                  <Text style={[styles.tagText, { color: theme.primary }]}>
+                  <Text style={[styles.tagText, { color: theme.text }]}>
                     {tag}
                   </Text>
                 </View>
@@ -277,10 +261,9 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: 24,
     right: 24,
-    backgroundColor: '#FF6B35',
     paddingHorizontal: 12,
     paddingVertical: 6,
-    borderRadius: 8,
+    borderRadius: 10,
   },
   discountText: {
     color: '#FFFFFF',

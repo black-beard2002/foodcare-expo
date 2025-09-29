@@ -12,17 +12,12 @@ import {
   Vibration,
 } from 'react-native';
 import { router } from 'expo-router';
-import {
-  ArrowLeft,
-  ChevronDown,
-  Phone,
-  Shield,
-  Check,
-} from 'lucide-react-native';
+import { ArrowLeft, Phone, Shield, Check } from 'lucide-react-native';
 import { CountryPicker } from 'react-native-country-codes-picker';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuthStore } from '@/stores/authStore';
 import { useAlert } from '@/providers/AlertProvider';
+import { useTheme } from '@/hooks/useTheme';
 
 interface Country {
   code: string;
@@ -57,40 +52,7 @@ export default function PhoneLoginScreen(): JSX.Element {
     name: 'Lebanon',
   });
 
-  const colorScheme = useColorScheme();
-
-  const colors: Record<'light' | 'dark', ColorTheme> = {
-    light: {
-      background: '#FFFFFF',
-      primary: '#22C55E',
-      primaryLight: '#DCFCE7',
-      secondary: '#16A34A',
-      text: '#1F2937',
-      textSecondary: '#6B7280',
-      inputBackground: '#F9FAFB',
-      border: '#E5E7EB',
-      cardBackground: '#FFFFFF',
-      success: '#10B981',
-      error: '#EF4444',
-      warning: '#F59E0B',
-    },
-    dark: {
-      background: '#101114ff',
-      primary: '#22C55E',
-      primaryLight: '#052E16',
-      secondary: '#16A34A',
-      text: '#F8FAFC',
-      textSecondary: '#94A3B8',
-      inputBackground: '#121316ff',
-      border: '#262626ff',
-      cardBackground: '#1E293B',
-      success: '#10B981',
-      error: '#EF4444',
-      warning: '#F59E0B',
-    },
-  };
-
-  const theme: ColorTheme = colors[colorScheme ?? 'light'];
+  const { theme } = useTheme();
 
   // Validate phone number format
   useEffect(() => {
@@ -145,14 +107,16 @@ export default function PhoneLoginScreen(): JSX.Element {
 
   const handlePhoneSignIn = async (): Promise<void> => {
     const fullPhoneNumber = `+${country.code}${phoneNumber.replace(/\s/g, '')}`;
-    
+
     const result = await signInWithPhone(fullPhoneNumber);
-    
     if (result.success && result.verificationId) {
       // Store verification ID for OTP screen
       router.push({
         pathname: '/auth/otp-verification',
-        params: { verificationId: result.verificationId, phoneNumber: fullPhoneNumber }
+        params: {
+          verificationId: result.verificationId,
+          phoneNumber: fullPhoneNumber,
+        },
       });
     } else {
       showAlert(
@@ -319,7 +283,8 @@ export default function PhoneLoginScreen(): JSX.Element {
             style={[
               styles.continueButton,
               {
-                backgroundColor: (isValidNumber && !isLoading) ? theme.primary : theme.border,
+                backgroundColor:
+                  isValidNumber && !isLoading ? theme.primary : theme.border,
                 shadowColor: isValidNumber ? theme.primary : 'transparent',
                 opacity: isLoading ? 0.7 : 1,
               },
@@ -332,7 +297,10 @@ export default function PhoneLoginScreen(): JSX.Element {
               style={[
                 styles.continueButtonText,
                 {
-                  color: (isValidNumber && !isLoading) ? '#FFFFFF' : theme.textSecondary,
+                  color:
+                    isValidNumber && !isLoading
+                      ? '#FFFFFF'
+                      : theme.textSecondary,
                 },
               ]}
             >

@@ -6,7 +6,6 @@ import {
   FlatList,
   TouchableOpacity,
   Image,
-  useColorScheme,
 } from 'react-native';
 import { router } from 'expo-router';
 import { Plus, Minus, Trash2 } from 'lucide-react-native';
@@ -33,7 +32,7 @@ export default function CartScreen() {
         { backgroundColor: theme.card, borderColor: theme.border },
       ]}
     >
-      <Image source={{ uri: item.offer.image_url }} style={styles.itemImage} />
+      <Image source={item.offer.image_url} style={styles.itemImage} />
 
       <View style={styles.itemDetails}>
         <Text
@@ -58,7 +57,7 @@ export default function CartScreen() {
           }}
           style={[
             styles.deleteButton,
-            { backgroundColor: `${theme.error}20` },
+            { backgroundColor: `${theme.errorLight}20` },
           ]}
         >
           <Trash2 color={theme.error} size={16} />

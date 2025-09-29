@@ -6,16 +6,15 @@ import {
   FlatList,
   TouchableOpacity,
   Image,
-  useColorScheme,
 } from 'react-native';
-import { router } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import { useAppStore } from '@/stores/appStore';
-import { dummyOffers, dummyCategories } from '@/data/dummyData';
 import { useTheme } from '@/hooks/useTheme';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function CategoriesScreen() {
   const { theme } = useTheme();
+  const { categoryId } = useLocalSearchParams<{ categoryId: string }>();
   const {
     categories,
     offers,
@@ -34,7 +33,13 @@ export default function CategoriesScreen() {
     if (offers.length === 0) {
       fetchOffers();
     }
-  }, []);
+  }, [categories, offers]);
+
+  useEffect(() => {
+    if (categoryId) {
+      setSelectedCategory(categoryId);
+    }
+  }, [categoryId]);
 
   const filteredOffers = selectedCategory
     ? offers.filter((offer) => offer.category_id === selectedCategory)
@@ -45,9 +50,9 @@ export default function CategoriesScreen() {
       style={[
         styles.categoryCard,
         {
-          backgroundColor: selectedCategory === category.id 
-            ? theme.primaryLight 
-            : theme.card,
+          shadowColor: theme.shadow,
+          backgroundColor:
+            selectedCategory === category.id ? theme.primaryLight : theme.card,
           borderColor:
             selectedCategory === category.id ? theme.primary : theme.border,
         },
@@ -58,10 +63,7 @@ export default function CategoriesScreen() {
         )
       }
     >
-      <Image
-        source={ category.image_url }
-        style={styles.categoryImage}
-      />
+      <Image source={category.image_url} style={styles.categoryImage} />
       <View style={styles.categoryContent}>
         <Text style={[styles.categoryName, { color: theme.text }]}>
           {category.name}
@@ -83,7 +85,7 @@ export default function CategoriesScreen() {
       ]}
       onPress={() => router.push(`/offer-details?id=${offer.id}`)}
     >
-      <Image source={ offer.image_url } style={styles.offerImage} />
+      <Image source={offer.image_url} style={styles.offerImage} />
       <View style={styles.discountBadge}>
         <Text style={styles.discountText}>
           {offer.discount_percentage}% OFF
@@ -199,6 +201,7 @@ const styles = StyleSheet.create({
   categoriesList: {
     paddingHorizontal: 24,
     gap: 12,
+    paddingBottom: 5,
   },
   categoryCard: {
     width: 120,
@@ -206,7 +209,6 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     padding: 5,
     borderWidth: 2,
-    shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.08,
     shadowRadius: 4,

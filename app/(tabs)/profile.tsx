@@ -21,13 +21,14 @@ import {
   ChevronRight,
   Moon,
   Sun,
+  Palette,
 } from 'lucide-react-native';
 import { useAuthStore } from '@/stores/authStore';
 import { useSettingsStore } from '@/stores/settingsStore';
 import { useTheme } from '@/hooks/useTheme';
 
 export default function ProfileScreen() {
-  const { theme, isDark, toggleTheme, setTheme: setAppTheme, currentTheme } = useTheme();
+  const { theme, isDark, toggleTheme } = useTheme();
   const { user, signOut } = useAuthStore();
   const { biometricEnabled, setBiometricEnabled, pinEnabled, setPinEnabled } =
     useSettingsStore();
@@ -44,22 +45,6 @@ export default function ProfileScreen() {
             console.log('Personal Info');
           },
         },
-        {
-          icon: MapPin,
-          label: 'Addresses',
-          action: () => {
-            // Navigate to addresses screen
-            console.log('Addresses');
-          },
-        },
-        {
-          icon: CreditCard,
-          label: 'Payment Methods',
-          action: () => {
-            // Navigate to payment methods screen
-            console.log('Payment');
-          },
-        },
       ],
     },
     {
@@ -68,24 +53,14 @@ export default function ProfileScreen() {
         {
           icon: Bell,
           label: 'Notifications',
-          action: () => {
-            // Navigate to notifications settings
-            console.log('Notifications');
-          },
-        },
-        {
-          icon: Moon,
-          label: 'Dark Mode',
           hasSwitch: true,
-          value: isDark,
-          onValueChange: toggleTheme,
         },
         {
-          icon: Settings,
-          label: 'Theme Settings',
+          icon: Palette,
+          label: 'Appearance',
           action: () => {
-            // Show theme picker (Light/Dark/System)
-            console.log('Theme Settings');
+            // Navigate to general settings
+            router.push('/settings');
           },
         },
       ],
@@ -118,14 +93,6 @@ export default function ProfileScreen() {
           action: () => {
             // Navigate to help center
             console.log('Help');
-          },
-        },
-        {
-          icon: Settings,
-          label: 'Settings',
-          action: () => {
-            // Navigate to general settings
-            console.log('Settings');
           },
         },
       ],
@@ -165,10 +132,14 @@ export default function ProfileScreen() {
               <View
                 style={[
                   styles.iconContainer,
-                  { backgroundColor: `${theme.primary}20` },
+                  { backgroundColor: `${theme.primaryLight}20` },
                 ]}
               >
-                <item.icon color={theme.primary} size={20} />
+                <item.icon
+                  color={theme.primaryDark}
+                  strokeWidth={2.5}
+                  size={20}
+                />
               </View>
               <Text style={[styles.menuItemText, { color: theme.text }]}>
                 {item.label}
@@ -179,7 +150,7 @@ export default function ProfileScreen() {
                 value={item.value}
                 onValueChange={item.onValueChange}
                 trackColor={{ false: theme.border, true: theme.primary }}
-                thumbColor="#FFFFFF"
+                thumbColor={theme.primary}
               />
             ) : (
               <ChevronRight color={theme.textSecondary} size={20} />
@@ -205,7 +176,7 @@ export default function ProfileScreen() {
         >
           <View style={styles.avatarContainer}>
             <View style={[styles.avatar, { backgroundColor: theme.primary }]}>
-              <User color="#FFFFFF" size={32} />
+              <User color={theme.text} size={32} />
             </View>
           </View>
           <Text style={[styles.profileName, { color: theme.text }]}>
@@ -221,12 +192,12 @@ export default function ProfileScreen() {
         <TouchableOpacity
           style={[
             styles.signOutButton,
-            { backgroundColor: `${theme.danger}20` },
+            { backgroundColor: `${theme.errorLight}` },
           ]}
           onPress={handleSignOut}
         >
-          <LogOut color={theme.danger} size={20} />
-          <Text style={[styles.signOutText, { color: theme.danger }]}>
+          <LogOut color={theme.error} size={20} />
+          <Text style={[styles.signOutText, { color: theme.error }]}>
             Sign Out
           </Text>
         </TouchableOpacity>

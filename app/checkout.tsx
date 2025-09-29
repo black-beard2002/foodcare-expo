@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import * as Clipboard from 'expo-clipboard';
 import {
   View,
   Text,
@@ -7,30 +6,33 @@ import {
   ScrollView,
   TouchableOpacity,
   TextInput,
-  useColorScheme,
-  Modal,
+  Image,
 } from 'react-native';
 import { router } from 'expo-router';
 import {
   ArrowLeft,
   Clock,
-  MapPin,
+  MessageSquare,
   User,
   Phone,
-  CheckCircle,
-  Copy,
+  ShoppingBag,
+  DollarSign,
+  Percent,
 } from 'lucide-react-native';
 import { useAppStore } from '@/stores/appStore';
 import { useOrderStore } from '@/stores/orderStore';
 import { useTheme } from '@/hooks/useTheme';
 import { useAlert } from '@/providers/AlertProvider';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import OrderSuccessModal from '@/components/OrderSuccessModal';
+import { spacing, borderRadius, fontSize, shadows } from '@/constants/theme';
 
 export default function CheckoutScreen() {
   const { theme } = useTheme();
   const { cart, getCartTotal, clearCart } = useAppStore();
   const { showAlert } = useAlert();
   const { createOrder, isLoading } = useOrderStore();
+
   const [customerInfo, setCustomerInfo] = useState({
     name: '',
     phone: '',
@@ -50,24 +52,23 @@ export default function CheckoutScreen() {
       return;
     }
 
-    // Prepare order object
     const orderData = {
       customerName: customerInfo.name,
       customerPhone: customerInfo.phone,
       pickupTime: customerInfo.pickupTime,
       specialInstructions: customerInfo.specialInstructions,
       offers: cart,
+      status: 'pending',
       total: getCartTotal(),
     };
 
-    // Create order using API
     const result = await createOrder(orderData);
-    
+
     if (result.success && result.orderId) {
       setOrderNumber(result.orderId);
       setShowOrderModal(true);
       clearCart();
-      
+
       showAlert(
         'Order Created!',
         `Your order ${result.orderId} has been placed successfully.`,
@@ -86,16 +87,15 @@ export default function CheckoutScreen() {
   const subtotal = getCartTotal();
   const total = subtotal + deliveryFee;
 
-  const isReserveDisabled = 
-    !customerInfo.name.trim() || 
-    !customerInfo.phone.trim() || 
-    isLoading;
+  const isReserveDisabled =
+    !customerInfo.name.trim() || !customerInfo.phone.trim() || isLoading;
 
   return (
     <SafeAreaView
       style={[styles.container, { backgroundColor: theme.background }]}
     >
-      <View style={styles.header}>
+      {/* Header */}
+      <View style={[styles.header, { borderBottomColor: theme.border }]}>
         <TouchableOpacity
           onPress={() => router.back()}
           style={styles.backButton}
@@ -103,58 +103,124 @@ export default function CheckoutScreen() {
           <ArrowLeft color={theme.text} size={24} />
         </TouchableOpacity>
         <Text style={[styles.title, { color: theme.text }]}>Checkout</Text>
+        <View style={styles.placeholder} />
       </View>
 
-      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-        {/* Order Summary */}
+      <ScrollView
+        style={styles.content}
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.scrollContent}
+      >
+        {/* Order Summary Section */}
         <View style={styles.section}>
-          <Text style={[styles.sectionTitle, { color: theme.text }]}>
-            Order Summary
-          </Text>
-          {cart.map((item) => (
+          <View style={styles.sectionHeader}>
+            <ShoppingBag color={theme.primary} size={20} />
+            <Text style={[styles.sectionTitle, { color: theme.text }]}>
+              Order Summary
+            </Text>
             <View
-              key={item.id}
               style={[
-                styles.orderItem,
-                { backgroundColor: theme.card, borderColor: theme.border },
+                styles.itemCount,
+                { backgroundColor: theme.primaryDark + '30' },
               ]}
             >
-              <Text
-                style={[styles.itemName, { color: theme.text }]}
-                numberOfLines={1}
-              >
-                {item.offer.title}
+              <Text style={[styles.itemCountText, { color: theme.text }]}>
+                {cart.length}
               </Text>
-              <View style={styles.itemDetails}>
-                <Text
-                  style={[styles.itemQuantity, { color: theme.textSecondary }]}
-                >
-                  Qty: {item.quantity}
-                </Text>
-                <Text style={[styles.itemPrice, { color: theme.primary }]}>
-                  ${(item.offer.discounted_price * item.quantity).toFixed(2)}
-                </Text>
-              </View>
             </View>
-          ))}
+          </View>
+
+          <View style={styles.orderItems}>
+            {cart.map((item) => (
+              <View
+                key={item.id}
+                style={[
+                  styles.orderItem,
+                  {
+                    backgroundColor: theme.card,
+                    borderColor: theme.border,
+                  },
+                  shadows.sm,
+                ]}
+              >
+                <Image source={item.offer.image_url} style={styles.itemImage} />
+                <View style={styles.itemInfo}>
+                  <Text
+                    style={[styles.itemName, { color: theme.text }]}
+                    numberOfLines={2}
+                  >
+                    {item.offer.title}
+                  </Text>
+                  <View style={styles.itemMetaRow}>
+                    <View
+                      style={[
+                        styles.quantityBadge,
+                        { backgroundColor: theme.backgroundSecondary },
+                      ]}
+                    >
+                      <Text
+                        style={[
+                          styles.itemQuantity,
+                          { color: theme.textSecondary },
+                        ]}
+                      >
+                        Qty: {item.quantity}
+                      </Text>
+                    </View>
+                    <View style={styles.itemPriceContainer}>
+                      <Text
+                        style={[
+                          styles.itemOriginalPrice,
+                          { color: theme.textTertiary },
+                        ]}
+                      >
+                        ${item.offer.original_price.toFixed(2)}
+                      </Text>
+                      <Text
+                        style={[styles.itemPrice, { color: theme.primary }]}
+                      >
+                        $
+                        {(item.offer.discounted_price * item.quantity).toFixed(
+                          2
+                        )}
+                      </Text>
+                    </View>
+                  </View>
+                </View>
+              </View>
+            ))}
+          </View>
         </View>
 
-        {/* Customer Info */}
+        {/* Customer Info Section */}
         <View style={styles.section}>
-          <Text style={[styles.sectionTitle, { color: theme.text }]}>
-            Customer Information
-          </Text>
+          <View style={styles.sectionHeader}>
+            <User color={theme.info} size={20} />
+            <Text style={[styles.sectionTitle, { color: theme.text }]}>
+              Customer Information
+            </Text>
+          </View>
 
           <View style={styles.inputGroup}>
-            <View style={styles.inputContainer}>
-              <User color={theme.textSecondary} size={20} />
-              <TextInput
+            <View
+              style={[
+                styles.inputWrapper,
+                { backgroundColor: theme.card, borderColor: theme.border },
+                shadows.sm,
+              ]}
+            >
+              <View
                 style={[
-                  styles.input,
-                  { color: theme.text, backgroundColor: theme.inputBackground },
+                  styles.inputIcon,
+                  { backgroundColor: theme.primaryLight + '20' },
                 ]}
-                placeholder="Full Name"
-                placeholderTextColor={theme.textSecondary}
+              >
+                <User color={theme.primaryDark} size={20} />
+              </View>
+              <TextInput
+                style={[styles.input, { color: theme.text }]}
+                placeholder="Full Name *"
+                placeholderTextColor={theme.inputPlaceholder}
                 value={customerInfo.name}
                 onChangeText={(text) =>
                   setCustomerInfo({ ...customerInfo, name: text })
@@ -162,15 +228,25 @@ export default function CheckoutScreen() {
               />
             </View>
 
-            <View style={styles.inputContainer}>
-              <Phone color={theme.textSecondary} size={20} />
-              <TextInput
+            <View
+              style={[
+                styles.inputWrapper,
+                { backgroundColor: theme.card, borderColor: theme.border },
+                shadows.sm,
+              ]}
+            >
+              <View
                 style={[
-                  styles.input,
-                  { color: theme.text, backgroundColor: theme.inputBackground },
+                  styles.inputIcon,
+                  { backgroundColor: theme.primaryLight + '20' },
                 ]}
-                placeholder="Phone Number"
-                placeholderTextColor={theme.textSecondary}
+              >
+                <Phone color={theme.primaryDark} size={20} />
+              </View>
+              <TextInput
+                style={[styles.input, { color: theme.text }]}
+                placeholder="Phone Number *"
+                placeholderTextColor={theme.inputPlaceholder}
                 value={customerInfo.phone}
                 onChangeText={(text) =>
                   setCustomerInfo({ ...customerInfo, phone: text })
@@ -179,15 +255,22 @@ export default function CheckoutScreen() {
               />
             </View>
 
-            <View style={styles.inputContainer}>
-              <Clock color={theme.textSecondary} size={20} />
+            <View
+              style={[
+                styles.inputWrapper,
+                { backgroundColor: theme.card, borderColor: theme.border },
+                shadows.sm,
+              ]}
+            >
+              <View
+                style={[styles.inputIcon, { backgroundColor: theme.infoLight }]}
+              >
+                <Clock color={theme.info} size={20} />
+              </View>
               <TextInput
-                style={[
-                  styles.input,
-                  { color: theme.text, backgroundColor: theme.inputBackground },
-                ]}
+                style={[styles.input, { color: theme.text }]}
                 placeholder="Preferred Pickup Time (Optional)"
-                placeholderTextColor={theme.textSecondary}
+                placeholderTextColor={theme.inputPlaceholder}
                 value={customerInfo.pickupTime}
                 onChangeText={(text) =>
                   setCustomerInfo({ ...customerInfo, pickupTime: text })
@@ -195,15 +278,25 @@ export default function CheckoutScreen() {
               />
             </View>
 
-            <View style={styles.inputContainer}>
-              <MapPin color={theme.textSecondary} size={20} />
-              <TextInput
+            <View
+              style={[
+                styles.textAreaWrapper,
+                { backgroundColor: theme.card, borderColor: theme.border },
+                shadows.sm,
+              ]}
+            >
+              <View
                 style={[
-                  styles.textArea,
-                  { color: theme.text, backgroundColor: theme.inputBackground },
+                  styles.inputIcon,
+                  { backgroundColor: theme.warningLight },
                 ]}
+              >
+                <MessageSquare color={theme.warning} size={20} />
+              </View>
+              <TextInput
+                style={[styles.textArea, { color: theme.text }]}
                 placeholder="Special Instructions (Optional)"
-                placeholderTextColor={theme.textSecondary}
+                placeholderTextColor={theme.inputPlaceholder}
                 value={customerInfo.specialInstructions}
                 onChangeText={(text) =>
                   setCustomerInfo({
@@ -212,265 +305,347 @@ export default function CheckoutScreen() {
                   })
                 }
                 multiline
-                numberOfLines={3}
+                numberOfLines={4}
+                textAlignVertical="top"
               />
             </View>
           </View>
         </View>
 
-        {/* Price Breakdown */}
-        <View
-          style={[
-            styles.priceBreakdown,
-            { backgroundColor: theme.card, borderColor: theme.border },
-          ]}
-        >
-          <View style={styles.priceRow}>
-            <Text style={[styles.priceLabel, { color: theme.textSecondary }]}>
-              Subtotal
-            </Text>
-            <Text style={[styles.priceValue, { color: theme.text }]}>
-              {subtotal.toFixed(2)}
+        {/* Price Breakdown Section */}
+        <View style={styles.section}>
+          <View style={styles.sectionHeader}>
+            <DollarSign color={theme.success} size={20} />
+            <Text style={[styles.sectionTitle, { color: theme.text }]}>
+              Price Breakdown
             </Text>
           </View>
-          <View style={styles.priceRow}>
-            <Text style={[styles.priceLabel, { color: theme.textSecondary }]}>
-              Service Fee
-            </Text>
-            <Text style={[styles.priceValue, { color: theme.text }]}>
-              {deliveryFee.toFixed(2)}
-            </Text>
-          </View>
+
           <View
             style={[
-              styles.priceRow,
-              styles.totalRow,
-              { borderTopColor: theme.border },
+              styles.priceBreakdown,
+              { backgroundColor: theme.card, borderColor: theme.border },
+              shadows.md,
             ]}
           >
-            <Text style={[styles.totalLabel, { color: theme.text }]}>
-              Total
-            </Text>
-            <Text style={[styles.totalValue, { color: theme.primary }]}>
-              ${total.toFixed(2)}
-            </Text>
+            <View style={styles.priceRow}>
+              <Text style={[styles.priceLabel, { color: theme.textSecondary }]}>
+                Subtotal
+              </Text>
+              <Text style={[styles.priceValue, { color: theme.text }]}>
+                ${subtotal.toFixed(2)}
+              </Text>
+            </View>
+
+            <View style={styles.priceRow}>
+              <Text style={[styles.priceLabel, { color: theme.textSecondary }]}>
+                Service Fee
+              </Text>
+              <Text style={[styles.priceValue, { color: theme.text }]}>
+                ${deliveryFee.toFixed(2)}
+              </Text>
+            </View>
+
+            <View
+              style={[
+                styles.savingsRow,
+                { backgroundColor: theme.successLight },
+              ]}
+            >
+              <Percent color={theme.success} size={16} />
+              <Text style={[styles.savingsLabel, { color: theme.success }]}>
+                You're saving
+              </Text>
+              <Text style={[styles.savingsValue, { color: theme.success }]}>
+                $
+                {cart
+                  .reduce(
+                    (sum, item) =>
+                      sum +
+                      (item.offer.original_price -
+                        item.offer.discounted_price) *
+                        item.quantity,
+                    0
+                  )
+                  .toFixed(2)}
+              </Text>
+            </View>
+
+            <View
+              style={[
+                styles.priceRow,
+                styles.totalRow,
+                { borderTopColor: theme.border },
+              ]}
+            >
+              <Text style={[styles.totalLabel, { color: theme.text }]}>
+                Total Amount
+              </Text>
+              <Text style={[styles.totalValue, { color: theme.primary }]}>
+                ${total.toFixed(2)}
+              </Text>
+            </View>
           </View>
         </View>
+
+        <View style={{ height: 120 }} />
       </ScrollView>
 
       {/* Footer */}
       <View
         style={[
           styles.footer,
-          { backgroundColor: theme.card, borderColor: theme.border },
+          { backgroundColor: theme.background, borderTopColor: theme.border },
+          shadows.lg,
         ]}
       >
         <TouchableOpacity
           style={[
             styles.reserveButton,
-            { 
-              backgroundColor: isReserveDisabled ? theme.disabled : theme.primary,
+            {
+              backgroundColor: isReserveDisabled
+                ? theme.disabled
+                : theme.primary,
               opacity: isLoading ? 0.7 : 1,
             },
           ]}
           onPress={handleReserveOrder}
           disabled={isReserveDisabled}
+          activeOpacity={0.8}
         >
-          <Text style={styles.reserveButtonText}>
-            {isLoading ? 'Creating Order...' : `Reserve Order - $${total.toFixed(2)}`}
+          <Text style={[styles.reserveButtonText, { color: theme.text }]}>
+            {isLoading
+              ? 'Creating Order...'
+              : `Reserve Order • $${total.toFixed(2)}`}
           </Text>
         </TouchableOpacity>
+        <Text style={[styles.footerNote, { color: theme.textSecondary }]}>
+          * Required fields must be filled
+        </Text>
       </View>
 
-      {/* Order Details Modal */}
-      <Modal
+      {/* Order Success Modal */}
+      <OrderSuccessModal
         visible={showOrderModal}
-        transparent
-        animationType="slide"
-        onRequestClose={() => setShowOrderModal(false)}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={[styles.modalContent, { backgroundColor: theme.card }]}>
-            <Text style={[styles.modalTitle, { color: theme.text }]}>
-              Order Reserved!
-            </Text>
-            <View
-              style={{
-                flexDirection: 'row',
-                alignItems: 'center',
-              }}
-            >
-              <Text
-                style={[
-                  styles.modalText,
-                  { color: theme.text, fontWeight: 'bold' },
-                ]}
-              >
-                Order Number: {orderNumber}
-              </Text>
-              <TouchableOpacity
-                style={{ marginLeft: 8 }}
-                onPress={async () => {
-                  await Clipboard.setStringAsync(orderNumber);
-                  showAlert(
-                    'Copied!',
-                    `Order ID ${orderNumber} copied to clipboard.`,
-                    'success'
-                  );
-                }}
-              >
-                <Copy size={20} color={theme.primary} />
-              </TouchableOpacity>
-            </View>
-            <Text style={[styles.modalText, { color: theme.text }]}>
-              Name: {customerInfo.name}
-            </Text>
-            <Text style={[styles.modalText, { color: theme.text }]}>
-              Phone: {customerInfo.phone}
-            </Text>
-            {customerInfo.pickupTime ? (
-              <Text style={[styles.modalText, { color: theme.text }]}>
-                Pickup Time: {customerInfo.pickupTime}
-              </Text>
-            ) : null}
-            {customerInfo.specialInstructions ? (
-              <Text style={[styles.modalText, { color: theme.text }]}>
-                Instructions: {customerInfo.specialInstructions}
-              </Text>
-            ) : null}
-            <Text
-              style={[
-                styles.modalNote,
-                {
-                  color: theme.text,
-                  borderColor: theme.border,
-                },
-              ]}
-            >
-              Take a screenshot of this information to show it to the
-              restaurant.
-            </Text>
-            <TouchableOpacity
-              style={[styles.modalButton, { backgroundColor: theme.primary }]}
-              onPress={() => {
-                setShowOrderModal(false);
-                router.replace('/(tabs)');
-              }}
-            >
-              <Text style={styles.modalButtonText}>OK</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </Modal>
+        onClose={() => setShowOrderModal(false)}
+        orderNumber={orderNumber}
+        customerInfo={customerInfo}
+      />
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, paddingTop: 40 },
+  container: {
+    flex: 1,
+  },
   header: {
     flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 24,
-    paddingBottom: 24,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.md,
+    borderBottomWidth: 1,
   },
-  backButton: { marginRight: 16 },
-  title: { fontSize: 24, fontFamily: 'Inter-Bold' },
-  content: { flex: 1, paddingHorizontal: 24 },
-  section: { marginBottom: 32 },
-  sectionTitle: { fontSize: 20, fontFamily: 'Inter-Bold', marginBottom: 16 },
-  orderItem: { padding: 16, borderRadius: 12, borderWidth: 1, marginBottom: 8 },
-  itemName: { fontSize: 16, fontFamily: 'Inter-Medium', marginBottom: 8 },
-  itemDetails: {
+  backButton: {
+    padding: spacing.sm,
+  },
+  title: {
+    fontSize: fontSize['2xl'],
+    fontFamily: 'Inter-Bold',
+  },
+  placeholder: {
+    width: 40,
+  },
+  content: {
+    flex: 1,
+  },
+  scrollContent: {
+    paddingHorizontal: spacing.lg,
+  },
+  section: {
+    marginTop: spacing.lg,
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    marginBottom: spacing.md,
+  },
+  sectionTitle: {
+    fontSize: fontSize.lg,
+    fontFamily: 'Inter-Bold',
+    flex: 1,
+  },
+  itemCount: {
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 4,
+    borderRadius: borderRadius.sm,
+  },
+  itemCountText: {
+    fontSize: fontSize.xs,
+    fontFamily: 'Inter-Bold',
+  },
+  orderItems: {
+    gap: spacing.md,
+  },
+  orderItem: {
+    flexDirection: 'row',
+    padding: spacing.md,
+    borderRadius: borderRadius.xl,
+    borderWidth: 1,
+    gap: spacing.md,
+  },
+  itemImage: {
+    width: 70,
+    height: 70,
+    borderRadius: borderRadius.lg,
+  },
+  itemInfo: {
+    flex: 1,
+    justifyContent: 'space-between',
+  },
+  itemName: {
+    fontSize: fontSize.base,
+    fontFamily: 'Inter-SemiBold',
+    marginBottom: spacing.sm,
+    lineHeight: 20,
+  },
+  itemMetaRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
   },
-  itemQuantity: { fontSize: 14, fontFamily: 'Inter-Regular' },
-  itemPrice: { fontSize: 16, fontFamily: 'Inter-Bold' },
-  inputGroup: { gap: 16 },
-  inputContainer: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  quantityBadge: {
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 4,
+    borderRadius: borderRadius.sm,
+  },
+  itemQuantity: {
+    fontSize: fontSize.xs,
+    fontFamily: 'Inter-Medium',
+  },
+  itemPriceContainer: {
+    alignItems: 'flex-end',
+    gap: 2,
+  },
+  itemOriginalPrice: {
+    fontSize: fontSize.xs,
+    fontFamily: 'Inter-Regular',
+    textDecorationLine: 'line-through',
+  },
+  itemPrice: {
+    fontSize: fontSize.lg,
+    fontFamily: 'Inter-Bold',
+  },
+  inputGroup: {
+    gap: spacing.md,
+  },
+  inputWrapper: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderRadius: borderRadius.xl,
+    borderWidth: 1,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    gap: spacing.md,
+  },
+  textAreaWrapper: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    borderRadius: borderRadius.xl,
+    borderWidth: 1,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.md,
+    gap: spacing.md,
+  },
+  inputIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: borderRadius.lg,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   input: {
     flex: 1,
-    padding: 16,
-    borderRadius: 12,
-    fontSize: 16,
+    fontSize: fontSize.base,
     fontFamily: 'Inter-Regular',
+    paddingVertical: spacing.sm,
   },
   textArea: {
     flex: 1,
-    padding: 16,
-    borderRadius: 12,
-    fontSize: 16,
+    fontSize: fontSize.base,
     fontFamily: 'Inter-Regular',
     minHeight: 80,
-    textAlignVertical: 'top',
   },
   priceBreakdown: {
-    padding: 20,
-    borderRadius: 16,
+    padding: spacing.lg,
+    borderRadius: borderRadius.xl,
     borderWidth: 1,
-    marginBottom: 130,
   },
   priceRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 12,
+    marginBottom: spacing.md,
   },
-  priceLabel: { fontSize: 16, fontFamily: 'Inter-Regular' },
-  priceValue: { fontSize: 16, fontFamily: 'Inter-Medium' },
-  totalRow: { borderTopWidth: 1, paddingTop: 12, marginBottom: 0 },
-  totalLabel: { fontSize: 18, fontFamily: 'Inter-Bold' },
-  totalValue: { fontSize: 20, fontFamily: 'Inter-Bold' },
+  priceLabel: {
+    fontSize: fontSize.base,
+    fontFamily: 'Inter-Regular',
+  },
+  priceValue: {
+    fontSize: fontSize.base,
+    fontFamily: 'Inter-SemiBold',
+  },
+  savingsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: spacing.md,
+    borderRadius: borderRadius.lg,
+    gap: spacing.sm,
+    marginBottom: spacing.md,
+  },
+  savingsLabel: {
+    fontSize: fontSize.sm,
+    fontFamily: 'Inter-SemiBold',
+    flex: 1,
+  },
+  savingsValue: {
+    fontSize: fontSize.lg,
+    fontFamily: 'Inter-Bold',
+  },
+  totalRow: {
+    borderTopWidth: 1,
+    paddingTop: spacing.md,
+    marginBottom: 0,
+  },
+  totalLabel: {
+    fontSize: fontSize.lg,
+    fontFamily: 'Inter-Bold',
+  },
+  totalValue: {
+    fontSize: fontSize['2xl'],
+    fontFamily: 'Inter-Bold',
+  },
   footer: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    padding: 24,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.md,
     borderTopWidth: 1,
   },
   reserveButton: {
     width: '100%',
-    padding: 18,
-    borderRadius: 12,
+    padding: spacing.md,
+    borderRadius: borderRadius.xl,
     alignItems: 'center',
+    marginBottom: spacing.sm,
   },
   reserveButtonText: {
-    color: '#FFFFFF',
-    fontSize: 16,
-    fontFamily: 'Inter-Medium',
-  },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  modalContent: { width: '85%', borderRadius: 16, padding: 24 },
-  modalTitle: {
-    fontSize: 20,
+    fontSize: fontSize.lg,
     fontFamily: 'Inter-Bold',
-    marginBottom: 16,
-    textAlign: 'center',
   },
-  modalText: { fontSize: 16, fontFamily: 'Inter-Regular', marginBottom: 8 },
-  modalNote: {
-    fontSize: 14,
+  footerNote: {
+    fontSize: fontSize.xs,
     fontFamily: 'Inter-Regular',
-    marginTop: 12,
-    borderWidth: 3,
-    padding: 2,
-    borderRadius: 10,
-    borderStyle: 'dotted',
     textAlign: 'center',
   },
-  modalButton: {
-    marginTop: 24,
-    padding: 16,
-    borderRadius: 12,
-    alignItems: 'center',
-  },
-  modalButtonText: { color: '#fff', fontSize: 16, fontFamily: 'Inter-Medium' },
 });

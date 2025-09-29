@@ -135,7 +135,7 @@ export default function SettingsScreen() {
                         {
                           color:
                             currentTheme === option.key
-                              ? theme.primary
+                              ? theme.primaryDark
                               : theme.text,
                         },
                       ]}

@@ -2,14 +2,29 @@ import { apiClient, ApiResponse } from './config';
 import { User } from '@/types/authTypes';
 
 export interface AuthApi {
-  signInWithPhone: (phoneNumber: string) => Promise<ApiResponse<{ verificationId: string }>>;
-  verifyOtp: (verificationId: string, otp: string) => Promise<ApiResponse<{ user: User; token: string }>>;
-  signInWithEmail: (email: string, password: string) => Promise<ApiResponse<{ user: User; token: string }>>;
-  signUp: (userData: SignUpData) => Promise<ApiResponse<{ user: User; token: string }>>;
+  signInWithPhone: (
+    phoneNumber: string
+  ) => Promise<ApiResponse<{ verificationId: string }>>;
+  verifyOtp: (
+    verificationId: string,
+    otp: string
+  ) => Promise<ApiResponse<{ user: User; token: string }>>;
+  signInWithEmail: (
+    email: string,
+    password: string
+  ) => Promise<ApiResponse<{ user: User; token: string }>>;
+  signUp: (
+    userData: SignUpData
+  ) => Promise<ApiResponse<{ user: User; token: string }>>;
   signOut: () => Promise<ApiResponse<void>>;
-  refreshToken: (refreshToken: string) => Promise<ApiResponse<{ token: string }>>;
+  refreshToken: (
+    refreshToken: string
+  ) => Promise<ApiResponse<{ token: string }>>;
   getCurrentUser: () => Promise<ApiResponse<User>>;
-  updateProfile: (userId: string, userData: Partial<User>) => Promise<ApiResponse<User>>;
+  updateProfile: (
+    userId: string,
+    userData: Partial<User>
+  ) => Promise<ApiResponse<User>>;
   deleteAccount: (userId: string) => Promise<ApiResponse<void>>;
 }
 
@@ -21,13 +36,15 @@ export interface SignUpData {
 }
 
 class AuthApiImpl implements AuthApi {
-  async signInWithPhone(phoneNumber: string): Promise<ApiResponse<{ verificationId: string }>> {
+  async signInWithPhone(
+    phoneNumber: string
+  ): Promise<ApiResponse<{ verificationId: string }>> {
     try {
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+
       // Simulate sending OTP
-      const verificationId = `verify_${Date.now()}`;
-      
+      const verificationId = '000000';
+
       return {
         success: true,
         data: { verificationId },
@@ -41,10 +58,13 @@ class AuthApiImpl implements AuthApi {
     }
   }
 
-  async verifyOtp(verificationId: string, otp: string): Promise<ApiResponse<{ user: User; token: string }>> {
+  async verifyOtp(
+    verificationId: string,
+    otp: string
+  ): Promise<ApiResponse<{ user: User; token: string }>> {
     try {
-      await new Promise(resolve => setTimeout(resolve, 800));
-      
+      await new Promise((resolve) => setTimeout(resolve, 800));
+      console.log('otp:', otp);
       // For demo purposes, accept any 6-digit OTP
       if (otp.length !== 6) {
         return {
@@ -76,10 +96,13 @@ class AuthApiImpl implements AuthApi {
     }
   }
 
-  async signInWithEmail(email: string, password: string): Promise<ApiResponse<{ user: User; token: string }>> {
+  async signInWithEmail(
+    email: string,
+    password: string
+  ): Promise<ApiResponse<{ user: User; token: string }>> {
     try {
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+
       // Demo validation
       if (!email || !password) {
         return {
@@ -111,10 +134,12 @@ class AuthApiImpl implements AuthApi {
     }
   }
 
-  async signUp(userData: SignUpData): Promise<ApiResponse<{ user: User; token: string }>> {
+  async signUp(
+    userData: SignUpData
+  ): Promise<ApiResponse<{ user: User; token: string }>> {
     try {
-      await new Promise(resolve => setTimeout(resolve, 1200));
-      
+      await new Promise((resolve) => setTimeout(resolve, 1200));
+
       if (!userData.full_name) {
         return {
           success: false,
@@ -148,8 +173,8 @@ class AuthApiImpl implements AuthApi {
 
   async signOut(): Promise<ApiResponse<void>> {
     try {
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
+      await new Promise((resolve) => setTimeout(resolve, 500));
+
       return {
         success: true,
         message: 'Signed out successfully',
@@ -162,12 +187,14 @@ class AuthApiImpl implements AuthApi {
     }
   }
 
-  async refreshToken(refreshToken: string): Promise<ApiResponse<{ token: string }>> {
+  async refreshToken(
+    refreshToken: string
+  ): Promise<ApiResponse<{ token: string }>> {
     try {
-      await new Promise(resolve => setTimeout(resolve, 600));
-      
+      await new Promise((resolve) => setTimeout(resolve, 600));
+
       const token = `token_${Date.now()}`;
-      
+
       return {
         success: true,
         data: { token },
@@ -182,8 +209,8 @@ class AuthApiImpl implements AuthApi {
 
   async getCurrentUser(): Promise<ApiResponse<User>> {
     try {
-      await new Promise(resolve => setTimeout(resolve, 400));
-      
+      await new Promise((resolve) => setTimeout(resolve, 400));
+
       // Return demo user for now
       const user: User = {
         id: '1',
@@ -205,10 +232,13 @@ class AuthApiImpl implements AuthApi {
     }
   }
 
-  async updateProfile(userId: string, userData: Partial<User>): Promise<ApiResponse<User>> {
+  async updateProfile(
+    userId: string,
+    userData: Partial<User>
+  ): Promise<ApiResponse<User>> {
     try {
-      await new Promise(resolve => setTimeout(resolve, 800));
-      
+      await new Promise((resolve) => setTimeout(resolve, 800));
+
       const updatedUser: User = {
         id: userId,
         email: userData.email || 'demo@example.com',
@@ -234,8 +264,8 @@ class AuthApiImpl implements AuthApi {
 
   async deleteAccount(userId: string): Promise<ApiResponse<void>> {
     try {
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+
       return {
         success: true,
         message: 'Account deleted successfully',

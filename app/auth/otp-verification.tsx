@@ -1,4 +1,11 @@
-import React, { useState, useEffect, useRef, JSX } from 'react';
+import React, {
+  useState,
+  useEffect,
+  useRef,
+  JSX,
+  useMemo,
+  useCallback,
+} from 'react';
 import {
   View,
   Text,
@@ -6,7 +13,6 @@ import {
   TouchableOpacity,
   StyleSheet,
   useColorScheme,
-  Alert,
   ActivityIndicator,
   NativeSyntheticEvent,
   TextInputKeyPressEventData,
@@ -15,6 +21,7 @@ import { router, useLocalSearchParams } from 'expo-router';
 import { ArrowLeft, Shield } from 'lucide-react-native';
 import { useAuthStore } from '@/stores/authStore';
 import { useAlert } from '@/providers/AlertProvider';
+import { useTheme } from '@/hooks/useTheme';
 
 interface ColorTheme {
   background: string;
@@ -32,6 +39,7 @@ export default function OTPVerificationScreen(): JSX.Element {
   const [otp, setOtp] = useState<string[]>(['', '', '', '', '', '']);
   const [timer, setTimer] = useState<number>(60);
   const [isResending, setIsResending] = useState<boolean>(false);
+  const [hasVerified, setHasVerified] = useState<boolean>(false); // Add flag to prevent multiple verifications
   const { verificationId, phoneNumber } = useLocalSearchParams<{
     verificationId: string;
     phoneNumber: string;
@@ -41,33 +49,7 @@ export default function OTPVerificationScreen(): JSX.Element {
   const colorScheme = useColorScheme();
   const inputRefs = useRef<(TextInput | null)[]>([]);
 
-  const colors: Record<'light' | 'dark', ColorTheme> = {
-    light: {
-      background: '#FFFFFF',
-      primary: '#22C55E', // Nice green color
-      primaryLight: '#16A34A',
-      text: '#1A1A1A',
-      textSecondary: '#666666',
-      inputBackground: '#F5F5F5',
-      border: '#E5E5EA',
-      success: '#10B981',
-      error: '#EF4444',
-    },
-    dark: {
-      background: '#000000',
-      primary: '#22C55E', // Same green for consistency
-      primaryLight: '#16A34A',
-      text: '#FFFFFF',
-      textSecondary: '#8E8E93',
-      inputBackground: '#1C1C1E',
-      border: '#2C2C2E',
-      success: '#10B981',
-      error: '#EF4444',
-    },
-  };
-
-  const theme: ColorTheme = colors[colorScheme ?? 'light'];
-
+  const { theme } = useTheme();
   // Timer countdown effect
   useEffect(() => {
     let interval: number;
@@ -81,109 +63,113 @@ export default function OTPVerificationScreen(): JSX.Element {
     };
   }, [timer]);
 
-  // Auto-verify when OTP is complete
-  useEffect(() => {
-    const otpCode = otp.join('');
-    if (otpCode.length === 6 && !isLoading) {
-      handleAutoVerify();
-    }
-  }, [otp, isLoading]);
-
-  const handleOtpChange = (value: string, index: number): void => {
-    // Only allow numeric input
-    const numericValue = value.replace(/[^0-9]/g, '');
-
-    if (numericValue.length <= 1) {
-      const newOtp = [...otp];
-      newOtp[index] = numericValue;
-      setOtp(newOtp);
-
-      // Auto-focus next input
-      if (numericValue && index < 5) {
-        inputRefs.current[index + 1]?.focus();
+  const handleOtpChange = useCallback(
+    (value: string, index: number): void => {
+      const numericValue = value.replace(/[^0-9]/g, '');
+      if (numericValue.length <= 1) {
+        const newOtp = [...otp];
+        newOtp[index] = numericValue;
+        setOtp(newOtp);
+        if (numericValue && index < 5) {
+          inputRefs.current[index + 1]?.focus();
+        }
       }
-    }
-  };
+    },
+    [otp]
+  );
 
-  const handleKeyPress = (
-    e: NativeSyntheticEvent<TextInputKeyPressEventData>,
-    index: number
-  ): void => {
-    // Handle backspace to move to previous input
-    if (e.nativeEvent.key === 'Backspace' && !otp[index] && index > 0) {
-      inputRefs.current[index - 1]?.focus();
-    }
-  };
+  const handleKeyPress = useCallback(
+    (
+      e: NativeSyntheticEvent<TextInputKeyPressEventData>,
+      index: number
+    ): void => {
+      if (e.nativeEvent.key === 'Backspace' && !otp[index] && index > 0) {
+        inputRefs.current[index - 1]?.focus();
+      }
+    },
+    [otp]
+  );
 
-  const handlePaste = (text: string, index: number): void => {
-    // Handle paste operation for the entire OTP
+  const handlePaste = useCallback((text: string, index: number): void => {
     const numericText = text.replace(/[^0-9]/g, '');
     if (numericText.length >= 6) {
       const newOtp = numericText.slice(0, 6).split('');
       setOtp(newOtp);
-      // Focus the last input
       inputRefs.current[5]?.focus();
     }
-  };
+  }, []);
 
   const simulateOtpVerification = async (otpCode: string): Promise<boolean> => {
     if (!verificationId) return false;
-    
     const result = await verifyOtp(verificationId, otpCode);
     return result.success;
   };
 
-  const handleAutoVerify = async (): Promise<void> => {
+  const handleAutoVerify = useCallback(async (): Promise<void> => {
+    // Prevent multiple executions
+    if (hasVerified || isLoading) {
+      return;
+    }
+
     const otpCode = otp.join('');
+    setHasVerified(true); // Set flag immediately to prevent re-execution
 
     try {
       const isValid = await simulateOtpVerification(otpCode);
 
       if (isValid) {
-        // Success feedback could be added here (like a checkmark animation)
-        showAlert('Success!', 'Phone number verified successfully', 'success');
-        setTimeout(() => {
-          router.push('/auth/setup-security');
-        }, 500);
+        showAlert('Verified!', '', 'success');
+        router.push('/auth/setup-security');
       } else {
-        // Invalid OTP
+        // Reset flag on error so user can try again
+        setHasVerified(false);
         setOtp(['', '', '', '', '', '']);
         inputRefs.current[0]?.focus();
         showAlert(
-          'Invalid Code', 
+          'Invalid Code',
           'Please enter the correct verification code.',
           'error'
         );
       }
     } catch (error) {
+      // Reset flag on error so user can try again
+      setHasVerified(false);
       showAlert('Error', 'Something went wrong. Please try again.', 'error');
     }
-  };
+  }, [otp, verificationId, verifyOtp, showAlert, hasVerified, isLoading]);
 
-  const handleManualVerify = (): void => {
+  // Auto-verify when OTP is complete
+  useEffect(() => {
     const otpCode = otp.join('');
-    if (otpCode.length === 6) {
+    if (otpCode.length === 6 && !isLoading && !hasVerified) {
       handleAutoVerify();
     }
-  };
+  }, [otp, isLoading, hasVerified, handleAutoVerify]);
+
+  const handleManualVerify = useCallback((): void => {
+    const otpCode = otp.join('');
+    if (otpCode.length === 6 && !hasVerified) {
+      handleAutoVerify();
+    }
+  }, [otp, hasVerified, handleAutoVerify]);
 
   const simulateResendCode = async (): Promise<boolean> => {
     if (!phoneNumber) return false;
-    
     const result = await signInWithPhone(phoneNumber);
     return result.success;
   };
 
-  const handleCodeResend = async (): Promise<void> => {
+  const handleCodeResend = useCallback(async (): Promise<void> => {
     setIsResending(true);
 
     try {
       const success = await simulateResendCode();
 
       if (success) {
-        // Reset OTP and timer
+        // Reset OTP, timer, and verification flag
         setOtp(['', '', '', '', '', '']);
         setTimer(60);
+        setHasVerified(false);
         inputRefs.current[0]?.focus();
 
         showAlert(
@@ -199,10 +185,16 @@ export default function OTPVerificationScreen(): JSX.Element {
     } finally {
       setIsResending(false);
     }
-  };
+  }, [phoneNumber, signInWithPhone, showAlert]);
 
-  const isOtpComplete: boolean = otp.every((digit) => digit !== '');
-  const canResend: boolean = timer === 0 && !isResending;
+  const isOtpComplete = useMemo(
+    () => otp.every((digit) => digit !== ''),
+    [otp]
+  );
+  const canResend = useMemo(
+    () => timer === 0 && !isResending,
+    [timer, isResending]
+  );
 
   return (
     <View style={[styles.container, { backgroundColor: theme.background }]}>
@@ -252,7 +244,6 @@ export default function OTPVerificationScreen(): JSX.Element {
               ]}
               value={digit}
               onChangeText={(value) => {
-                // Handle paste operation for the entire OTP
                 if (value.length > 1) {
                   handlePaste(value, index);
                 } else {

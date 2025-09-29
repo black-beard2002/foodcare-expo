@@ -88,6 +88,14 @@ export interface Order {
   pickupTime?: string;
   specialInstructions?: string;
   offers: CartItem[];
+  status: 'pending' | 'completed' | 'cancelled';
   total: number;
   createdAt: string;
+}
+export interface FilterOptions {
+  priceRange: string[];
+  rating: number | null;
+  deliveryTime: string[];
+  sortBy: string;
+  cuisine: string[];
 }

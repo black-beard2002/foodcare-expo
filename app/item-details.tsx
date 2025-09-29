@@ -9,40 +9,17 @@ import {
   useColorScheme,
 } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
-import { ArrowLeft, Leaf, Zap, Clock, Plus } from 'lucide-react-native';
+import { ArrowLeft, Leaf, Zap, Clock, Plus, Heart } from 'lucide-react-native';
 import { dummyItems } from '@/data/dummyData';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Item } from '@/types/appTypes';
+import { LinearGradient } from 'expo-linear-gradient';
+import { useTheme } from '@/hooks/useTheme';
 
 export default function ItemDetailsScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const [item, setItem] = useState<Item | null>(null);
-  const colorScheme = useColorScheme();
-
-  const colors = {
-    light: {
-      background: '#FFFFFF',
-      primary: '#FF6B35',
-      text: '#1A1A1A',
-      textSecondary: '#666666',
-      card: '#FFFFFF',
-      border: '#E5E5EA',
-      success: '#34C759',
-      warning: '#FF9500',
-    },
-    dark: {
-      background: '#000000',
-      primary: '#FF6B35',
-      text: '#FFFFFF',
-      textSecondary: '#8E8E93',
-      card: '#1C1C1E',
-      border: '#2C2C2E',
-      success: '#30D158',
-      warning: '#FF9F0A',
-    },
-  };
-
-  const theme = colors[colorScheme ?? 'light'];
+  const { theme } = useTheme();
 
   useEffect(() => {
     const foundItem = dummyItems.find((i) => i.id === id);
@@ -59,36 +36,6 @@ export default function ItemDetailsScreen() {
     );
   }
 
-  const getSpiceLevelColor = (level: string) => {
-    switch (level) {
-      case 'mild':
-        return theme.success;
-      case 'medium':
-        return theme.warning;
-      case 'hot':
-        return theme.primary;
-      case 'very_hot':
-        return '#FF3B30';
-      default:
-        return theme.textSecondary;
-    }
-  };
-
-  const getSpiceLevelText = (level: string) => {
-    switch (level) {
-      case 'mild':
-        return 'Mild';
-      case 'medium':
-        return 'Medium';
-      case 'hot':
-        return 'Hot';
-      case 'very_hot':
-        return 'Very Hot';
-      default:
-        return 'Not Spicy';
-    }
-  };
-
   return (
     <SafeAreaView
       style={[styles.container, { backgroundColor: theme.background }]}
@@ -96,270 +43,284 @@ export default function ItemDetailsScreen() {
       <View style={styles.header}>
         <TouchableOpacity
           onPress={() => router.back()}
-          style={[styles.backButton, { backgroundColor: 'rgba(0,0,0,0.5)' }]}
-        >
-          <ArrowLeft color="#FFFFFF" size={24} />
-        </TouchableOpacity>
-      </View>
-
-      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-        <Image source={ item.image_url } style={styles.itemImage} />
-
-        <View
           style={[
-            styles.detailsContainer,
-            { backgroundColor: theme.background },
+            styles.backButton,
+            { backgroundColor: theme.backgroundSecondary },
           ]}
         >
-          <View style={styles.titleSection}>
-            <Text style={[styles.itemName, { color: theme.text }]}>
-              {item.name}
-            </Text>
-            <Text style={[styles.itemPrice, { color: theme.primary }]}>
-              {/* ${item.price.toFixed(2)} */}
-            </Text>
-          </View>
+          <ArrowLeft color={theme.textSecondary} size={24} />
+        </TouchableOpacity>
+      </View>
+      <LinearGradient
+        style={[{ flex: 1 }]}
+        colors={[theme.background, theme.backgroundSecondary]}
+        start={{ x: 0, y: 0 }} // top-left
+        end={{ x: 1, y: 1 }} // bottom-right
+      >
+        <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+          <Image
+            resizeMode="cover"
+            source={item.image_url}
+            style={styles.itemImage}
+          />
 
-          <Text
-            style={[styles.itemDescription, { color: theme.textSecondary }]}
+          <TouchableOpacity
+            style={[
+              {
+                position: 'absolute',
+                top: 10,
+                right: 40,
+                backgroundColor: theme.accent,
+                padding: 10,
+                borderRadius: 15,
+                justifyContent: 'center',
+                alignItems: 'center',
+              },
+            ]}
           >
-            {item.description}
-          </Text>
+            <Heart fill={'white'} strokeWidth={0} />
+          </TouchableOpacity>
 
-          <View style={styles.badgesContainer}>
-            {item.is_vegetarian && (
-              <View
-                style={[
-                  styles.badge,
-                  { backgroundColor: `${theme.success}20` },
-                ]}
-              >
-                <Leaf color={theme.success} size={16} />
-                <Text style={[styles.badgeText, { color: theme.success }]}>
-                  Vegetarian
-                </Text>
-              </View>
-            )}
-            {item.is_vegan && (
-              <View
-                style={[
-                  styles.badge,
-                  { backgroundColor: `${theme.success}20` },
-                ]}
-              >
-                <Leaf color={theme.success} size={16} />
-                <Text style={[styles.badgeText, { color: theme.success }]}>
-                  Vegan
-                </Text>
-              </View>
-            )}
-            {item.is_gluten_free && (
-              <View
-                style={[
-                  styles.badge,
-                  { backgroundColor: `${theme.warning}20` },
-                ]}
-              >
-                <Text style={[styles.badgeText, { color: theme.warning }]}>
-                  Gluten Free
-                </Text>
-              </View>
-            )}
-            <View
-              style={[
-                styles.badge,
-                {
-                  backgroundColor: `${getSpiceLevelColor(item.spice_level)}20`,
-                },
-              ]}
-            >
-              <Zap color={getSpiceLevelColor(item.spice_level)} size={16} />
-              <Text
-                style={[
-                  styles.badgeText,
-                  { color: getSpiceLevelColor(item.spice_level) },
-                ]}
-              >
-                {getSpiceLevelText(item.spice_level)}
+          <View
+            style={[styles.detailsContainer, { backgroundColor: theme.card }]}
+          >
+            <View style={styles.titleSection}>
+              <Text style={[styles.itemName, { color: theme.text }]}>
+                {item.name}
+              </Text>
+              <Text style={[styles.itemPrice, { color: theme.primary }]}>
+                ${item.price.toFixed(2)}
               </Text>
             </View>
-          </View>
 
-          <View style={styles.quickInfoContainer}>
-            <View
-              style={[
-                styles.quickInfoCard,
-                { backgroundColor: theme.card, borderColor: theme.border },
-              ]}
+            <Text
+              style={[styles.itemDescription, { color: theme.textSecondary }]}
             >
-              <Clock color={theme.primary} size={24} />
-              <Text
-                style={[styles.quickInfoLabel, { color: theme.textSecondary }]}
-              >
-                Prep Time
-              </Text>
-              <Text style={[styles.quickInfoValue, { color: theme.text }]}>
-                {item.prep_time} min
-              </Text>
-            </View>
-            <View
-              style={[
-                styles.quickInfoCard,
-                { backgroundColor: theme.card, borderColor: theme.border },
-              ]}
-            >
-              <Zap color={theme.primary} size={24} />
-              <Text
-                style={[styles.quickInfoLabel, { color: theme.textSecondary }]}
-              >
-                Calories
-              </Text>
-              <Text style={[styles.quickInfoValue, { color: theme.text }]}>
-                {item.calories}
-              </Text>
-            </View>
-          </View>
-
-          <View style={styles.section}>
-            <Text style={[styles.sectionTitle, { color: theme.text }]}>
-              Ingredients
+              {item.description}
             </Text>
-            <View style={styles.ingredientsList}>
-              {item.ingredients.map((ingredient, index) => (
+
+            <View style={styles.badgesContainer}>
+              {item.is_vegetarian && (
                 <View
-                  key={index}
-                  style={[
-                    styles.ingredientItem,
-                    { backgroundColor: theme.card, borderColor: theme.border },
-                  ]}
+                  style={[styles.badge, { backgroundColor: theme.primary }]}
                 >
-                  <Text style={[styles.ingredientText, { color: theme.text }]}>
-                    {ingredient}
+                  <Leaf color={theme.primaryDark} size={16} />
+                  <Text style={[styles.badgeText, { color: theme.text }]}>
+                    Vegetarian
                   </Text>
                 </View>
-              ))}
+              )}
+              {item.is_vegan && (
+                <View
+                  style={[styles.badge, { backgroundColor: theme.primary }]}
+                >
+                  <Leaf color={theme.primaryDark} size={16} />
+                  <Text style={[styles.badgeText, { color: theme.text }]}>
+                    Vegan
+                  </Text>
+                </View>
+              )}
+              {item.is_gluten_free && (
+                <View
+                  style={[
+                    styles.badge,
+                    { backgroundColor: `${theme.primary}20` },
+                  ]}
+                >
+                  <Text style={[styles.badgeText, { color: theme.text }]}>
+                    Gluten Free
+                  </Text>
+                </View>
+              )}
+              <View
+                style={[
+                  styles.badge,
+                  {
+                    backgroundColor: theme.primary,
+                  },
+                ]}
+              >
+                <Zap color={theme.primaryDark} size={16} />
+                <Text style={[styles.badgeText, { color: theme.text }]}>
+                  {item.spice_level}
+                </Text>
+              </View>
             </View>
-          </View>
 
-          {item.allergens.length > 0 && (
+            <View style={styles.quickInfoContainer}>
+              <View
+                style={[
+                  styles.quickInfoCard,
+                  { backgroundColor: theme.card, borderColor: theme.border },
+                ]}
+              >
+                <Clock color={theme.primary} size={24} />
+                <Text
+                  style={[
+                    styles.quickInfoLabel,
+                    { color: theme.textSecondary },
+                  ]}
+                >
+                  Prep Time
+                </Text>
+                <Text style={[styles.quickInfoValue, { color: theme.text }]}>
+                  {item.prep_time} min
+                </Text>
+              </View>
+              <View
+                style={[
+                  styles.quickInfoCard,
+                  { backgroundColor: theme.card, borderColor: theme.border },
+                ]}
+              >
+                <Zap color={theme.primary} size={24} />
+                <Text
+                  style={[
+                    styles.quickInfoLabel,
+                    { color: theme.textSecondary },
+                  ]}
+                >
+                  Calories
+                </Text>
+                <Text style={[styles.quickInfoValue, { color: theme.text }]}>
+                  {item.calories}
+                </Text>
+              </View>
+            </View>
+
             <View style={styles.section}>
               <Text style={[styles.sectionTitle, { color: theme.text }]}>
-                Allergens
+                Ingredients
               </Text>
-              <View style={styles.allergensList}>
-                {item.allergens.map((allergen, index) => (
+              <View style={styles.ingredientsList}>
+                {item.ingredients.map((ingredient, index) => (
                   <View
                     key={index}
                     style={[
-                      styles.allergenItem,
-                      { backgroundColor: `${theme.primary}20` },
+                      styles.ingredientItem,
+                      {
+                        backgroundColor: theme.secondary,
+                        borderColor: theme.border,
+                      },
                     ]}
                   >
                     <Text
-                      style={[styles.allergenText, { color: theme.primary }]}
+                      style={[styles.ingredientText, { color: theme.text }]}
                     >
-                      {allergen}
+                      {ingredient}
                     </Text>
                   </View>
                 ))}
               </View>
             </View>
-          )}
 
-          <View style={styles.section}>
-            <Text style={[styles.sectionTitle, { color: theme.text }]}>
-              Nutrition Facts
-            </Text>
-            <View
-              style={[
-                styles.nutritionCard,
-                { backgroundColor: theme.card, borderColor: theme.border },
-              ]}
-            >
-              <View style={styles.nutritionGrid}>
-                <View style={styles.nutritionItem}>
-                  <Text
-                    style={[
-                      styles.nutritionLabel,
-                      { color: theme.textSecondary },
-                    ]}
-                  >
-                    Protein
-                  </Text>
-                  <Text style={[styles.nutritionValue, { color: theme.text }]}>
-                    {item.nutrition_facts.protein}g
-                  </Text>
-                </View>
-                <View style={styles.nutritionItem}>
-                  <Text
-                    style={[
-                      styles.nutritionLabel,
-                      { color: theme.textSecondary },
-                    ]}
-                  >
-                    Carbs
-                  </Text>
-                  <Text style={[styles.nutritionValue, { color: theme.text }]}>
-                    {item.nutrition_facts.carbs}g
-                  </Text>
-                </View>
-                <View style={styles.nutritionItem}>
-                  <Text
-                    style={[
-                      styles.nutritionLabel,
-                      { color: theme.textSecondary },
-                    ]}
-                  >
-                    Fat
-                  </Text>
-                  <Text style={[styles.nutritionValue, { color: theme.text }]}>
-                    {item.nutrition_facts.fat}g
-                  </Text>
-                </View>
-                <View style={styles.nutritionItem}>
-                  <Text
-                    style={[
-                      styles.nutritionLabel,
-                      { color: theme.textSecondary },
-                    ]}
-                  >
-                    Fiber
-                  </Text>
-                  <Text style={[styles.nutritionValue, { color: theme.text }]}>
-                    {item.nutrition_facts.fiber}g
-                  </Text>
-                </View>
-                <View style={styles.nutritionItem}>
-                  <Text
-                    style={[
-                      styles.nutritionLabel,
-                      { color: theme.textSecondary },
-                    ]}
-                  >
-                    Sugar
-                  </Text>
-                  <Text style={[styles.nutritionValue, { color: theme.text }]}>
-                    {item.nutrition_facts.sugar}g
-                  </Text>
-                </View>
-                <View style={styles.nutritionItem}>
-                  <Text
-                    style={[
-                      styles.nutritionLabel,
-                      { color: theme.textSecondary },
-                    ]}
-                  >
-                    Sodium
-                  </Text>
-                  <Text style={[styles.nutritionValue, { color: theme.text }]}>
-                    {item.nutrition_facts.sodium}mg
-                  </Text>
+            <View style={styles.section}>
+              <Text style={[styles.sectionTitle, { color: theme.text }]}>
+                Nutrition Facts
+              </Text>
+              <View
+                style={[
+                  styles.nutritionCard,
+                  { backgroundColor: theme.card, borderColor: theme.border },
+                ]}
+              >
+                <View style={styles.nutritionGrid}>
+                  <View style={styles.nutritionItem}>
+                    <Text
+                      style={[
+                        styles.nutritionLabel,
+                        { color: theme.textSecondary },
+                      ]}
+                    >
+                      Protein
+                    </Text>
+                    <Text
+                      style={[styles.nutritionValue, { color: theme.text }]}
+                    >
+                      {item.nutrition_facts.protein}g
+                    </Text>
+                  </View>
+                  <View style={styles.nutritionItem}>
+                    <Text
+                      style={[
+                        styles.nutritionLabel,
+                        { color: theme.textSecondary },
+                      ]}
+                    >
+                      Carbs
+                    </Text>
+                    <Text
+                      style={[styles.nutritionValue, { color: theme.text }]}
+                    >
+                      {item.nutrition_facts.carbs}g
+                    </Text>
+                  </View>
+                  <View style={styles.nutritionItem}>
+                    <Text
+                      style={[
+                        styles.nutritionLabel,
+                        { color: theme.textSecondary },
+                      ]}
+                    >
+                      Fat
+                    </Text>
+                    <Text
+                      style={[styles.nutritionValue, { color: theme.text }]}
+                    >
+                      {item.nutrition_facts.fat}g
+                    </Text>
+                  </View>
+                  <View style={styles.nutritionItem}>
+                    <Text
+                      style={[
+                        styles.nutritionLabel,
+                        { color: theme.textSecondary },
+                      ]}
+                    >
+                      Fiber
+                    </Text>
+                    <Text
+                      style={[styles.nutritionValue, { color: theme.text }]}
+                    >
+                      {item.nutrition_facts.fiber}g
+                    </Text>
+                  </View>
+                  <View style={styles.nutritionItem}>
+                    <Text
+                      style={[
+                        styles.nutritionLabel,
+                        { color: theme.textSecondary },
+                      ]}
+                    >
+                      Sugar
+                    </Text>
+                    <Text
+                      style={[styles.nutritionValue, { color: theme.text }]}
+                    >
+                      {item.nutrition_facts.sugar}g
+                    </Text>
+                  </View>
+                  <View style={styles.nutritionItem}>
+                    <Text
+                      style={[
+                        styles.nutritionLabel,
+                        { color: theme.textSecondary },
+                      ]}
+                    >
+                      Sodium
+                    </Text>
+                    <Text
+                      style={[styles.nutritionValue, { color: theme.text }]}
+                    >
+                      {item.nutrition_facts.sodium}mg
+                    </Text>
+                  </View>
                 </View>
               </View>
             </View>
           </View>
-        </View>
-      </ScrollView>
+        </ScrollView>
+      </LinearGradient>
     </SafeAreaView>
   );
 }
@@ -367,6 +328,7 @@ export default function ItemDetailsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    paddingTop: 30,
   },
   header: {
     position: 'absolute',
@@ -383,30 +345,31 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
+    position: 'relative',
   },
   itemImage: {
-    width: '100%',
-    height: 300,
+    width: 200,
+    borderRadius: 100,
+    marginHorizontal: 'auto',
+    height: 200,
   },
   detailsContainer: {
     flex: 1,
-    marginTop: -20,
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
+    marginTop: 30,
     padding: 24,
-    paddingBottom: 100,
+    paddingBottom: 10,
   },
   titleSection: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
+    justifyContent: 'center',
+    alignItems: 'center',
     marginBottom: 12,
   },
   itemName: {
     fontSize: 28,
     fontFamily: 'Inter-Bold',
     flex: 1,
-    marginRight: 16,
     lineHeight: 36,
   },
   itemPrice: {

@@ -6,24 +6,24 @@ export interface ColorTheme {
   secondary: string;
   secondaryLight: string;
   secondaryDark: string;
-  
+
   // Background colors
   background: string;
   backgroundSecondary: string;
   surface: string;
   card: string;
-  
+
   // Text colors
   text: string;
   textSecondary: string;
   textTertiary: string;
   textInverse: string;
-  
+
   // Border and divider colors
   border: string;
   borderLight: string;
   divider: string;
-  
+
   // Status colors
   success: string;
   successLight: string;
@@ -33,140 +33,197 @@ export interface ColorTheme {
   errorLight: string;
   info: string;
   infoLight: string;
-  
+
   // Input colors
   inputBackground: string;
   inputBorder: string;
   inputPlaceholder: string;
-  
+
   // Shadow and overlay
   shadow: string;
   overlay: string;
-  
+
   // Tab bar colors
   tabBarBackground: string;
   tabBarBorder: string;
   tabBarActive: string;
   tabBarInactive: string;
-  
+
   // Special colors
   accent: string;
   highlight: string;
   disabled: string;
 }
 
-export const lightTheme: ColorTheme = {
-  // Primary colors - Green theme
-  primary: '#22C55E',
-  primaryLight: '#86EFAC',
-  primaryDark: '#16A34A',
-  secondary: '#10B981',
-  secondaryLight: '#6EE7B7',
-  secondaryDark: '#059669',
-  
+export interface ColorTheme {
+  // Primary colors
+  primary: string;
+  primaryLight: string;
+  primaryDark: string;
+  secondary: string;
+  secondaryLight: string;
+  secondaryDark: string;
+
   // Background colors
-  background: '#FFFFFF',
-  backgroundSecondary: '#F8FAFC',
-  surface: '#FFFFFF',
-  card: '#FFFFFF',
-  
+  background: string;
+  backgroundSecondary: string;
+  surface: string;
+  card: string;
+
   // Text colors
-  text: '#1F2937',
-  textSecondary: '#6B7280',
-  textTertiary: '#9CA3AF',
-  textInverse: '#FFFFFF',
-  
+  text: string;
+  textSecondary: string;
+  textTertiary: string;
+  textInverse: string;
+
   // Border and divider colors
-  border: '#E5E7EB',
-  borderLight: '#F3F4F6',
-  divider: '#E5E7EB',
-  
+  border: string;
+  borderLight: string;
+  divider: string;
+
   // Status colors
-  success: '#10B981',
-  successLight: '#D1FAE5',
-  warning: '#F59E0B',
-  warningLight: '#FEF3C7',
-  error: '#EF4444',
-  errorLight: '#FEE2E2',
-  info: '#3B82F6',
-  infoLight: '#DBEAFE',
-  
+  success: string;
+  successLight: string;
+  warning: string;
+  warningLight: string;
+  error: string;
+  errorLight: string;
+  info: string;
+  infoLight: string;
+
   // Input colors
-  inputBackground: '#F9FAFB',
-  inputBorder: '#D1D5DB',
-  inputPlaceholder: '#9CA3AF',
-  
+  inputBackground: string;
+  inputBorder: string;
+  inputPlaceholder: string;
+
   // Shadow and overlay
-  shadow: '#000000',
-  overlay: 'rgba(0, 0, 0, 0.5)',
-  
+  shadow: string;
+  overlay: string;
+
   // Tab bar colors
-  tabBarBackground: '#FFFFFF',
-  tabBarBorder: '#E5E7EB',
-  tabBarActive: '#22C55E',
-  tabBarInactive: '#9CA3AF',
-  
+  tabBarBackground: string;
+  tabBarBorder: string;
+  tabBarActive: string;
+  tabBarInactive: string;
+
   // Special colors
-  accent: '#F59E0B',
-  highlight: '#FEF3C7',
-  disabled: '#D1D5DB',
+  accent: string;
+  highlight: string;
+  disabled: string;
+}
+export const lightTheme: ColorTheme = {
+  // Primary colors - Golden Yellow/Amber (matches the buttons and accents)
+  primary: 'rgba(255, 193, 7, 1)', // Sampled from active button/icon: #FFC107
+  primaryLight: 'rgba(255, 215, 64, 1)', // Lighter golden
+  primaryDark: 'rgba(230, 169, 0, 1)', // Darker golden
+  secondary: 'rgba(255, 152, 0, 1)', // A complementary orange/amber
+  secondaryLight: 'rgba(255, 183, 77, 1)',
+  secondaryDark: 'rgba(245, 124, 0, 1)',
+
+  // Background colors - Soft white/off-white with subtle depth
+  background: 'rgba(252, 252, 252, 1)', // Very light off-white background
+  backgroundSecondary: 'rgba(248, 248, 248, 1)', // Slightly deeper for subtle layers
+  surface: 'rgba(255, 255, 255, 1)', // Pure white for cards/surfaces
+  card: 'rgba(255, 255, 255, 1)', // Pure white for cards
+
+  // Text colors - Dark grey/black for contrast
+  text: 'rgba(30, 30, 30, 1)', // Very dark grey, almost black for main text
+  textSecondary: 'rgba(100, 100, 100, 1)', // Medium grey for less important text (e.g., recipe details)
+  textTertiary: 'rgba(160, 160, 160, 1)', // Light grey for subtle labels/placeholders
+  textInverse: 'rgba(255, 255, 255, 1)', // White text (used on primary-colored elements)
+
+  // Border and divider colors - Very light grey for a clean look
+  border: 'rgba(230, 230, 230, 1)',
+  borderLight: 'rgba(240, 240, 240, 1)',
+  divider: 'rgba(230, 230, 230, 1)',
+
+  // Status colors - Standard web colors (no clear status colors in the image, so keeping standard)
+  success: 'rgba(76, 175, 80, 1)',
+  successLight: 'rgba(232, 245, 233, 1)',
+  warning: 'rgba(255, 193, 7, 1)', // Using primary for warning since it's a common pattern
+  warningLight: 'rgba(254, 249, 231, 1)',
+  error: 'rgba(244, 67, 54, 1)',
+  errorLight: 'rgba(252, 232, 230, 1)',
+  info: 'rgba(33, 150, 243, 1)',
+  infoLight: 'rgba(232, 240, 254, 1)',
+
+  // Input colors (Assuming standard light design for inputs not explicitly shown)
+  inputBackground: 'rgba(248, 248, 248, 1)',
+  inputBorder: 'rgba(215, 215, 215, 1)',
+  inputPlaceholder: 'rgba(160, 160, 160, 1)',
+
+  // Shadow and overlay - Soft, subtle shadow
+  shadow: 'rgba(0, 0, 0, 0.2)', // Very light shadow for depth
+  overlay: 'rgba(30, 30, 30, 0.5)',
+
+  // Tab bar colors (Based on the bottom navigation bar)
+  tabBarBackground: 'rgba(255, 255, 255, 1)',
+  tabBarBorder: 'rgba(240, 240, 240, 1)',
+  tabBarActive: 'rgba(255, 193, 7, 1)', // Primary color
+  tabBarInactive: 'rgba(160, 160, 160, 1)', // Text tertiary color
+
+  // Special colors
+  accent: 'rgba(255, 87, 34, 1)', // A bright orange (used for the occasional red element like the heart icon)
+  highlight: 'rgba(255, 243, 224, 1)', // Lightest yellow for subtle highlight
+  disabled: 'rgba(215, 215, 215, 1)',
 };
 
 export const darkTheme: ColorTheme = {
-  // Primary colors - Green theme
-  primary: '#22C55E',
-  primaryLight: '#4ADE80',
-  primaryDark: '#15803D',
-  secondary: '#10B981',
-  secondaryLight: '#34D399',
-  secondaryDark: '#047857',
-  
-  // Background colors
-  background: '#111827',
-  backgroundSecondary: '#1F2937',
-  surface: '#1F2937',
-  card: '#374151',
-  
+  // Keeping dark theme as is since the request only focused on light mode
+  // Primary colors - Golden amber (like in the image)
+  primary: 'rgba(255, 193, 7, 1)',
+  primaryLight: 'rgba(255, 213, 79, 1)',
+  primaryDark: 'rgba(255, 160, 0, 1)',
+  secondary: 'rgba(255, 152, 0, 1)',
+  secondaryLight: 'rgba(255, 183, 77, 1)',
+  secondaryDark: 'rgba(245, 124, 0, 1)',
+
+  // Background colors - Dark sophisticated tones from image
+  background: 'rgba(26, 26, 26, 1)',
+  backgroundSecondary: 'rgba(35, 35, 35, 1)',
+  surface: 'rgba(40, 40, 40, 1)',
+  card: 'rgba(45, 45, 45, 0.7)', // Glassmorphism effect
+
   // Text colors
-  text: '#F9FAFB',
-  textSecondary: '#D1D5DB',
-  textTertiary: '#9CA3AF',
-  textInverse: '#111827',
-  
-  // Border and divider colors
-  border: '#4B5563',
-  borderLight: '#374151',
-  divider: '#4B5563',
-  
+  text: 'rgba(255, 255, 255, 1)',
+  textSecondary: 'rgba(189, 189, 189, 1)',
+  textTertiary: 'rgba(138, 138, 138, 1)',
+  textInverse: 'rgba(26, 26, 26, 1)',
+
+  // Border and divider colors - Subtle for glassmorphism
+  border: 'rgba(255, 255, 255, 0.08)',
+  borderLight: 'rgba(255, 255, 255, 0.05)',
+  divider: 'rgba(255, 255, 255, 0.08)',
+
   // Status colors
-  success: '#10B981',
-  successLight: '#064E3B',
-  warning: '#F59E0B',
-  warningLight: '#78350F',
-  error: '#EF4444',
-  errorLight: '#7F1D1D',
-  info: '#3B82F6',
-  infoLight: '#1E3A8A',
-  
+  success: 'rgba(76, 175, 80, 1)',
+  successLight: 'rgba(76, 175, 80, 0.2)',
+  warning: 'rgba(255, 193, 7, 1)',
+  warningLight: 'rgba(255, 193, 7, 0.2)',
+  error: 'rgba(244, 67, 54, 1)',
+  errorLight: 'rgba(244, 67, 54, 0.2)',
+  info: 'rgba(33, 150, 243, 1)',
+  infoLight: 'rgba(33, 150, 243, 0.2)',
+
   // Input colors
-  inputBackground: '#374151',
-  inputBorder: '#4B5563',
-  inputPlaceholder: '#9CA3AF',
-  
-  // Shadow and overlay
-  shadow: '#000000',
-  overlay: 'rgba(0, 0, 0, 0.7)',
-  
+  inputBackground: 'rgba(255, 255, 255, 0.05)',
+  inputBorder: 'rgba(255, 255, 255, 0.1)',
+  inputPlaceholder: 'rgba(138, 138, 138, 1)',
+
+  // Shadow and overlay - Enhanced for depth
+  shadow: 'rgba(0, 0, 0, 0.5)',
+  overlay: 'rgba(0, 0, 0, 0.8)',
+
   // Tab bar colors
-  tabBarBackground: '#1F2937',
-  tabBarBorder: '#374151',
-  tabBarActive: '#22C55E',
-  tabBarInactive: '#9CA3AF',
-  
+  tabBarBackground: 'rgba(35, 35, 35, 0.95)',
+  tabBarBorder: 'rgba(255, 255, 255, 0.05)',
+  tabBarActive: 'rgba(255, 193, 7, 1)',
+  tabBarInactive: 'rgba(138, 138, 138, 1)',
+
   // Special colors
-  accent: '#F59E0B',
-  highlight: '#78350F',
-  disabled: '#6B7280',
+  accent: 'rgba(255, 87, 34, 1)', // Deep orange accent
+  highlight: 'rgba(255, 193, 7, 0.15)',
+  disabled: 'rgba(97, 97, 97, 1)',
 };
 
 export const spacing = {
@@ -189,6 +246,7 @@ export const borderRadius = {
 };
 
 export const fontSize = {
+  '2xs': 8,
   xs: 12,
   sm: 14,
   base: 16,

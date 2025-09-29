@@ -11,6 +11,7 @@ import {
 } from '@expo-google-fonts/inter';
 import * as SplashScreen from 'expo-splash-screen';
 import { AlertProvider } from '@/providers/AlertProvider';
+import React from 'react';
 
 SplashScreen.preventAutoHideAsync();
 
