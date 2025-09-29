@@ -1,5 +1,5 @@
-import { Restaurant, Category, Offer, Item } from '@/stores/appStore';
 import { images } from '@/constants';
+import { Category, Item, Offer, Restaurant } from '@/types/appTypes';
 
 export const dummyCategories: Category[] = [
   {
@@ -61,9 +61,10 @@ export const dummyCategories: Category[] = [
 export const dummyRestaurants: Restaurant[] = [
   {
     id: '1',
-    name: 'Mario\'s Pizza Palace',
+    name: "Mario's Pizza Palace",
     description: 'Authentic Italian pizza made with love',
-    image_url: 'https://images.pexels.com/photos/1566837/pexels-photo-1566837.jpeg',
+    image_url:
+      'https://images.pexels.com/photos/1566837/pexels-photo-1566837.jpeg',
     rating: 4.8,
     delivery_time: '20-30 min',
     delivery_fee: 2.99,
@@ -79,7 +80,8 @@ export const dummyRestaurants: Restaurant[] = [
     id: '2',
     name: 'Burger Haven',
     description: 'Gourmet burgers and craft beers',
-    image_url: 'https://images.pexels.com/photos/1633578/pexels-photo-1633578.jpeg',
+    image_url:
+      'https://images.pexels.com/photos/1633578/pexels-photo-1633578.jpeg',
     rating: 4.6,
     delivery_time: '25-35 min',
     delivery_fee: 3.49,
@@ -95,7 +97,8 @@ export const dummyRestaurants: Restaurant[] = [
     id: '3',
     name: 'Dragon Noodle House',
     description: 'Traditional Asian noodles and stir-fry',
-    image_url: 'https://images.pexels.com/photos/1640777/pexels-photo-1640777.jpeg',
+    image_url:
+      'https://images.pexels.com/photos/1640777/pexels-photo-1640777.jpeg',
     rating: 4.7,
     delivery_time: '30-40 min',
     delivery_fee: 2.49,
@@ -111,7 +114,8 @@ export const dummyRestaurants: Restaurant[] = [
     id: '4',
     name: 'Sweet Dreams Bakery',
     description: 'Freshly baked goods and desserts',
-    image_url: 'https://images.pexels.com/photos/291528/pexels-photo-291528.jpeg',
+    image_url:
+      'https://images.pexels.com/photos/291528/pexels-photo-291528.jpeg',
     rating: 4.9,
     delivery_time: '15-25 min',
     delivery_fee: 1.99,
@@ -188,7 +192,14 @@ export const dummyItems: Item[] = [
     image_url: images.items3,
     price: 12.99,
     category: 'Burgers',
-    ingredients: ['Beef Patty', 'Cheddar Cheese', 'Lettuce', 'Tomato', 'Pickles', 'Bun'],
+    ingredients: [
+      'Beef Patty',
+      'Cheddar Cheese',
+      'Lettuce',
+      'Tomato',
+      'Pickles',
+      'Bun',
+    ],
     allergens: ['Dairy', 'Gluten'],
     calories: 520,
     prep_time: 12,
@@ -215,7 +226,14 @@ export const dummyItems: Item[] = [
     image_url: images.items4,
     price: 13.99,
     category: 'Asian',
-    ingredients: ['Rice Noodles', 'Shrimp', 'Tofu', 'Bean Sprouts', 'Peanuts', 'Lime'],
+    ingredients: [
+      'Rice Noodles',
+      'Shrimp',
+      'Tofu',
+      'Bean Sprouts',
+      'Peanuts',
+      'Lime',
+    ],
     allergens: ['Shellfish', 'Soy', 'Peanuts'],
     calories: 420,
     prep_time: 18,
@@ -242,7 +260,14 @@ export const dummyItems: Item[] = [
     image_url: images.items5,
     price: 6.99,
     category: 'Desserts',
-    ingredients: ['Chocolate', 'Flour', 'Sugar', 'Eggs', 'Butter', 'Cocoa Powder'],
+    ingredients: [
+      'Chocolate',
+      'Flour',
+      'Sugar',
+      'Eggs',
+      'Butter',
+      'Cocoa Powder',
+    ],
     allergens: ['Dairy', 'Gluten', 'Eggs'],
     calories: 450,
     prep_time: 5,
