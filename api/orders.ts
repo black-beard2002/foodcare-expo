@@ -4,13 +4,18 @@ import { Order } from '@/types/appTypes';
 export interface OrdersApi {
   getOrders: (userId?: string) => Promise<ApiResponse<Order[]>>;
   getOrderById: (id: string) => Promise<ApiResponse<Order>>;
-  createOrder: (order: Omit<Order, 'id' | 'createdAt'>) => Promise<ApiResponse<Order>>;
-  updateOrderStatus: (id: string, status: OrderStatus) => Promise<ApiResponse<Order>>;
+  createOrder: (
+    order: Omit<Order, 'id' | 'createdAt'>
+  ) => Promise<ApiResponse<Order>>;
+  updateOrderStatus: (
+    id: string,
+    status: OrderStatus
+  ) => Promise<ApiResponse<Order>>;
   cancelOrder: (id: string) => Promise<ApiResponse<void>>;
   getOrderHistory: (userId: string) => Promise<ApiResponse<Order[]>>;
 }
 
-export type OrderStatus = 'pending' | 'confirmed' | 'preparing' | 'ready' | 'completed' | 'cancelled';
+export type OrderStatus = 'pending' | 'completed' | 'cancelled';
 
 export interface OrderWithStatus extends Order {
   status: OrderStatus;
@@ -23,8 +28,8 @@ class OrdersApiImpl implements OrdersApi {
 
   async getOrders(userId?: string): Promise<ApiResponse<Order[]>> {
     try {
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
+      await new Promise((resolve) => setTimeout(resolve, 500));
+
       let filteredOrders = this.orders;
       if (userId) {
         // In a real app, you'd filter by userId
@@ -45,9 +50,9 @@ class OrdersApiImpl implements OrdersApi {
 
   async getOrderById(id: string): Promise<ApiResponse<Order>> {
     try {
-      await new Promise(resolve => setTimeout(resolve, 300));
-      
-      const order = this.orders.find(o => o.id === id);
+      await new Promise((resolve) => setTimeout(resolve, 300));
+
+      const order = this.orders.find((o) => o.id === id);
       if (!order) {
         return {
           success: false,
@@ -67,10 +72,12 @@ class OrdersApiImpl implements OrdersApi {
     }
   }
 
-  async createOrder(orderData: Omit<Order, 'id' | 'createdAt'>): Promise<ApiResponse<Order>> {
+  async createOrder(
+    orderData: Omit<Order, 'id' | 'createdAt'>
+  ): Promise<ApiResponse<Order>> {
     try {
-      await new Promise(resolve => setTimeout(resolve, 800));
-      
+      await new Promise((resolve) => setTimeout(resolve, 800));
+
       const newOrder: OrderWithStatus = {
         ...orderData,
         id: `ORD${Date.now()}`,
@@ -94,11 +101,14 @@ class OrdersApiImpl implements OrdersApi {
     }
   }
 
-  async updateOrderStatus(id: string, status: OrderStatus): Promise<ApiResponse<Order>> {
+  async updateOrderStatus(
+    id: string,
+    status: OrderStatus
+  ): Promise<ApiResponse<Order>> {
     try {
-      await new Promise(resolve => setTimeout(resolve, 400));
-      
-      const orderIndex = this.orders.findIndex(o => o.id === id);
+      await new Promise((resolve) => setTimeout(resolve, 400));
+
+      const orderIndex = this.orders.findIndex((o) => o.id === id);
       if (orderIndex === -1) {
         return {
           success: false,
@@ -126,9 +136,9 @@ class OrdersApiImpl implements OrdersApi {
 
   async cancelOrder(id: string): Promise<ApiResponse<void>> {
     try {
-      await new Promise(resolve => setTimeout(resolve, 600));
-      
-      const orderIndex = this.orders.findIndex(o => o.id === id);
+      await new Promise((resolve) => setTimeout(resolve, 600));
+
+      const orderIndex = this.orders.findIndex((o) => o.id === id);
       if (orderIndex === -1) {
         return {
           success: false,
@@ -155,11 +165,11 @@ class OrdersApiImpl implements OrdersApi {
 
   async getOrderHistory(userId: string): Promise<ApiResponse<Order[]>> {
     try {
-      await new Promise(resolve => setTimeout(resolve, 400));
-      
+      await new Promise((resolve) => setTimeout(resolve, 400));
+
       // Filter completed and cancelled orders
-      const historyOrders = this.orders.filter(o => 
-        o.status === 'completed' || o.status === 'cancelled'
+      const historyOrders = this.orders.filter(
+        (o) => o.status === 'completed' || o.status === 'cancelled'
       );
 
       return {
