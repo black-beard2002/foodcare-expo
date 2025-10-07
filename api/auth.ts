@@ -76,10 +76,7 @@ class AuthApiImpl implements AuthApi {
       const user: User = {
         id: Date.now().toString(),
         phone_number: '+1234567890',
-        email: 'demo.user@gmail.com',
-        address: '123 street, beirut',
-        date_of_birth: 'May 5,2002',
-        full_name: 'Demo User',
+        has_completed_onboarding: false,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       };
@@ -116,8 +113,10 @@ class AuthApiImpl implements AuthApi {
 
       const user: User = {
         id: Date.now().toString(),
+        phone_number: '+1234567890',
         email,
         full_name: 'Demo User',
+        has_completed_onboarding: true,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       };
@@ -152,9 +151,10 @@ class AuthApiImpl implements AuthApi {
 
       const user: User = {
         id: Date.now().toString(),
+        phone_number: userData.phone_number || '',
         email: userData.email,
-        phone_number: userData.phone_number,
         full_name: userData.full_name,
+        has_completed_onboarding: false,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       };
@@ -217,8 +217,10 @@ class AuthApiImpl implements AuthApi {
       // Return demo user for now
       const user: User = {
         id: '1',
+        phone_number: '+1234567890',
         email: 'demo@example.com',
         full_name: 'Demo User',
+        has_completed_onboarding: true,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       };
@@ -244,12 +246,15 @@ class AuthApiImpl implements AuthApi {
 
       const updatedUser: User = {
         id: userId,
-        email: userData.email || 'demo@example.com',
-        phone_number: userData.phone_number,
-        full_name: userData.full_name || 'Demo User',
-        address: userData.address || '123 street, beirut',
-        date_of_birth: userData.date_of_birth || 'May 5,2000',
+        phone_number: userData.phone_number || '+1234567890',
+        email: userData.email,
+        full_name: userData.full_name,
+        address: userData.address,
+        latitude: userData.latitude,
+        longitude: userData.longitude,
+        date_of_birth: userData.date_of_birth,
         avatar_url: userData.avatar_url,
+        has_completed_onboarding: userData.has_completed_onboarding,
         created_at: '2024-01-01T00:00:00Z',
         updated_at: new Date().toISOString(),
       };

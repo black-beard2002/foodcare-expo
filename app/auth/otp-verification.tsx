@@ -87,7 +87,7 @@ export default function OTPVerificationScreen(): JSX.Element {
     try {
       const valid = await simulateOtpVerification(otpCode);
       if (valid) {
-        router.push('/auth/setup-security');
+        router.push('/auth/onboarding-step-1');
       } else {
         setHasVerified(false);
         setOtp(['', '', '', '', '', '']);

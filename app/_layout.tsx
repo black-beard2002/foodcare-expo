@@ -55,6 +55,7 @@ export default function RootLayout() {
     (state) => state.loadTrendingSearches
   );
   const user = useAuthStore((state) => state.user);
+  const hasCompletedOnboarding = useAuthStore((state) => state.hasCompletedOnboarding);
 
   const [fontsLoaded, fontError] = useFonts({
     'Inter-Regular': Inter_400Regular,
@@ -96,7 +97,11 @@ export default function RootLayout() {
       if (isReady && (fontsLoaded || fontError)) {
         await SplashScreen.hideAsync();
         if (user) {
-          router.replace('/(tabs)');
+          if (hasCompletedOnboarding || user.has_completed_onboarding) {
+            router.replace('/(tabs)');
+          } else {
+            router.replace('/auth/onboarding-step-1');
+          }
         } else {
           router.replace('/auth');
         }
@@ -104,7 +109,7 @@ export default function RootLayout() {
     };
 
     handleNavigation();
-  }, [isReady, fontsLoaded, fontError, user]);
+  }, [isReady, fontsLoaded, fontError, user, hasCompletedOnboarding]);
 
   if (!isReady || (!fontsLoaded && !fontError)) {
     return null;
