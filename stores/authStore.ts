@@ -17,6 +17,7 @@ interface AuthState {
   setOnboardingComplete: (complete: boolean) => void;
   setLoading: (loading: boolean) => void;
   setError: (error: string | null) => void;
+  loadUserFromStorage: () => Promise<void>;
 
   // API Actions
   signInWithPhone: (
@@ -47,6 +48,12 @@ export const useAuthStore = create<AuthState>()(
       hasCompletedOnboarding: false,
       isLoading: false,
       error: null,
+      loadUserFromStorage: async () => {
+        const storedUser = await AsyncStorage.getItem('user');
+        if (storedUser) {
+          set({ user: JSON.parse(storedUser), isAuthenticated: true });
+        }
+      },
 
       setUser: (user) => set({ user }),
       setAuthenticated: (isAuthenticated) => set({ isAuthenticated }),
@@ -156,6 +163,7 @@ export const useAuthStore = create<AuthState>()(
 
           if (response.success && response.data) {
             set({ user: response.data, error: null });
+            AsyncStorage.setItem('user', JSON.stringify(response.data));
             return { success: true };
           } else {
             set({ error: response.error });
@@ -177,6 +185,7 @@ export const useAuthStore = create<AuthState>()(
             isLoading: false,
             error: null,
           });
+          await AsyncStorage.removeItem('user');
         } catch (error) {
           set({ isLoading: false, error: 'Failed to sign out' });
         }

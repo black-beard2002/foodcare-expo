@@ -16,8 +16,9 @@ import { images } from '@/constants';
 import { BlurView } from 'expo-blur';
 import MaskedView from '@react-native-masked-view/masked-view';
 import Svg, { Path } from 'react-native-svg';
+import { useAlert } from '@/providers/AlertProvider';
 
-const { height, width } = Dimensions.get('window');
+const { height } = Dimensions.get('window');
 
 // Google Logo Component
 const GoogleLogo = ({ size = 22 }) => (
@@ -42,7 +43,7 @@ const GoogleLogo = ({ size = 22 }) => (
 );
 
 export default function AuthScreen() {
-  const { theme, isDark } = useTheme();
+  const { isDark } = useTheme();
   const pulseAnim = React.useRef(new Animated.Value(1)).current;
 
   // Button slide animations

@@ -1,9 +1,7 @@
-// app/(tabs)/profile/help-center.tsx
 import React, { useState } from 'react';
 import {
   View,
   Text,
-  StyleSheet,
   TouchableOpacity,
   ScrollView,
   Linking,
@@ -17,9 +15,11 @@ import {
   ExternalLink,
   Plus,
   Minus,
+  HelpCircle,
 } from 'lucide-react-native';
 import { useTheme } from '@/hooks/useTheme';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { MotiView, AnimatePresence } from 'moti';
 
 export default function HelpCenterScreen() {
   const { theme } = useTheme();
@@ -59,6 +59,7 @@ export default function HelpCenterScreen() {
       title: 'Email Support',
       description: 'Get help via email',
       details: 'support@foodapp.com',
+      color: '#3B82F6',
       action: () => Linking.openURL('mailto:support@foodapp.com'),
     },
     {
@@ -66,31 +67,28 @@ export default function HelpCenterScreen() {
       title: 'Phone Support',
       description: 'Call our support team',
       details: '+1 (555) 123-4567',
+      color: '#10B981',
       action: () => Linking.openURL('tel:+15551234567'),
     },
-    // {
-    //   icon: MessageCircle,
-    //   title: 'Live Chat',
-    //   description: '24/7 live chat support',
-    //   details: 'Available now',
-    //   action: () => console.log('Open live chat'),
-    // },
   ];
 
   const resources = [
     {
       icon: FileText,
       title: 'Terms of Service',
+      color: '#8B5CF6',
       action: () => Linking.openURL('https://yourapp.com/terms'),
     },
     {
       icon: FileText,
       title: 'Privacy Policy',
+      color: '#EC4899',
       action: () => Linking.openURL('https://yourapp.com/privacy'),
     },
     {
       icon: FileText,
       title: 'Community Guidelines',
+      color: '#F59E0B',
       action: () => Linking.openURL('https://yourapp.com/guidelines'),
     },
   ];
@@ -101,109 +99,202 @@ export default function HelpCenterScreen() {
 
   return (
     <SafeAreaView
-      style={[styles.container, { backgroundColor: theme.background }]}
+      className="flex-1"
+      style={{ backgroundColor: theme.background }}
     >
       {/* Header */}
-      <View style={styles.header}>
+      <View
+        className="flex-row items-center justify-between px-6 py-4 border-b"
+        style={{ borderBottomColor: theme.border }}
+      >
         <TouchableOpacity
-          style={styles.backButton}
+          className="p-1"
           onPress={() => router.back()}
+          activeOpacity={0.7}
         >
-          <ArrowLeft color={theme.text} size={24} />
+          <ArrowLeft color={theme.text} size={24} strokeWidth={2} />
         </TouchableOpacity>
-        <Text style={[styles.headerTitle, { color: theme.text }]}>
+        <Text
+          className="text-xl font-bold flex-1 text-center"
+          style={{ color: theme.text }}
+        >
           Help Center
         </Text>
+        <View className="w-6" />
       </View>
 
-      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+      <ScrollView className="flex-1 px-6" showsVerticalScrollIndicator={false}>
+        {/* Welcome Card */}
+        <MotiView
+          from={{ opacity: 0, translateY: 20 }}
+          animate={{ opacity: 1, translateY: 0 }}
+          transition={{ type: 'timing', duration: 400 }}
+          className="my-6 rounded-3xl p-6 border shadow-sm"
+          style={{
+            backgroundColor: `${theme.primary}10`,
+            borderColor: `${theme.primary}30`,
+          }}
+        >
+          <View className="flex-row items-center gap-4">
+            <View
+              className="w-14 h-14 rounded-2xl justify-center items-center"
+              style={{ backgroundColor: `${theme.primary}20` }}
+            >
+              <HelpCircle color={theme.primary} size={28} strokeWidth={2} />
+            </View>
+            <View className="flex-1">
+              <Text
+                className="text-xl font-bold mb-1"
+                style={{ color: theme.text }}
+              >
+                How can we help?
+              </Text>
+              <Text className="text-sm" style={{ color: theme.textSecondary }}>
+                We're here to assist you
+              </Text>
+            </View>
+          </View>
+        </MotiView>
+
         {/* Contact Methods */}
-        <Text style={[styles.sectionTitle, { color: theme.text }]}>
+        <Text
+          className="text-sm font-semibold mb-3 uppercase tracking-wider px-1"
+          style={{ color: theme.textSecondary }}
+        >
           Get Help
         </Text>
-        <View style={styles.contactGrid}>
+        <View className="gap-3 mb-8">
           {contactMethods.map((method, index) => (
-            <TouchableOpacity
+            <MotiView
               key={index}
-              style={[
-                styles.contactCard,
-                { backgroundColor: theme.card, borderColor: theme.border },
-              ]}
-              onPress={method.action}
+              from={{ opacity: 0, translateX: -20 }}
+              animate={{ opacity: 1, translateX: 0 }}
+              transition={{ type: 'timing', duration: 300, delay: index * 100 }}
             >
-              <View
-                style={[
-                  styles.contactIconContainer,
-                  { backgroundColor: `${theme.border}` },
-                ]}
+              <TouchableOpacity
+                className="rounded-2xl p-5 border shadow-sm"
+                style={{
+                  backgroundColor: theme.card,
+                  borderColor: theme.border,
+                }}
+                onPress={method.action}
+                activeOpacity={0.7}
               >
-                <method.icon color={theme.primary} size={24} />
-              </View>
-              <Text style={[styles.contactTitle, { color: theme.text }]}>
-                {method.title}
-              </Text>
-              <Text
-                style={[
-                  styles.contactDescription,
-                  { color: theme.textSecondary },
-                ]}
-              >
-                {method.description}
-              </Text>
-              <View style={styles.contactDetails}>
-                <Text
-                  style={[styles.contactDetailsText, { color: theme.primary }]}
-                >
-                  {method.details}
-                </Text>
-                <ExternalLink color={theme.primary} size={16} />
-              </View>
-            </TouchableOpacity>
+                <View className="flex-row items-center gap-4 mb-3">
+                  <View
+                    className="w-12 h-12 rounded-xl justify-center items-center"
+                    style={{ backgroundColor: `${method.color}15` }}
+                  >
+                    <method.icon
+                      color={method.color}
+                      size={24}
+                      strokeWidth={2}
+                    />
+                  </View>
+                  <View className="flex-1">
+                    <Text
+                      className="text-lg font-bold mb-0.5"
+                      style={{ color: theme.text }}
+                    >
+                      {method.title}
+                    </Text>
+                    <Text
+                      className="text-sm"
+                      style={{ color: theme.textSecondary }}
+                    >
+                      {method.description}
+                    </Text>
+                  </View>
+                </View>
+                <View className="flex-row items-center justify-between px-1">
+                  <Text
+                    className="text-sm font-semibold"
+                    style={{ color: method.color }}
+                  >
+                    {method.details}
+                  </Text>
+                  <ExternalLink
+                    color={method.color}
+                    size={18}
+                    strokeWidth={2}
+                  />
+                </View>
+              </TouchableOpacity>
+            </MotiView>
           ))}
         </View>
 
         {/* FAQ Section */}
         <Text
-          style={[styles.sectionTitle, { color: theme.text, marginTop: 32 }]}
+          className="text-sm font-semibold mb-3 uppercase tracking-wider px-1"
+          style={{ color: theme.textSecondary }}
         >
           Frequently Asked Questions
         </Text>
         <View
-          style={[
-            styles.faqContainer,
-            { backgroundColor: theme.card, borderColor: theme.border },
-          ]}
+          className="rounded-2xl overflow-hidden border shadow-sm mb-8"
+          style={{ backgroundColor: theme.card, borderColor: theme.border }}
         >
           {faqs.map((faq, index) => (
             <View key={index}>
               <TouchableOpacity
-                style={styles.faqItem}
+                className="flex-row justify-between items-center p-5"
                 onPress={() => toggleFaq(index)}
+                activeOpacity={0.7}
               >
-                <Text style={[styles.faqQuestion, { color: theme.text }]}>
+                <Text
+                  className="text-base font-semibold flex-1 mr-4"
+                  style={{ color: theme.text }}
+                >
                   {faq.question}
                 </Text>
-                {expandedFaq === index ? (
-                  <Minus color={theme.primary} size={20} />
-                ) : (
-                  <Plus color={theme.primary} size={20} />
-                )}
-              </TouchableOpacity>
-              {expandedFaq === index && (
-                <View style={styles.faqAnswer}>
-                  <Text
-                    style={[
-                      styles.faqAnswerText,
-                      { color: theme.textSecondary },
-                    ]}
-                  >
-                    {faq.answer}
-                  </Text>
+                <View
+                  className="w-8 h-8 rounded-full justify-center items-center"
+                  style={{
+                    backgroundColor:
+                      expandedFaq === index
+                        ? `${theme.primary}20`
+                        : theme.inputBackground,
+                  }}
+                >
+                  {expandedFaq === index ? (
+                    <Minus color={theme.primary} size={18} strokeWidth={2.5} />
+                  ) : (
+                    <Plus
+                      color={theme.textSecondary}
+                      size={18}
+                      strokeWidth={2.5}
+                    />
+                  )}
                 </View>
-              )}
+              </TouchableOpacity>
+              <AnimatePresence>
+                {expandedFaq === index && (
+                  <MotiView
+                    from={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    exit={{ opacity: 0, height: 0 }}
+                    transition={{ type: 'timing', duration: 200 }}
+                    className="px-5 pb-5"
+                  >
+                    <View
+                      className="p-4 rounded-xl"
+                      style={{ backgroundColor: `${theme.primary}08` }}
+                    >
+                      <Text
+                        className="text-sm leading-6"
+                        style={{ color: theme.textSecondary }}
+                      >
+                        {faq.answer}
+                      </Text>
+                    </View>
+                  </MotiView>
+                )}
+              </AnimatePresence>
               {index < faqs.length - 1 && (
                 <View
-                  style={[styles.faqDivider, { backgroundColor: theme.border }]}
+                  className="h-px mx-5"
+                  style={{ backgroundColor: theme.border }}
                 />
               )}
             </View>
@@ -212,194 +303,82 @@ export default function HelpCenterScreen() {
 
         {/* Resources */}
         <Text
-          style={[styles.sectionTitle, { color: theme.text, marginTop: 32 }]}
+          className="text-sm font-semibold mb-3 uppercase tracking-wider px-1"
+          style={{ color: theme.textSecondary }}
         >
           Resources
         </Text>
         <View
-          style={[
-            styles.resourcesContainer,
-            { backgroundColor: theme.card, borderColor: theme.border },
-          ]}
+          className="rounded-2xl overflow-hidden border shadow-sm mb-8"
+          style={{ backgroundColor: theme.card, borderColor: theme.border }}
         >
           {resources.map((resource, index) => (
             <TouchableOpacity
               key={index}
-              disabled
-              style={[
-                styles.resourceItem,
-                index < resources.length - 1 && [
-                  styles.resourceBorder,
-                  { borderBottomColor: theme.border },
-                ],
-              ]}
+              className={`flex-row justify-between items-center p-5 ${
+                index < resources.length - 1 ? 'border-b' : ''
+              }`}
+              style={
+                index < resources.length - 1
+                  ? { borderBottomColor: theme.border }
+                  : {}
+              }
               onPress={resource.action}
+              activeOpacity={0.7}
             >
-              <View style={styles.resourceLeft}>
+              <View className="flex-row items-center flex-1 gap-3">
                 <View
-                  style={[
-                    styles.resourceIconContainer,
-                    { backgroundColor: theme.border },
-                  ]}
+                  className="w-10 h-10 rounded-xl justify-center items-center"
+                  style={{ backgroundColor: `${resource.color}15` }}
                 >
-                  <resource.icon color={theme.primary} size={20} />
+                  <resource.icon
+                    color={resource.color}
+                    size={20}
+                    strokeWidth={2}
+                  />
                 </View>
-                <Text style={[styles.resourceText, { color: theme.text }]}>
+                <Text
+                  className="text-base font-semibold flex-1"
+                  style={{ color: theme.text }}
+                >
                   {resource.title}
                 </Text>
               </View>
-              <ExternalLink color={theme.textSecondary} size={16} />
+              <ExternalLink
+                color={theme.textSecondary}
+                size={18}
+                strokeWidth={2}
+              />
             </TouchableOpacity>
           ))}
         </View>
+
+        {/* Support Info Card */}
+        <MotiView
+          from={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ type: 'timing', duration: 400, delay: 500 }}
+          className="mb-8 rounded-2xl p-5 border"
+          style={{
+            backgroundColor: `${theme.primary}10`,
+            borderColor: `${theme.primary}30`,
+          }}
+        >
+          <Text
+            className="text-sm font-semibold mb-2"
+            style={{ color: theme.text }}
+          >
+            Still need help?
+          </Text>
+          <Text
+            className="text-xs leading-5"
+            style={{ color: theme.textSecondary }}
+          >
+            Our support team is available 24/7 to assist you with any questions
+            or concerns you may have.
+          </Text>
+        </MotiView>
       </ScrollView>
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 24,
-    paddingVertical: 16,
-  },
-  backButton: {
-    padding: 4,
-  },
-  headerTitle: {
-    fontSize: 18,
-    fontFamily: 'Inter-Bold',
-    flex: 1,
-    textAlign: 'center',
-  },
-  headerRight: {
-    width: 24,
-  },
-  content: {
-    flex: 1,
-    padding: 24,
-  },
-  sectionTitle: {
-    fontSize: 20,
-    fontFamily: 'Inter-Bold',
-    marginBottom: 16,
-  },
-  contactGrid: {
-    gap: 12,
-  },
-  contactCard: {
-    padding: 20,
-    borderRadius: 16,
-    borderWidth: 1,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  contactIconContainer: {
-    width: 48,
-    height: 48,
-    borderRadius: 12,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  contactTitle: {
-    fontSize: 18,
-    fontFamily: 'Inter-SemiBold',
-    marginBottom: 4,
-  },
-  contactDescription: {
-    fontSize: 14,
-    fontFamily: 'Inter-Regular',
-    marginBottom: 12,
-  },
-  contactDetails: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  contactDetailsText: {
-    fontSize: 14,
-    fontFamily: 'Inter-Medium',
-  },
-  faqContainer: {
-    borderRadius: 16,
-    borderWidth: 1,
-    overflow: 'hidden',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  faqItem: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: 20,
-  },
-  faqQuestion: {
-    fontSize: 16,
-    fontFamily: 'Inter-Medium',
-    flex: 1,
-    marginRight: 16,
-  },
-  faqAnswer: {
-    padding: 20,
-    paddingTop: 0,
-  },
-  faqAnswerText: {
-    fontSize: 14,
-    fontFamily: 'Inter-Regular',
-    lineHeight: 20,
-  },
-  faqDivider: {
-    height: 1,
-    marginHorizontal: 20,
-  },
-  resourcesContainer: {
-    borderRadius: 16,
-    borderWidth: 1,
-    overflow: 'hidden',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 4,
-    marginBottom: 60,
-    elevation: 3,
-  },
-  resourceItem: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: 20,
-  },
-  resourceBorder: {
-    borderBottomWidth: 1,
-  },
-  resourceLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flex: 1,
-  },
-  resourceIconContainer: {
-    width: 40,
-    height: 40,
-    borderRadius: 12,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 16,
-  },
-  resourceText: {
-    fontSize: 16,
-    fontFamily: 'Inter-Medium',
-    flex: 1,
-  },
-});

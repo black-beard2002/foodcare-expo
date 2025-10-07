@@ -2,309 +2,312 @@ import React from 'react';
 import {
   View,
   Text,
-  StyleSheet,
   TouchableOpacity,
   ScrollView,
   Switch,
+  ColorValue,
 } from 'react-native';
 import { router } from 'expo-router';
-import { ArrowLeft, Palette, Moon, Sun, Smartphone } from 'lucide-react-native';
+import {
+  ArrowLeft,
+  Palette,
+  Moon,
+  Sun,
+  Smartphone,
+  Check,
+  LucideIcon,
+} from 'lucide-react-native';
 import { useTheme } from '@/hooks/useTheme';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { MotiView } from 'moti';
+import { LinearGradient } from 'expo-linear-gradient';
 
+interface ThemeOptions {
+  key: 'light' | 'dark' | 'system';
+  label: string;
+  icon: LucideIcon;
+  description: string;
+  color: string;
+  gradient: [ColorValue, ColorValue];
+}
 export default function SettingsScreen() {
   const { theme, isDark, toggleTheme, setTheme, currentTheme } = useTheme();
 
-  const themeOptions = [
+  const themeOptions: ThemeOptions[] = [
     {
       key: 'light',
       label: 'Light',
       icon: Sun,
       description: 'Always use light theme',
+      color: '#F59E0B',
+      gradient: ['#FEF3C7', '#FCD34D'],
     },
     {
       key: 'dark',
       label: 'Dark',
       icon: Moon,
       description: 'Always use dark theme',
+      color: '#8B5CF6',
+      gradient: ['#DDD6FE', '#A78BFA'],
     },
     {
       key: 'system',
       label: 'System',
       icon: Smartphone,
       description: 'Follow system settings',
+      color: '#3B82F6',
+      gradient: ['#DBEAFE', '#93C5FD'],
     },
   ];
 
   return (
     <SafeAreaView
-      style={[styles.container, { backgroundColor: theme.background }]}
+      className="flex-1"
+      style={{ backgroundColor: theme.background }}
     >
-      <View style={styles.header}>
+      <View className="flex-row items-center px-5 pt-4 pb-6">
         <TouchableOpacity
           onPress={() => router.back()}
-          style={[
-            styles.backButton,
-            { backgroundColor: theme.inputBackground },
-          ]}
+          className="w-10 h-10 rounded-xl justify-center items-center mr-4"
+          style={{ backgroundColor: theme.inputBackground }}
+          activeOpacity={0.7}
         >
-          <ArrowLeft color={theme.text} size={20} />
+          <ArrowLeft color={theme.text} size={20} strokeWidth={2} />
         </TouchableOpacity>
-        <Text style={[styles.title, { color: theme.text }]}>Settings</Text>
+        <Text className="text-2xl font-bold" style={{ color: theme.text }}>
+          Appearance
+        </Text>
       </View>
 
-      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-        <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <Palette color={theme.primary} size={24} />
-            <Text style={[styles.sectionTitle, { color: theme.text }]}>
-              Appearance
-            </Text>
-          </View>
-
-          <View
-            style={[
-              styles.sectionContent,
-              { backgroundColor: theme.card, borderColor: theme.border },
-            ]}
+      <ScrollView className="flex-1 px-5" showsVerticalScrollIndicator={false}>
+        {/* Theme Preview Card */}
+        <MotiView
+          from={{ opacity: 0, translateY: 20 }}
+          animate={{ opacity: 1, translateY: 0 }}
+          transition={{ type: 'timing', duration: 400 }}
+          className="mb-6 rounded-3xl overflow-hidden shadow-lg"
+          style={{
+            backgroundColor: theme.card,
+            borderWidth: 1,
+            borderColor: theme.border,
+          }}
+        >
+          <LinearGradient
+            colors={isDark ? ['#1F2937', '#111827'] : ['#F3F4F6', '#E5E7EB']}
+            className="p-6"
           >
-            <View style={styles.quickToggle}>
-              <Text style={[styles.quickToggleLabel, { color: theme.text }]}>
-                Dark Mode
-              </Text>
+            <View className="flex-row items-center justify-center mb-4">
+              <View
+                className="w-16 h-16 rounded-2xl justify-center items-center"
+                style={{ backgroundColor: `${theme.primary}20` }}
+              >
+                <Palette color={theme.primary} size={32} strokeWidth={2} />
+              </View>
+            </View>
+            <Text
+              className="text-center text-lg font-bold mb-2"
+              style={{ color: theme.text }}
+            >
+              Current Theme
+            </Text>
+            <Text
+              className="text-center text-sm"
+              style={{ color: theme.textSecondary }}
+            >
+              {currentTheme === 'light' && 'Light mode is active'}
+              {currentTheme === 'dark' && 'Dark mode is active'}
+              {currentTheme === 'system' && 'Following system preference'}
+            </Text>
+          </LinearGradient>
+        </MotiView>
+
+        {/* Quick Toggle Section */}
+        <View className="mb-6">
+          <View
+            className="rounded-2xl p-5 shadow-sm"
+            style={{
+              backgroundColor: theme.card,
+              borderWidth: 1,
+              borderColor: theme.border,
+            }}
+          >
+            <View className="flex-row justify-between items-center">
+              <View className="flex-row items-center flex-1 gap-3">
+                <View
+                  className="w-12 h-12 rounded-xl justify-center items-center"
+                  style={{ backgroundColor: `${theme.primary}15` }}
+                >
+                  {isDark ? (
+                    <Moon color={theme.primary} size={24} strokeWidth={2} />
+                  ) : (
+                    <Sun color={theme.primary} size={24} strokeWidth={2} />
+                  )}
+                </View>
+                <View className="flex-1">
+                  <Text
+                    className="text-base font-semibold mb-0.5"
+                    style={{ color: theme.text }}
+                  >
+                    Dark Mode
+                  </Text>
+                  <Text
+                    className="text-xs"
+                    style={{ color: theme.textSecondary }}
+                  >
+                    Quick toggle theme
+                  </Text>
+                </View>
+              </View>
               <Switch
                 value={isDark}
                 onValueChange={toggleTheme}
                 trackColor={{ false: theme.border, true: theme.primary }}
                 thumbColor="#FFFFFF"
+                ios_backgroundColor={theme.border}
               />
             </View>
-
-            <View style={styles.divider} />
-
-            <Text
-              style={[styles.subsectionTitle, { color: theme.textSecondary }]}
-            >
-              Theme Options
-            </Text>
-
-            {themeOptions.map((option, index) => (
-              <TouchableOpacity
-                key={option.key}
-                style={[
-                  styles.themeOption,
-                  {
-                    backgroundColor:
-                      currentTheme === option.key
-                        ? theme.primaryLight
-                        : 'transparent',
-                    borderColor:
-                      currentTheme === option.key
-                        ? theme.primary
-                        : theme.border,
-                  },
-                  index < themeOptions.length - 1 && styles.themeOptionBorder,
-                ]}
-                onPress={() => setTheme(option.key as any)}
-              >
-                <View style={styles.themeOptionLeft}>
-                  <View
-                    style={[
-                      styles.themeIconContainer,
-                      {
-                        backgroundColor:
-                          currentTheme === option.key
-                            ? theme.primary
-                            : theme.inputBackground,
-                      },
-                    ]}
-                  >
-                    <option.icon
-                      color={
-                        currentTheme === option.key
-                          ? '#FFFFFF'
-                          : theme.textSecondary
-                      }
-                      size={20}
-                    />
-                  </View>
-                  <View style={styles.themeOptionText}>
-                    <Text
-                      style={[
-                        styles.themeOptionLabel,
-                        {
-                          color:
-                            currentTheme === option.key
-                              ? theme.primaryDark
-                              : theme.text,
-                        },
-                      ]}
-                    >
-                      {option.label}
-                    </Text>
-                    <Text
-                      style={[
-                        styles.themeOptionDescription,
-                        { color: theme.textSecondary },
-                      ]}
-                    >
-                      {option.description}
-                    </Text>
-                  </View>
-                </View>
-                {currentTheme === option.key && (
-                  <View
-                    style={[
-                      styles.selectedIndicator,
-                      { backgroundColor: theme.primary },
-                    ]}
-                  />
-                )}
-              </TouchableOpacity>
-            ))}
           </View>
         </View>
 
-        <View style={styles.section}>
-          <Text style={[styles.sectionTitle, { color: theme.text }]}>
-            About Theme
-          </Text>
-          <View
-            style={[
-              styles.infoCard,
-              { backgroundColor: theme.card, borderColor: theme.border },
-            ]}
+        {/* Theme Options Section */}
+        <View className="mb-6">
+          <Text
+            className="text-xs font-semibold mb-3 uppercase tracking-wider px-1"
+            style={{ color: theme.textSecondary }}
           >
-            <Text style={[styles.infoText, { color: theme.textSecondary }]}>
-              The app uses a green-based color scheme that adapts to your
-              selected theme preference. System theme automatically switches
-              between light and dark modes based on your device settings.
-            </Text>
+            Theme Options
+          </Text>
+
+          <View className="gap-3">
+            {themeOptions.map((option, index) => {
+              const isSelected = currentTheme === option.key;
+              return (
+                <MotiView
+                  key={option.key}
+                  from={{ opacity: 0, translateX: -20 }}
+                  animate={{ opacity: 1, translateX: 0 }}
+                  transition={{
+                    type: 'timing',
+                    duration: 300,
+                    delay: index * 100,
+                  }}
+                >
+                  <TouchableOpacity
+                    className="rounded-2xl p-4 overflow-hidden shadow-sm"
+                    style={{
+                      backgroundColor: isSelected
+                        ? `${option.color}15`
+                        : theme.card,
+                      borderWidth: 2,
+                      borderColor: isSelected ? option.color : theme.border,
+                    }}
+                    onPress={() => setTheme(option.key as any)}
+                    activeOpacity={0.7}
+                  >
+                    <View className="flex-row items-center">
+                      <View className="flex-row items-center flex-1 gap-4">
+                        <View className="relative">
+                          <View
+                            className="w-14 h-14 rounded-2xl justify-center items-center overflow-hidden"
+                            style={{
+                              backgroundColor: isSelected
+                                ? option.color
+                                : theme.inputBackground,
+                            }}
+                          >
+                            {isSelected ? (
+                              <LinearGradient
+                                colors={option.gradient}
+                                className="w-full h-full justify-center items-center"
+                              >
+                                <option.icon
+                                  color={option.color}
+                                  size={26}
+                                  strokeWidth={2.5}
+                                />
+                              </LinearGradient>
+                            ) : (
+                              <option.icon
+                                color={theme.textSecondary}
+                                size={26}
+                                strokeWidth={2}
+                              />
+                            )}
+                          </View>
+                          {isSelected && (
+                            <MotiView
+                              from={{ scale: 0 }}
+                              animate={{ scale: 1 }}
+                              transition={{ type: 'spring', damping: 12 }}
+                              className="absolute -top-1 -right-1 w-6 h-6 rounded-full justify-center items-center shadow-md"
+                              style={{ backgroundColor: option.color }}
+                            >
+                              <Check color="#fff" size={14} strokeWidth={3} />
+                            </MotiView>
+                          )}
+                        </View>
+                        <View className="flex-1">
+                          <Text
+                            className="text-lg font-bold mb-0.5"
+                            style={{
+                              color: isSelected ? option.color : theme.text,
+                            }}
+                          >
+                            {option.label}
+                          </Text>
+                          <Text
+                            className="text-sm leading-5"
+                            style={{ color: theme.textSecondary }}
+                          >
+                            {option.description}
+                          </Text>
+                        </View>
+                      </View>
+                    </View>
+                  </TouchableOpacity>
+                </MotiView>
+              );
+            })}
           </View>
         </View>
+
+        {/* Info Card */}
+        <MotiView
+          from={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ type: 'timing', duration: 400, delay: 400 }}
+          className="mb-8 rounded-2xl p-5 border"
+          style={{
+            backgroundColor: `${theme.primary}10`,
+            borderColor: `${theme.primary}30`,
+          }}
+        >
+          <View className="flex-row items-start gap-3">
+            <View
+              className="w-10 h-10 rounded-full justify-center items-center mt-0.5"
+              style={{ backgroundColor: `${theme.primary}20` }}
+            >
+              <Palette color={theme.primary} size={20} strokeWidth={2.5} />
+            </View>
+            <View className="flex-1">
+              <Text
+                className="text-base font-bold mb-2"
+                style={{ color: theme.text }}
+              >
+                About Theme
+              </Text>
+              <Text
+                className="text-sm leading-6"
+                style={{ color: theme.textSecondary }}
+              >
+                The app uses a dynamic color scheme that adapts to your selected
+                theme preference. System theme automatically switches between
+                light and dark modes based on your device settings.
+              </Text>
+            </View>
+          </View>
+        </MotiView>
       </ScrollView>
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingTop: 16,
-    paddingBottom: 24,
-  },
-  backButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 12,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 16,
-  },
-  title: {
-    fontSize: 24,
-    fontFamily: 'Inter-Bold',
-  },
-  content: {
-    flex: 1,
-    paddingHorizontal: 20,
-  },
-  section: {
-    marginBottom: 32,
-  },
-  sectionHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 16,
-    gap: 12,
-  },
-  sectionTitle: {
-    fontSize: 20,
-    fontFamily: 'Inter-Bold',
-  },
-  sectionContent: {
-    borderRadius: 16,
-    borderWidth: 1,
-    padding: 20,
-  },
-  quickToggle: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 20,
-  },
-  quickToggleLabel: {
-    fontSize: 16,
-    fontFamily: 'Inter-Medium',
-  },
-  divider: {
-    height: 1,
-    backgroundColor: '#E5E7EB',
-    marginBottom: 20,
-  },
-  subsectionTitle: {
-    fontSize: 14,
-    fontFamily: 'Inter-Medium',
-    marginBottom: 16,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-  },
-  themeOption: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    padding: 16,
-    borderRadius: 12,
-    borderWidth: 2,
-    marginBottom: 12,
-  },
-  themeOptionBorder: {
-    marginBottom: 12,
-  },
-  themeOptionLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flex: 1,
-  },
-  themeIconContainer: {
-    width: 40,
-    height: 40,
-    borderRadius: 12,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 16,
-  },
-  themeOptionText: {
-    flex: 1,
-  },
-  themeOptionLabel: {
-    fontSize: 16,
-    fontFamily: 'Inter-Medium',
-    marginBottom: 2,
-  },
-  themeOptionDescription: {
-    fontSize: 14,
-    fontFamily: 'Inter-Regular',
-    lineHeight: 20,
-  },
-  selectedIndicator: {
-    width: 20,
-    height: 20,
-    borderRadius: 10,
-  },
-  infoCard: {
-    padding: 16,
-    borderRadius: 12,
-    borderWidth: 1,
-  },
-  infoText: {
-    fontSize: 14,
-    fontFamily: 'Inter-Regular',
-    lineHeight: 20,
-  },
-});

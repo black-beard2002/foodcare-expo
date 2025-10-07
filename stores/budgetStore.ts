@@ -7,19 +7,20 @@ const BUDGET_STORAGE_KEY = '@budget_tracker_storage';
 interface BudgetState {
   budgetData: BudgetTracker;
   isLoading: boolean;
-
   loadBudgetData: () => Promise<void>;
   setMonthlyLimit: (limit: number) => Promise<void>;
   addExpense: (category: string, amount: number) => Promise<void>;
   isOverBudget: () => boolean;
   getRemainingBudget: () => number;
   getSpendingPercentage: () => number;
+  clearBudgetData: () => Promise<void>;
 }
 
 export const useBudgetStore = create<BudgetState>((set, get) => ({
   budgetData: {
     monthly_limit: undefined,
     current_month_spending: 0,
+    overall_spending: 0,
     spending_by_category: [],
     spending_history: [],
   },
@@ -37,6 +38,22 @@ export const useBudgetStore = create<BudgetState>((set, get) => ({
     } catch (error) {
       console.error('Error loading budget data:', error);
       set({ isLoading: false });
+    }
+  },
+  clearBudgetData: async () => {
+    try {
+      await AsyncStorage.removeItem(BUDGET_STORAGE_KEY);
+      set({
+        budgetData: {
+          monthly_limit: undefined,
+          current_month_spending: 0,
+          overall_spending: 0,
+          spending_by_category: [],
+          spending_history: [],
+        },
+      });
+    } catch (error) {
+      console.error('Error clearing budget data:', error);
     }
   },
 
@@ -81,6 +98,7 @@ export const useBudgetStore = create<BudgetState>((set, get) => ({
 
     const updated: BudgetTracker = {
       ...budgetData,
+      overall_spending: budgetData.overall_spending + amount,
       current_month_spending: newSpending,
       spending_by_category: updatedCategories,
       spending_history: updatedHistory,

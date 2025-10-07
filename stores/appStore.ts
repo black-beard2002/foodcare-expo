@@ -28,14 +28,12 @@ interface AppState {
   refreshData: () => Promise<void>;
 
   // Cart Actions
-  loadCart: () => Promise<void>;
   addToCart: (offer: Offer, quantity?: number) => Promise<void>;
   updateCartItem: (itemId: string, quantity: number) => Promise<void>;
   removeFromCart: (itemId: string) => Promise<void>;
   clearCart: () => Promise<void>;
   getCartTotal: () => number;
   getCartItemCount: () => number;
-  saveCart: () => Promise<void>;
 }
 
 export const useAppStore = create<AppState>()((set, get) => ({
@@ -89,28 +87,8 @@ export const useAppStore = create<AppState>()((set, get) => ({
     await Promise.all([fetchCategories(), fetchOffers()]);
   },
 
-  loadCart: async () => {
-    try {
-      const stored = await AsyncStorage.getItem(CART_STORAGE_KEY);
-      if (stored) {
-        set({ cart: JSON.parse(stored) });
-      }
-    } catch (error) {
-      console.error('Error loading cart:', error);
-    }
-  },
-
-  saveCart: async () => {
-    try {
-      const { cart } = get();
-      await AsyncStorage.setItem(CART_STORAGE_KEY, JSON.stringify(cart));
-    } catch (error) {
-      console.error('Error saving cart:', error);
-    }
-  },
-
   addToCart: async (offer, quantity = 1) => {
-    const { cart, saveCart } = get();
+    const { cart } = get();
     const existingItem = cart.find((item) => item.offer.id === offer.id);
 
     if (existingItem) {
@@ -133,11 +111,10 @@ export const useAppStore = create<AppState>()((set, get) => ({
         ],
       });
     }
-    await saveCart();
   },
 
   updateCartItem: async (itemId, quantity) => {
-    const { cart, saveCart } = get();
+    const { cart } = get();
     if (quantity <= 0) {
       set({ cart: cart.filter((item) => item.id !== itemId) });
     } else {
@@ -147,13 +124,11 @@ export const useAppStore = create<AppState>()((set, get) => ({
         ),
       });
     }
-    await saveCart();
   },
 
   removeFromCart: async (itemId) => {
-    const { cart, saveCart } = get();
+    const { cart } = get();
     set({ cart: cart.filter((item) => item.id !== itemId) });
-    await saveCart();
   },
 
   clearCart: async () => {

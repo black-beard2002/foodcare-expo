@@ -14,14 +14,11 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Item } from '@/types/appTypes';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useTheme } from '@/hooks/useTheme';
-import { useFavoritesStore } from '@/stores/favoritesStore';
 
 export default function ItemDetailsScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const [item, setItem] = useState<Item | null>(null);
   const { theme } = useTheme();
-  const { isFavorite, addToFavorites, removeFromFavorites } =
-    useFavoritesStore();
 
   useEffect(() => {
     const foundItem = dummyItems.find((i) => i.id === id);
@@ -37,14 +34,6 @@ export default function ItemDetailsScreen() {
       </View>
     );
   }
-
-  const handleFavoritePress = () => {
-    if (isFavorite(id)) {
-      removeFromFavorites(id);
-    } else {
-      addToFavorites(item);
-    }
-  };
 
   return (
     <SafeAreaView
@@ -73,24 +62,6 @@ export default function ItemDetailsScreen() {
             source={item.image_url}
             style={styles.itemImage}
           />
-
-          <TouchableOpacity
-            onPress={handleFavoritePress}
-            style={[
-              {
-                position: 'absolute',
-                top: 10,
-                right: 40,
-                backgroundColor: isFavorite(id) ? theme.accent : theme.card,
-                padding: 10,
-                borderRadius: 15,
-                justifyContent: 'center',
-                alignItems: 'center',
-              },
-            ]}
-          >
-            <Heart fill={isFavorite(id) ? 'white' : 'gray'} strokeWidth={0} />
-          </TouchableOpacity>
 
           <View
             style={[styles.detailsContainer, { backgroundColor: theme.card }]}

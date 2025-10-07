@@ -314,7 +314,7 @@ export default function HomeScreen(): JSX.Element {
                 className="flex-row items-center gap-1 px-2 py-1 rounded-xl"
                 style={{ backgroundColor: theme.warning + '20' }}
               >
-                <Star fill={theme.text} color={theme.warning} size={14} />
+                <Star color={theme.warning} size={14} />
                 <Text
                   className="text-xs font-semibold"
                   style={{ color: theme.text }}
@@ -371,7 +371,7 @@ export default function HomeScreen(): JSX.Element {
           <View className="flex-row justify-between items-center">
             <TouchableOpacity
               onPress={() => handleAddToCart(offer)}
-              className="flex-row items-center gap-1 px-4 py-3 rounded-xl"
+              className="flex-row items-center gap-1 px-7 py-3 rounded-xl"
               style={{ backgroundColor: theme.warning }}
             >
               <ShoppingCart color={theme.text} size={18} />
@@ -379,7 +379,7 @@ export default function HomeScreen(): JSX.Element {
                 className="text-sm font-semibold"
                 style={{ color: theme.text }}
               >
-                Add To Cart
+                Add
               </Text>
             </TouchableOpacity>
             <View className="flex-row items-center gap-2">
@@ -520,7 +520,7 @@ export default function HomeScreen(): JSX.Element {
                 className="flex-row items-center gap-1 px-2 py-1 rounded-xl"
                 style={{ backgroundColor: theme.warning + '20' }}
               >
-                <Star fill={theme.text} color={theme.warning} size={12} />
+                <Star color={theme.warning} size={12} />
                 <Text
                   className="text-xs font-semibold"
                   style={{ color: theme.text }}

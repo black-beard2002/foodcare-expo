@@ -9,10 +9,7 @@ interface FavoritesState {
   isLoading: boolean;
   isNewFavoritedAdded: boolean;
   setIsNewFavoritedAdded: (value: boolean) => void;
-  addToFavorites: (
-    offer: Offer | Item,
-    enablePriceAlert?: boolean
-  ) => Promise<void>;
+  addToFavorites: (offer: Offer, enablePriceAlert?: boolean) => Promise<void>;
   removeFromFavorites: (offerId: string) => Promise<void>;
   togglePriceAlert: (favoriteId: string) => Promise<void>;
   isFavorite: (offerId: string) => boolean;
@@ -59,7 +56,7 @@ export const useFavoritesStore = create<FavoritesState>((set, get) => ({
       added_at: new Date().toISOString(),
       price_alert_enabled: enablePriceAlert,
       original_price_tracked:
-        'discounted_price' in offer ? offer.discounted_price : 0,
+        offer.discounted_price || offer.original_price || 0,
     };
 
     const updated = [...favorites, newFavorite];
@@ -122,7 +119,6 @@ export const useFavoritesStore = create<FavoritesState>((set, get) => ({
     return favorites.filter(
       (fav) =>
         fav.price_alert_enabled &&
-        'discounted_price' in fav.favorited &&
         fav.favorited.discounted_price < fav.original_price_tracked
     );
   },

@@ -173,7 +173,8 @@ export default function OTPVerificationScreen(): JSX.Element {
         {/* Icon */}
         <LinearGradient
           colors={accentGradient}
-          className="w-20 h-20 rounded-full justify-center items-center mb-8"
+          style={{ borderRadius: 16 }}
+          className="w-20 h-20  justify-center items-center mb-8"
         >
           <Shield color={theme.text} size={48} />
         </LinearGradient>

@@ -247,6 +247,8 @@ class AuthApiImpl implements AuthApi {
         email: userData.email || 'demo@example.com',
         phone_number: userData.phone_number,
         full_name: userData.full_name || 'Demo User',
+        address: userData.address || '123 street, beirut',
+        date_of_birth: userData.date_of_birth || 'May 5,2000',
         avatar_url: userData.avatar_url,
         created_at: '2024-01-01T00:00:00Z',
         updated_at: new Date().toISOString(),

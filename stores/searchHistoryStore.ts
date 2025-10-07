@@ -19,7 +19,7 @@ interface SearchHistoryState {
 
 export const useSearchHistoryStore = create<SearchHistoryState>((set, get) => ({
   searchHistory: [],
-  trendingSearches: [],
+  trendingSearches: ['Pizza', 'Burger', 'Sushi', 'Pasta', 'Salad'],
   isLoading: false,
 
   loadSearchHistory: async () => {
@@ -55,7 +55,10 @@ export const useSearchHistoryStore = create<SearchHistoryState>((set, get) => ({
     set({ searchHistory: updated });
 
     try {
-      await AsyncStorage.setItem(SEARCH_HISTORY_STORAGE_KEY, JSON.stringify(updated));
+      await AsyncStorage.setItem(
+        SEARCH_HISTORY_STORAGE_KEY,
+        JSON.stringify(updated)
+      );
     } catch (error) {
       console.error('Error saving search query:', error);
     }
@@ -67,7 +70,10 @@ export const useSearchHistoryStore = create<SearchHistoryState>((set, get) => ({
     set({ searchHistory: updated });
 
     try {
-      await AsyncStorage.setItem(SEARCH_HISTORY_STORAGE_KEY, JSON.stringify(updated));
+      await AsyncStorage.setItem(
+        SEARCH_HISTORY_STORAGE_KEY,
+        JSON.stringify(updated)
+      );
     } catch (error) {
       console.error('Error removing search query:', error);
     }

@@ -2,7 +2,6 @@ import React, { useState, useEffect, useCallback } from 'react';
 import {
   View,
   Text,
-  StyleSheet,
   TextInput,
   TouchableOpacity,
   FlatList,
@@ -11,24 +10,38 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
-import { ArrowLeft, Search, X, Clock, Star } from 'lucide-react-native';
+import {
+  ArrowLeft,
+  Search,
+  X,
+  Clock,
+  Star,
+  ChefHat,
+} from 'lucide-react-native';
 import { useTheme } from '@/hooks/useTheme';
 import { useAppStore } from '@/stores/appStore';
-import { spacing, borderRadius, fontSize, shadows } from '@/constants/theme';
+import { useRecentlyViewedStore } from '@/stores/recentlyViewedStore';
+import { useSearchHistoryStore } from '@/stores/searchHistoryStore';
+import { SearchHistory } from '@/types/appTypes';
 
 export default function SearchScreen() {
   const { theme } = useTheme();
   const { offers, restaurants } = useAppStore();
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<any[]>([]);
+  const { clearRecentlyViewed, recentlyViewed } = useRecentlyViewedStore();
+  const {
+    addSearchQuery,
+    clearSearchHistory,
+    loadSearchHistory,
+    loadTrendingSearches,
+    removeSearchQuery,
+    searchHistory,
+    trendingSearches,
+  } = useSearchHistoryStore();
   const [isSearching, setIsSearching] = useState(false);
-  const [recentSearches, setRecentSearches] = useState<string[]>([
-    'Pizza',
-    'Sushi',
-    'Burgers',
-    'Pasta',
-    'Donuts',
-  ]);
+  const [recentSearches, setRecentSearches] =
+    useState<SearchHistory[]>(searchHistory);
 
   const performSearch = useCallback(
     (query: string) => {
@@ -39,21 +52,18 @@ export default function SearchScreen() {
 
       setIsSearching(true);
 
-      // Simulate search delay
       setTimeout(() => {
         const lowerQuery = query.toLowerCase();
 
-        // Search in offers
-        const offerResults = offers
+        const recentResults = offers
           .filter(
-            (offer: any) =>
-              offer.title.toLowerCase().includes(lowerQuery) ||
-              offer.description.toLowerCase().includes(lowerQuery) ||
-              offer.restaurant.name.toLowerCase().includes(lowerQuery)
+            (recent: any) =>
+              recent.title.toLowerCase().includes(lowerQuery) ||
+              recent.description.toLowerCase().includes(lowerQuery) ||
+              recent.restaurant.name.toLowerCase().includes(lowerQuery)
           )
-          .map((offer: any) => ({ ...offer, type: 'offer' }));
+          .map((recent: any) => ({ ...recent, type: 'recent' }));
 
-        // Search in restaurants
         const restaurantResults = restaurants
           .filter(
             (restaurant: any) =>
@@ -62,7 +72,7 @@ export default function SearchScreen() {
           )
           .map((restaurant: any) => ({ ...restaurant, type: 'restaurant' }));
 
-        setSearchResults([...offerResults, ...restaurantResults]);
+        setSearchResults([...recentResults, ...restaurantResults]);
         setIsSearching(false);
       }, 300);
     },
@@ -83,52 +93,72 @@ export default function SearchScreen() {
 
   const handleRecentSearch = (query: string) => {
     setSearchQuery(query);
-    if (!recentSearches.includes(query)) {
-      setRecentSearches([query, ...recentSearches.slice(0, 4)]);
-    }
+    performSearch(query);
+    addSearchQuery(query);
+    setRecentSearches((prev) => {
+      const filtered = prev.filter(
+        (item) => item.query.toLowerCase() !== query.toLowerCase()
+      );
+      const newItem: SearchHistory = {
+        id: `search_${Date.now()}`,
+        query: query.trim(),
+        searched_at: new Date().toISOString(),
+      };
+      return [newItem, ...filtered].slice(0, 10);
+    });
   };
 
   const clearRecentSearches = () => {
     setRecentSearches([]);
   };
 
-  const removeRecentSearch = (query: string) => {
-    setRecentSearches(recentSearches.filter((q) => q !== query));
+  const removeRecentSearch = (id: string) => {
+    removeSearchQuery(id);
+    const query = recentSearches.find((item) => item.id === id)?.query;
+    setRecentSearches((prev) =>
+      prev.filter((item) => item.query.toLowerCase() !== query?.toLowerCase())
+    );
   };
 
   const renderSearchResult = ({ item }: { item: any }) => {
-    if (item.type === 'offer') {
+    if (item.type === 'recent') {
       return (
         <TouchableOpacity
-          style={[
-            styles.resultCard,
-            { backgroundColor: theme.card, borderColor: theme.border },
-          ]}
+          className="flex-row rounded-lg border mb-3 overflow-hidden"
+          style={{ backgroundColor: theme.card, borderColor: theme.border }}
           onPress={() =>
             router.push(`/(in_app_screens)/offer-details?id=${item.id}`)
           }
         >
-          <Image source={item.image_url} style={styles.resultImage} />
-          <View style={styles.resultContent}>
+          <Image source={item.image_url} className="w-[120px] h-full" />
+          <View className="flex-1 p-3 justify-between">
             <Text
-              style={[styles.resultTitle, { color: theme.text }]}
+              className="text-base font-semibold mb-1"
+              style={{ color: theme.text }}
               numberOfLines={1}
             >
               {item.title}
             </Text>
             <Text
-              style={[styles.resultSubtitle, { color: theme.textSecondary }]}
+              className="text-sm mb-2"
+              style={{ color: theme.textSecondary }}
             >
               {item.restaurant.name}
             </Text>
-            <View style={styles.resultMeta}>
-              <View style={styles.resultRating}>
+            <View className="flex-row justify-between items-center">
+              <View className="flex-row items-center gap-1">
                 <Star color="#F59E0B" size={12} fill="#F59E0B" />
-                <Text style={[styles.resultRatingText, { color: theme.text }]}>
+                <Text
+                  className="text-sm font-semibold"
+                  style={{ color: theme.text }}
+                >
                   {item.rating}
                 </Text>
               </View>
-              <Text style={[styles.resultPrice, { color: theme.primary }]}>
+              <Text
+                className="text-base font-bold"
+                style={{ color: theme.primary }}
+              >
                 ${item.discounted_price.toFixed(2)}
               </Text>
             </View>
@@ -139,33 +169,32 @@ export default function SearchScreen() {
 
     return (
       <TouchableOpacity
-        style={[
-          styles.resultCard,
-          { backgroundColor: theme.card, borderColor: theme.border },
-        ]}
-        // onPress={() => router.push(`/restaurants?id=${item.id}`)}
+        className="flex-row rounded-lg border mb-3 overflow-hidden"
+        style={{ backgroundColor: theme.card, borderColor: theme.border }}
       >
-        <Image source={item.image_url} style={styles.resultImage} />
-        <View style={styles.resultContent}>
+        <Image source={item.image_url} className="w-[120px] h-full" />
+        <View className="flex-1 p-3 justify-between">
           <Text
-            style={[styles.resultTitle, { color: theme.text }]}
+            className="text-base font-semibold mb-1"
+            style={{ color: theme.text }}
             numberOfLines={1}
           >
             {item.name}
           </Text>
-          <Text style={[styles.resultSubtitle, { color: theme.textSecondary }]}>
+          <Text className="text-sm mb-2" style={{ color: theme.textSecondary }}>
             {item.cuisine}
           </Text>
-          <View style={styles.resultMeta}>
-            <View style={styles.resultRating}>
+          <View className="flex-row justify-between items-center">
+            <View className="flex-row items-center gap-1">
               <Star color="#F59E0B" size={12} fill="#F59E0B" />
-              <Text style={[styles.resultRatingText, { color: theme.text }]}>
+              <Text
+                className="text-sm font-semibold"
+                style={{ color: theme.text }}
+              >
                 {item.rating}
               </Text>
             </View>
-            <Text
-              style={[styles.resultDelivery, { color: theme.textSecondary }]}
-            >
+            <Text className="text-sm" style={{ color: theme.textSecondary }}>
               {item.delivery_time}
             </Text>
           </View>
@@ -176,28 +205,28 @@ export default function SearchScreen() {
 
   return (
     <SafeAreaView
-      style={[styles.container, { backgroundColor: theme.background }]}
+      className="flex-1"
+      style={{ backgroundColor: theme.background }}
     >
       {/* Header */}
-      <View style={[styles.header, { borderBottomColor: theme.border }]}>
-        <TouchableOpacity
-          onPress={() => router.back()}
-          style={styles.backButton}
-        >
+      <View
+        className="flex-row items-center px-4 py-4 gap-4 border-b"
+        style={{ borderBottomColor: theme.border }}
+      >
+        <TouchableOpacity onPress={() => router.back()} className="p-2">
           <ArrowLeft color={theme.text} size={24} />
         </TouchableOpacity>
         <View
-          style={[
-            styles.searchInputContainer,
-            {
-              backgroundColor: theme.inputBackground,
-              borderColor: theme.border,
-            },
-          ]}
+          className="flex-1 flex-row items-center px-4 py-2 rounded-lg border gap-2"
+          style={{
+            backgroundColor: theme.inputBackground,
+            borderColor: theme.border,
+          }}
         >
           <Search color={theme.textSecondary} size={20} />
           <TextInput
-            style={[styles.searchInput, { color: theme.text }]}
+            className="flex-1 text-base"
+            style={{ color: theme.text }}
             placeholder="Search for food, restaurants..."
             placeholderTextColor={theme.inputPlaceholder}
             value={searchQuery}
@@ -214,41 +243,48 @@ export default function SearchScreen() {
 
       {/* Content */}
       {searchQuery.length === 0 ? (
-        <View style={styles.content}>
+        <View className="flex-1">
           {/* Recent Searches */}
           {recentSearches.length > 0 && (
-            <View style={styles.section}>
-              <View style={styles.sectionHeader}>
-                <View style={styles.sectionTitleContainer}>
+            <View className="py-4 px-4">
+              <View className="flex-row justify-between items-center mb-3">
+                <View className="flex-row items-center gap-2">
                   <Clock color={theme.textSecondary} size={18} />
-                  <Text style={[styles.sectionTitle, { color: theme.text }]}>
+                  <Text
+                    className="text-lg font-semibold"
+                    style={{ color: theme.text }}
+                  >
                     Recent Searches
                   </Text>
                 </View>
                 <TouchableOpacity onPress={clearRecentSearches}>
-                  <Text style={[styles.clearText, { color: theme.primary }]}>
+                  <Text
+                    className="text-sm font-medium"
+                    style={{ color: theme.primary }}
+                  >
                     Clear
                   </Text>
                 </TouchableOpacity>
               </View>
-              <View style={styles.chipContainer}>
+              <View className="flex-row flex-wrap gap-2">
                 {recentSearches.map((query, index) => (
                   <TouchableOpacity
                     key={index}
-                    style={[
-                      styles.chip,
-                      {
-                        backgroundColor: theme.card,
-                        borderColor: theme.border,
-                      },
-                    ]}
-                    onPress={() => handleRecentSearch(query)}
+                    className="flex-row items-center px-4 py-2 rounded-full border gap-2"
+                    style={{
+                      backgroundColor: theme.card,
+                      borderColor: theme.border,
+                    }}
+                    onPress={() => handleRecentSearch(query.query)}
                   >
-                    <Text style={[styles.chipText, { color: theme.text }]}>
-                      {query}
+                    <Text
+                      className="text-sm font-medium"
+                      style={{ color: theme.text }}
+                    >
+                      {query.query}
                     </Text>
                     <TouchableOpacity
-                      onPress={() => removeRecentSearch(query)}
+                      onPress={() => removeRecentSearch(query.id)}
                       hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
                     >
                       <X color={theme.textSecondary} size={14} />
@@ -258,14 +294,85 @@ export default function SearchScreen() {
               </View>
             </View>
           )}
+
+          {/* Recent Views */}
+          {recentlyViewed.length > 0 && (
+            <View className="py-4 px-4">
+              <View className="flex-row justify-between items-center mb-3">
+                <View className="flex-row items-center gap-2">
+                  <Clock color={theme.textSecondary} size={18} />
+                  <Text
+                    className="text-lg font-semibold"
+                    style={{ color: theme.text }}
+                  >
+                    Recent Views
+                  </Text>
+                  <Text
+                    className="text-sm"
+                    style={{ color: theme.textSecondary }}
+                  >
+                    ({recentlyViewed.length})
+                  </Text>
+                </View>
+                <TouchableOpacity onPress={clearRecentlyViewed}>
+                  <Text
+                    className="text-sm font-medium"
+                    style={{ color: theme.primary }}
+                  >
+                    Clear
+                  </Text>
+                </TouchableOpacity>
+              </View>
+              <View className="flex-row flex-wrap gap-2">
+                {recentlyViewed.map((recent) => (
+                  <TouchableOpacity
+                    key={recent.id}
+                    className="flex-row items-center pr-2 rounded-full border gap-2"
+                    style={{
+                      backgroundColor: theme.card,
+                      borderColor: theme.border,
+                    }}
+                    onPress={() =>
+                      router.push(
+                        `/(in_app_screens)/offer-details?id=${recent.offer.id}`
+                      )
+                    }
+                  >
+                    <Image
+                      source={recent.offer.image_url}
+                      className="w-14 h-14 rounded-full"
+                    />
+                    <View>
+                      <Text
+                        className="text-sm font-medium"
+                        style={{ color: theme.text }}
+                      >
+                        {recent.offer.title}
+                      </Text>
+                      <View className="flex-row items-center gap-1">
+                        <ChefHat size={12} color={theme.text} />
+                        <Text
+                          className="text-xs"
+                          style={{ color: theme.textSecondary }}
+                        >
+                          {recent.offer.restaurant.name}
+                        </Text>
+                      </View>
+                    </View>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </View>
+          )}
         </View>
       ) : (
-        <View style={styles.resultsContainer}>
+        <View className="flex-1">
           {isSearching ? (
-            <View style={styles.loadingContainer}>
+            <View className="flex-1 justify-center items-center gap-4">
               <ActivityIndicator size="large" color={theme.primary} />
               <Text
-                style={[styles.loadingText, { color: theme.textSecondary }]}
+                className="text-base"
+                style={{ color: theme.textSecondary }}
               >
                 Searching...
               </Text>
@@ -273,7 +380,8 @@ export default function SearchScreen() {
           ) : searchResults.length > 0 ? (
             <>
               <Text
-                style={[styles.resultsCount, { color: theme.textSecondary }]}
+                className="text-sm px-4 pt-3 pb-2"
+                style={{ color: theme.textSecondary }}
               >
                 Found {searchResults.length} results
               </Text>
@@ -284,17 +392,24 @@ export default function SearchScreen() {
                   `${item.type}-${item.id}-${index}`
                 }
                 showsVerticalScrollIndicator={false}
-                contentContainerStyle={styles.resultsList}
+                contentContainerStyle={{
+                  paddingHorizontal: 16,
+                  paddingBottom: 24,
+                }}
               />
             </>
           ) : (
-            <View style={styles.emptyContainer}>
+            <View className="flex-1 justify-center items-center px-6">
               <Search color={theme.textTertiary} size={64} />
-              <Text style={[styles.emptyTitle, { color: theme.text }]}>
+              <Text
+                className="text-xl font-semibold mt-4 mb-2"
+                style={{ color: theme.text }}
+              >
                 No results found
               </Text>
               <Text
-                style={[styles.emptySubtitle, { color: theme.textSecondary }]}
+                className="text-base text-center"
+                style={{ color: theme.textSecondary }}
               >
                 Try searching with different keywords
               </Text>
@@ -305,168 +420,3 @@ export default function SearchScreen() {
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.md,
-    gap: spacing.md,
-    borderBottomWidth: 1,
-  },
-  backButton: {
-    padding: spacing.sm,
-  },
-  searchInputContainer: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    borderRadius: borderRadius.lg,
-    borderWidth: 1,
-    gap: spacing.sm,
-  },
-  searchInput: {
-    flex: 1,
-    fontSize: fontSize.base,
-    fontFamily: 'Inter-Regular',
-  },
-  content: {
-    flex: 1,
-  },
-  section: {
-    paddingVertical: spacing.lg,
-    paddingHorizontal: spacing.lg,
-  },
-  sectionHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: spacing.md,
-  },
-  sectionTitleContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm,
-  },
-  sectionTitle: {
-    fontSize: fontSize.lg,
-    fontFamily: 'Inter-SemiBold',
-  },
-  clearText: {
-    fontSize: fontSize.sm,
-    fontFamily: 'Inter-Medium',
-  },
-  chipContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: spacing.sm,
-  },
-  chip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    borderRadius: borderRadius.full,
-    borderWidth: 1,
-    gap: spacing.sm,
-  },
-  chipText: {
-    fontSize: fontSize.sm,
-    fontFamily: 'Inter-Medium',
-  },
-  resultsContainer: {
-    flex: 1,
-  },
-  resultsCount: {
-    fontSize: fontSize.sm,
-    fontFamily: 'Inter-Regular',
-    paddingHorizontal: spacing.lg,
-    paddingTop: spacing.md,
-    paddingBottom: spacing.sm,
-  },
-  resultsList: {
-    paddingHorizontal: spacing.lg,
-    paddingBottom: spacing.xl,
-  },
-  resultCard: {
-    flexDirection: 'row',
-    borderRadius: borderRadius.lg,
-    borderWidth: 1,
-    marginBottom: spacing.md,
-    overflow: 'hidden',
-  },
-  resultImage: {
-    width: 120,
-    height: '100%',
-  },
-  resultContent: {
-    flex: 1,
-    padding: spacing.md,
-    justifyContent: 'space-between',
-  },
-  resultTitle: {
-    fontSize: fontSize.base,
-    fontFamily: 'Inter-SemiBold',
-    marginBottom: 4,
-  },
-  resultSubtitle: {
-    fontSize: fontSize.sm,
-    fontFamily: 'Inter-Regular',
-    marginBottom: spacing.sm,
-  },
-  resultMeta: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  resultRating: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-  },
-  resultRatingText: {
-    fontSize: fontSize.sm,
-    fontFamily: 'Inter-SemiBold',
-  },
-  resultPrice: {
-    fontSize: fontSize.base,
-    fontFamily: 'Inter-Bold',
-  },
-  resultDelivery: {
-    fontSize: fontSize.sm,
-    fontFamily: 'Inter-Regular',
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    gap: spacing.md,
-  },
-  loadingText: {
-    fontSize: fontSize.base,
-    fontFamily: 'Inter-Regular',
-  },
-  emptyContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: spacing.xl,
-  },
-  emptyTitle: {
-    fontSize: fontSize.xl,
-    fontFamily: 'Inter-SemiBold',
-    marginTop: spacing.lg,
-    marginBottom: spacing.sm,
-  },
-  emptySubtitle: {
-    fontSize: fontSize.base,
-    fontFamily: 'Inter-Regular',
-    textAlign: 'center',
-  },
-});

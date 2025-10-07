@@ -1,6 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { create } from 'zustand';
 import { Review } from '@/types/appTypes';
+import { dummyReviews } from '@/data/dummyData';
 
 const REVIEWS_STORAGE_KEY = '@reviews_storage';
 
@@ -10,13 +11,15 @@ interface ReviewsState {
 
   loadReviews: () => Promise<void>;
   getReviewsByOfferId: (offerId: string) => Review[];
-  addReview: (review: Omit<Review, 'id' | 'created_at' | 'helpful_count'>) => Promise<void>;
+  addReview: (
+    review: Omit<Review, 'id' | 'created_at' | 'helpful_count'>
+  ) => Promise<void>;
   markReviewHelpful: (reviewId: string) => Promise<void>;
   getAverageRating: (offerId: string) => number;
 }
 
 export const useReviewsStore = create<ReviewsState>((set, get) => ({
-  reviews: [],
+  reviews: dummyReviews,
   isLoading: false,
 
   loadReviews: async () => {
@@ -28,7 +31,10 @@ export const useReviewsStore = create<ReviewsState>((set, get) => ({
       } else {
         const { dummyReviews } = await import('@/data/dummyData');
         set({ reviews: dummyReviews, isLoading: false });
-        await AsyncStorage.setItem(REVIEWS_STORAGE_KEY, JSON.stringify(dummyReviews));
+        await AsyncStorage.setItem(
+          REVIEWS_STORAGE_KEY,
+          JSON.stringify(dummyReviews)
+        );
       }
     } catch (error) {
       console.error('Error loading reviews:', error);
@@ -40,7 +46,10 @@ export const useReviewsStore = create<ReviewsState>((set, get) => ({
     const { reviews } = get();
     return reviews
       .filter((r) => r.offer_id === offerId)
-      .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+      .sort(
+        (a, b) =>
+          new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+      );
   },
 
   addReview: async (reviewData) => {

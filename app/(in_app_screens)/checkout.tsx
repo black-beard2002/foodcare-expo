@@ -26,11 +26,13 @@ import { useAlert } from '@/providers/AlertProvider';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import OrderSuccessModal from '@/components/OrderSuccessModal';
 import { spacing, borderRadius, fontSize, shadows } from '@/constants/theme';
+import { useBudgetStore } from '@/stores/budgetStore';
 
 export default function CheckoutScreen() {
   const { theme } = useTheme();
   const { cart, getCartTotal, clearCart } = useAppStore();
   const { showAlert } = useAlert();
+  const { addExpense } = useBudgetStore();
   const { createOrder, isLoading } = useOrderStore();
 
   const [customerInfo, setCustomerInfo] = useState({
@@ -58,7 +60,7 @@ export default function CheckoutScreen() {
       pickupTime: customerInfo.pickupTime,
       specialInstructions: customerInfo.specialInstructions,
       offers: cart,
-      status: 'pending',
+      status: 'pending' as const,
       total: getCartTotal(),
     };
 
@@ -67,8 +69,14 @@ export default function CheckoutScreen() {
     if (result.success && result.orderId) {
       setOrderNumber(result.orderId);
       setShowOrderModal(true);
+      // Update budget store with the new expense according to each cart item category
+      cart.forEach(async (item) => {
+        await addExpense(
+          item.offer.category.name,
+          item.offer.discounted_price * item.quantity
+        );
+      });
       clearCart();
-
       showAlert(
         'Order Created!',
         `Your order ${result.orderId} has been placed successfully.`,

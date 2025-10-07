@@ -117,7 +117,7 @@ export interface Review {
 
 export interface FavoriteItem {
   id: string;
-  favorited: Offer | Item;
+  favorited: Offer;
   added_at: string;
   price_alert_enabled: boolean;
   original_price_tracked: number;
@@ -198,6 +198,7 @@ export interface FlashSale {
 export interface BudgetTracker {
   monthly_limit?: number;
   current_month_spending: number;
+  overall_spending: number;
   spending_by_category: {
     category: string;
     amount: number;

@@ -279,7 +279,8 @@ export default function SetupSecurityScreen(): JSX.Element {
       <View className="flex-1 px-6 items-center md:px-8">
         <LinearGradient
           colors={accentGradient}
-          className="w-20 h-20 rounded-full justify-center items-center mb-8 md:w-24 md:h-24"
+          style={{ borderRadius: 16 }}
+          className="w-20 h-20 justify-center items-center mb-8 md:w-24 md:h-24"
         >
           <Lock color={theme.text} size={45} />
         </LinearGradient>
