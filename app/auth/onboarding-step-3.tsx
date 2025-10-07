@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   ScrollView,
   ActivityIndicator,
+  ColorValue,
 } from 'react-native';
 import { router } from 'expo-router';
 import { Mail, PartyPopper, ArrowLeft, Sparkles } from 'lucide-react-native';
@@ -18,7 +19,8 @@ import { MotiView } from 'moti';
 export default function OnboardingStep3() {
   const [email, setEmail] = useState('');
   const [isCompleting, setIsCompleting] = useState(false);
-  const { updateProfile, setOnboardingComplete, isLoading, user } = useAuthStore();
+  const { updateProfile, setOnboardingComplete, isLoading, user } =
+    useAuthStore();
   const { showAlert } = useAlert();
   const { theme, isDark } = useTheme();
 
@@ -39,7 +41,11 @@ export default function OnboardingStep3() {
     }
 
     if (!user?.id) {
-      showAlert('Error', 'User session not found. Please login again.', 'error');
+      showAlert(
+        'Error',
+        'User session not found. Please login again.',
+        'error'
+      );
       return;
     }
 
@@ -55,7 +61,11 @@ export default function OnboardingStep3() {
 
       await new Promise((resolve) => setTimeout(resolve, 1500));
 
-      showAlert('Welcome!', 'Your account is ready. Let\'s start exploring!', 'success');
+      showAlert(
+        'Welcome!',
+        "Your account is ready. Let's start exploring!",
+        'success'
+      );
 
       setTimeout(() => {
         router.replace('/(tabs)');
@@ -64,23 +74,33 @@ export default function OnboardingStep3() {
       setIsCompleting(false);
       showAlert('Error', result.error || 'Failed to complete setup', 'error');
     }
-  }, [email, isFormValid, user, updateProfile, setOnboardingComplete, showAlert]);
+  }, [
+    email,
+    isFormValid,
+    user,
+    updateProfile,
+    setOnboardingComplete,
+    showAlert,
+  ]);
 
-  const gradientColors = isDark
-    ? (['rgba(15,23,42,1)', 'rgba(33,42,54,1)'] as const)
-    : (['rgba(250,250,250,1)', 'rgba(226,232,240,1)'] as const);
+  const gradientColors: [ColorValue, ColorValue, ColorValue] = isDark
+    ? ['rgba(15,23,42,1)', 'rgba(30,41,59,1)', 'rgba(15,23,42,1)']
+    : ['rgba(255,255,255,1)', 'rgba(248,250,252,1)', 'rgba(241,245,249,1)'];
 
-  const accentGradient = isDark
-    ? (['rgba(244,208,63,1)', 'rgba(245,158,11,1)'] as const)
-    : (['rgba(244,208,63,1)', 'rgb(247,177,57)'] as const);
+  const accentGradient: [ColorValue, ColorValue] = isDark
+    ? ['rgba(59,130,246,1)', 'rgba(147,51,234,1)']
+    : ['rgba(99,102,241,1)', 'rgba(139,92,246,1)'];
 
-  const successGradient = isDark
+  const successGradient: [ColorValue, ColorValue] = isDark
     ? (['rgba(34,197,94,1)', 'rgba(22,163,74,1)'] as const)
     : (['rgba(34,197,94,1)', 'rgba(22,163,74,1)'] as const);
 
   if (isCompleting) {
     return (
-      <LinearGradient colors={gradientColors} className="flex-1 items-center justify-center px-6">
+      <LinearGradient
+        colors={gradientColors}
+        className="flex-1 items-center justify-center px-6"
+      >
         <MotiView
           from={{ scale: 0, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
@@ -107,7 +127,10 @@ export default function OnboardingStep3() {
             delay: 300,
           }}
         >
-          <Text className="text-4xl font-bold mb-4 text-center" style={{ color: theme.text }}>
+          <Text
+            className="text-4xl font-bold mb-4 text-center"
+            style={{ color: theme.text }}
+          >
             Welcome Aboard!
           </Text>
           <Text
@@ -160,7 +183,10 @@ export default function OnboardingStep3() {
               <Sparkles color="#fff" size={56} />
             </LinearGradient>
 
-            <Text className="text-3xl font-bold mb-3 text-center" style={{ color: theme.text }}>
+            <Text
+              className="text-3xl font-bold mb-3 text-center"
+              style={{ color: theme.text }}
+            >
               Almost There!
             </Text>
             <Text
@@ -171,25 +197,43 @@ export default function OnboardingStep3() {
             </Text>
 
             <View className="flex-row items-center mt-6">
-              <View className="w-8 h-1 rounded-full" style={{ backgroundColor: theme.border }} />
-              <View className="w-8 h-1 rounded-full mx-2" style={{ backgroundColor: theme.border }} />
-              <View className="w-8 h-1 rounded-full" style={{ backgroundColor: theme.primary }} />
+              <View
+                className="w-8 h-1 rounded-full"
+                style={{ backgroundColor: theme.border }}
+              />
+              <View
+                className="w-8 h-1 rounded-full mx-2"
+                style={{ backgroundColor: theme.border }}
+              />
+              <View
+                className="w-8 h-1 rounded-full"
+                style={{ backgroundColor: theme.primary }}
+              />
             </View>
-            <Text className="text-sm mt-2" style={{ color: theme.textSecondary }}>
+            <Text
+              className="text-sm mt-2"
+              style={{ color: theme.textSecondary }}
+            >
               Step 3 of 3
             </Text>
           </View>
 
           <View className="flex-1 justify-center">
             <View className="mb-8">
-              <Text className="text-sm font-medium mb-2" style={{ color: theme.text }}>
+              <Text
+                className="text-sm font-medium mb-2"
+                style={{ color: theme.text }}
+              >
                 Email Address
               </Text>
               <View
                 className="flex-row items-center px-4 py-4 rounded-xl border-2"
                 style={{
                   backgroundColor: theme.inputBackground,
-                  borderColor: email && validateEmail(email) ? theme.primary : theme.border,
+                  borderColor:
+                    email && validateEmail(email)
+                      ? theme.primary
+                      : theme.border,
                 }}
               >
                 <Mail color={theme.textSecondary} size={20} />
@@ -208,7 +252,10 @@ export default function OnboardingStep3() {
                 />
               </View>
               {email && !validateEmail(email) && (
-                <Text className="text-xs mt-2 px-1" style={{ color: '#ef4444' }}>
+                <Text
+                  className="text-xs mt-2 px-1"
+                  style={{ color: '#ef4444' }}
+                >
                   Please enter a valid email address
                 </Text>
               )}
@@ -216,18 +263,31 @@ export default function OnboardingStep3() {
 
             <View
               className="p-4 rounded-xl mb-8"
-              style={{ backgroundColor: isDark ? 'rgba(244,208,63,0.1)' : 'rgba(244,208,63,0.15)' }}
+              style={{
+                backgroundColor: isDark
+                  ? 'rgba(244,208,63,0.1)'
+                  : 'rgba(244,208,63,0.15)',
+              }}
             >
               <View className="flex-row items-start">
-                <Mail color={theme.primary} size={18} style={{ marginTop: 2 }} />
+                <Mail
+                  color={theme.primary}
+                  size={18}
+                  style={{ marginTop: 2 }}
+                />
                 <View className="flex-1 ml-3">
-                  <Text className="text-sm font-semibold mb-1" style={{ color: theme.text }}>
+                  <Text
+                    className="text-sm font-semibold mb-1"
+                    style={{ color: theme.text }}
+                  >
                     Why we need your email
                   </Text>
-                  <Text className="text-xs leading-5" style={{ color: theme.textSecondary }}>
-                    • Order confirmations and updates{'\n'}
-                    • Exclusive deals and promotions{'\n'}
-                    • Account security notifications
+                  <Text
+                    className="text-xs leading-5"
+                    style={{ color: theme.textSecondary }}
+                  >
+                    • Order confirmations and updates{'\n'}• Exclusive deals and
+                    promotions{'\n'}• Account security notifications
                   </Text>
                 </View>
               </View>
@@ -238,7 +298,8 @@ export default function OnboardingStep3() {
               disabled={!isFormValid || isLoading}
               className="w-full py-4 rounded-xl items-center justify-center"
               style={{
-                backgroundColor: isFormValid && !isLoading ? theme.primary : theme.border,
+                backgroundColor:
+                  isFormValid && !isLoading ? theme.primary : theme.border,
                 opacity: isLoading ? 0.7 : 1,
               }}
             >
@@ -254,7 +315,10 @@ export default function OnboardingStep3() {
                   >
                     Complete Setup
                   </Text>
-                  <Sparkles color={isFormValid ? '#fff' : theme.textSecondary} size={18} />
+                  <Sparkles
+                    color={isFormValid ? '#fff' : theme.textSecondary}
+                    size={18}
+                  />
                 </View>
               )}
             </TouchableOpacity>

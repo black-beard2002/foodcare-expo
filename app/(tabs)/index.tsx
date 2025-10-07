@@ -46,6 +46,7 @@ import { MotiView } from 'moti';
 import { Skeleton } from 'moti/skeleton';
 import { useAlert } from '@/providers/AlertProvider';
 import { useFavoritesStore } from '@/stores/favoritesStore';
+import { useAuthStore } from '@/stores/authStore';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const HERO_CARD_WIDTH = SCREEN_WIDTH - 40;
@@ -67,7 +68,7 @@ export default function HomeScreen(): JSX.Element {
   const { offers, categories, isLoading, refreshData, addToCart } =
     useAppStore();
   const { isNewFavoritedAdded } = useFavoritesStore();
-
+  const { user } = useAuthStore();
   const { showAlert } = useAlert();
 
   const [refreshing, setRefreshing] = useState(false);
@@ -540,7 +541,7 @@ export default function HomeScreen(): JSX.Element {
 
   // Skeleton Components
   const HeroSkeleton = () => (
-    <MotiView className="px-6 mb-6 md:px-8">
+    <MotiView className="px-6 mb-6  md:px-8">
       <Skeleton
         colorMode={colorMode}
         radius={24}
@@ -700,7 +701,8 @@ export default function HomeScreen(): JSX.Element {
                 className="text-sm font-inter-regular mt-0.5"
                 style={{ color: theme.textSecondary }}
               >
-                Beirut, Hart Hreik
+                {user?.address?.split(',')[0].concat('..') ||
+                  'Set your address'}
               </Text>
             </View>
           </View>

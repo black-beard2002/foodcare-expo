@@ -25,7 +25,8 @@ interface AuthState {
   ) => Promise<{ success: boolean; verificationId?: string; error?: string }>;
   verifyOtp: (
     verificationId: string,
-    otp: string
+    otp: string,
+    phoneNumber: string
   ) => Promise<{ success: boolean; error?: string }>;
   signInWithEmail: (
     email: string,
@@ -83,7 +84,11 @@ export const useAuthStore = create<AuthState>()(
         }
       },
 
-      verifyOtp: async (verificationId: string, otp: string) => {
+      verifyOtp: async (
+        verificationId: string,
+        otp: string,
+        phoneNumber: string
+      ) => {
         set({ isLoading: true, error: null });
         try {
           const response = await authApi.verifyOtp(verificationId, otp);
@@ -91,7 +96,7 @@ export const useAuthStore = create<AuthState>()(
 
           if (response.success && response.data) {
             set({
-              user: response.data.user,
+              user: { ...response.data.user, phone_number: phoneNumber },
               isAuthenticated: true,
               error: null,
             });
@@ -158,7 +163,8 @@ export const useAuthStore = create<AuthState>()(
 
         set({ isLoading: true, error: null });
         try {
-          const response = await authApi.updateProfile(user.id, userData);
+          const updatedUser = { ...user, ...userData };
+          const response = await authApi.updateProfile(user.id, updatedUser);
           set({ isLoading: false });
 
           if (response.success && response.data) {

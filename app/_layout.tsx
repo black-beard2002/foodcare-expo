@@ -55,7 +55,9 @@ export default function RootLayout() {
     (state) => state.loadTrendingSearches
   );
   const user = useAuthStore((state) => state.user);
-  const hasCompletedOnboarding = useAuthStore((state) => state.hasCompletedOnboarding);
+  const hasCompletedOnboarding = useAuthStore(
+    (state) => state.hasCompletedOnboarding
+  );
 
   const [fontsLoaded, fontError] = useFonts({
     'Inter-Regular': Inter_400Regular,
@@ -96,15 +98,15 @@ export default function RootLayout() {
     const handleNavigation = async () => {
       if (isReady && (fontsLoaded || fontError)) {
         await SplashScreen.hideAsync();
-        if (user) {
-          if (hasCompletedOnboarding || user.has_completed_onboarding) {
-            router.replace('/(tabs)');
-          } else {
-            router.replace('/auth/onboarding-step-1');
-          }
-        } else {
-          router.replace('/auth');
-        }
+        // if (user) {
+        //   if (hasCompletedOnboarding || user.has_completed_onboarding) {
+        //     router.replace('/(tabs)');
+        //   } else {
+        //     router.replace('/auth');
+        //   }
+        // } else {
+        //   router.replace('/auth');
+        // }
       }
     };
 

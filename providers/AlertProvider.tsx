@@ -1,3 +1,4 @@
+import { AlertTriangle, CheckCircle, Info, XCircle } from 'lucide-react-native';
 import React, {
   createContext,
   useContext,
@@ -47,7 +48,6 @@ export const AlertProvider = ({ children }: { children: ReactNode }) => {
     const newAlert: Alert = { id, title, message, type };
     setAlerts((prev) => [...prev, newAlert]);
 
-    // Auto dismiss after 3s
     setTimeout(() => {
       setAlerts((prev) => prev.filter((a) => a.id !== id));
     }, 4000);
@@ -65,35 +65,40 @@ export const AlertProvider = ({ children }: { children: ReactNode }) => {
   );
 };
 
-const Toast = ({ title, message, type }: Alert) => {
-  const slideAnim = useRef(new Animated.Value(-100)).current; // Start above the screen
-  const fadeAnim = useRef(new Animated.Value(0)).current; // Start fully transparent
+const matteColors: Record<AlertType, string> = {
+  success: '#2E7D32',
+  error: '#C62828',
+  warning: '#F9A825',
+  info: '#1565C0',
+};
 
-  const bgColor =
-    type === 'success'
-      ? '#4CAF50'
-      : type === 'error'
-      ? '#F44336'
-      : type === 'warning'
-      ? '#FFC107'
-      : '#2196F3';
+const Toast = ({ title, message, type }: Alert) => {
+  const slideAnim = useRef(new Animated.Value(-100)).current;
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+
+  const bgColor = matteColors[type] || matteColors.info;
+
+  const IconComponent = {
+    success: CheckCircle,
+    error: XCircle,
+    warning: AlertTriangle,
+    info: Info,
+  }[type];
 
   useEffect(() => {
-    // Slide in and fade in
     Animated.parallel([
       Animated.timing(slideAnim, {
-        toValue: 0, // Slide to original position
-        duration: 200,
+        toValue: 0,
+        duration: 250,
         useNativeDriver: true,
       }),
       Animated.timing(fadeAnim, {
         toValue: 1,
-        duration: 200,
+        duration: 250,
         useNativeDriver: true,
       }),
     ]).start();
 
-    // Slide up and fade out after 3.5s
     const timeout = setTimeout(() => {
       Animated.parallel([
         Animated.timing(slideAnim, {
@@ -123,8 +128,13 @@ const Toast = ({ title, message, type }: Alert) => {
         },
       ]}
     >
-      <Text style={styles.title}>{title}</Text>
-      {message ? <Text style={styles.message}>{message}</Text> : null}
+      <View style={styles.row}>
+        <IconComponent color="#F5F5F5" size={22} style={styles.icon} />
+        <View style={styles.textContainer}>
+          <Text style={styles.title}>{title}</Text>
+          {message ? <Text style={styles.message}>{message}</Text> : null}
+        </View>
+      </View>
     </Animated.View>
   );
 };
@@ -136,26 +146,43 @@ const styles = StyleSheet.create({
     width: '100%',
     alignItems: 'center',
     zIndex: 1000,
+    paddingHorizontal: 16,
   },
+  row: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  icon: {
+    fontSize: 20,
+    marginRight: 12,
+  },
+  textContainer: {
+    flex: 1,
+  },
+
   toast: {
-    minWidth: '80%',
-    marginVertical: 5,
-    padding: 12,
-    borderRadius: 10,
+    width: '100%',
+    maxWidth: 380,
+    marginVertical: 8,
+    paddingVertical: 14,
+    paddingHorizontal: 18,
+    borderRadius: 12,
     shadowColor: '#000',
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    zIndex: 999,
-    elevation: 90,
+    shadowOpacity: 0.1,
+    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 6,
   },
   title: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: 'white',
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#F5F5F5',
+    letterSpacing: 0.3,
   },
   message: {
-    fontSize: 14,
-    color: 'white',
-    marginTop: 2,
+    fontSize: 13,
+    color: '#E0E0E0',
+    marginTop: 4,
+    lineHeight: 18,
   },
 });
