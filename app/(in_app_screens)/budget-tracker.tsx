@@ -93,7 +93,14 @@ export default function BudgetTrackerScreen() {
     >
       <LinearGradient
         colors={[theme.background, theme.backgroundSecondary]}
-        className="flex-1"
+        style={{
+          position: 'absolute',
+          left: 0,
+          right: 0,
+          top: 0,
+          bottom: 0,
+          paddingTop: 40,
+        }}
       >
         <View
           className="flex-row items-center px-6 py-4 border-b"

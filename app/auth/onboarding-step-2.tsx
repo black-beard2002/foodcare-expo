@@ -224,7 +224,16 @@ export default function OnboardingStep2() {
     : ['rgba(99,102,241,1)', 'rgba(139,92,246,1)'];
 
   return (
-    <LinearGradient colors={gradientColors} className="flex-1">
+    <LinearGradient
+      colors={gradientColors}
+      style={{
+        position: 'absolute',
+        left: 0,
+        right: 0,
+        top: 0,
+        bottom: 0,
+      }}
+    >
       <ScrollView
         className="flex-1"
         contentContainerStyle={{ flexGrow: 1 }}
@@ -252,8 +261,13 @@ export default function OnboardingStep2() {
             <View className="relative mb-6">
               <LinearGradient
                 colors={accentGradient}
-                style={{ borderRadius: 32 }}
-                className="w-20 h-20 justify-center items-center shadow-lg"
+                style={{
+                  borderRadius: 32,
+                  width: 80,
+                  height: 80,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
               >
                 <Map color="#fff" size={40} strokeWidth={2.5} />
               </LinearGradient>
@@ -336,7 +350,15 @@ export default function OnboardingStep2() {
                 colors={accentGradient}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 0 }}
-                className="flex-row items-center justify-center py-5 px-6"
+                style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  paddingHorizontal: 24,
+                  paddingVertical: 16,
+                  gap: 12,
+                  borderRadius: 16,
+                }}
               >
                 {isGettingLocation ? (
                   <>
@@ -505,7 +527,15 @@ export default function OnboardingStep2() {
                 }
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 0 }}
-                className="w-full py-5 items-center justify-center"
+                style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  paddingHorizontal: 24,
+                  paddingVertical: 16,
+                  gap: 12,
+                  borderRadius: 16,
+                }}
               >
                 {isLoading ? (
                   <ActivityIndicator color="#fff" size="small" />

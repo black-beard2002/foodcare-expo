@@ -16,9 +16,8 @@ import { images } from '@/constants';
 import { BlurView } from 'expo-blur';
 import MaskedView from '@react-native-masked-view/masked-view';
 import Svg, { Path } from 'react-native-svg';
-import { useAlert } from '@/providers/AlertProvider';
 
-const { height } = Dimensions.get('window');
+const { height, width } = Dimensions.get('window');
 
 // Google Logo Component
 const GoogleLogo = ({ size = 22 }) => (
@@ -102,38 +101,100 @@ export default function AuthScreen() {
     animateButton(button4SlideAnim, button4OpacityAnim, 750);
   }, []);
 
+  // Modern gradient colors
   const accentGradient: [ColorValue, ColorValue, ColorValue] = isDark
-    ? ['#8B5CF6', '#EC4899', '#F59E0B']
-    : ['#7C3AED', '#DB2777', '#F59E0B'];
-  const gradientColors: [ColorValue, ColorValue] = isDark
-    ? ['rgba(15,23,42,1)', 'rgba(33,42,54,1)']
-    : ['rgba(250,250,250,1)', 'rgba(226,232,240,1)'];
+    ? ['#6366F1', '#8B5CF6', '#EC4899'] // Indigo -> Purple -> Pink
+    : ['#4F46E5', '#7C3AED', '#DB2777']; // Deep Indigo -> Deep Purple -> Deep Pink
+
+  const backgroundGradient: [ColorValue, ColorValue, ColorValue] = isDark
+    ? ['#0F172A', '#1E293B', '#0F172A'] // Slate dark gradient
+    : ['#F8FAFC', '#E0E7FF', '#FCE7F3']; // Light slate -> Indigo tint -> Pink tint
 
   return (
-    <LinearGradient colors={gradientColors} className="flex-1">
+    <View style={{ flex: 1, width: '100%', height: '100%' }}>
+      {/* Background Gradient */}
+      <LinearGradient
+        colors={backgroundGradient}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={{
+          position: 'absolute',
+          left: 0,
+          right: 0,
+          top: 0,
+          bottom: 0,
+        }}
+      />
+
       {/* Animated Background Orbs */}
-      <View className="absolute inset-0 overflow-hidden">
+      <View
+        style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          overflow: 'hidden',
+        }}
+      >
+        {/* Top Right Orb - Indigo */}
         <Animated.View
           style={{
+            position: 'absolute',
+            top: -96,
+            right: -48,
+            width: 300,
+            height: 300,
+            borderRadius: 150,
+            opacity: 0.6,
             transform: [{ scale: pulseAnim }],
-            backgroundColor: isDark ? '#8B5CF680' : '#7C3AED40',
+            backgroundColor: isDark ? '#6366F180' : '#818CF840',
           }}
-          className="absolute w-[300px] h-[300px] rounded-full opacity-60 -top-24 -right-12"
         />
+
+        {/* Bottom Left Orb - Purple */}
         <Animated.View
           style={{
+            position: 'absolute',
+            bottom: -96,
+            left: -80,
+            width: 250,
+            height: 250,
+            borderRadius: 125,
+            opacity: 0.6,
             transform: [{ scale: pulseAnim }],
-            backgroundColor: isDark ? '#EC489980' : '#DB277740',
+            backgroundColor: isDark ? '#8B5CF680' : '#A78BFA40',
           }}
-          className="absolute w-[250px] h-[250px] rounded-full opacity-60 -bottom-24 -left-20"
         />
+
+        {/* Middle Right Orb - Pink */}
         <Animated.View
           style={{
-            transform: [{ scale: pulseAnim }],
-            backgroundColor: isDark ? '#F59E0B80' : '#F59E0B40',
+            position: 'absolute',
             top: height * 0.4,
+            right: -64,
+            width: 200,
+            height: 200,
+            borderRadius: 100,
+            opacity: 0.6,
+            transform: [{ scale: pulseAnim }],
+            backgroundColor: isDark ? '#EC489980' : '#F9A8D440',
           }}
-          className="absolute w-[200px] h-[200px] rounded-full opacity-60 -right-16"
+        />
+
+        {/* Additional Accent Orb - Cyan */}
+        <Animated.View
+          style={{
+            position: 'absolute',
+            top: height * 0.25,
+            left: -40,
+            width: 180,
+            height: 180,
+            borderRadius: 90,
+            opacity: 0.4,
+            transform: [{ scale: pulseAnim }],
+            backgroundColor: isDark ? '#06B6D480' : '#22D3EE40',
+          }}
         />
       </View>
 
@@ -143,19 +204,35 @@ export default function AuthScreen() {
       >
         {/* Header */}
         <View className="items-center">
+          {/* Logo with Gradient Border */}
           <View className="mb-8 shadow-lg shadow-black/30">
-            <LinearGradient
-              style={{ borderRadius: 12 }}
-              colors={accentGradient}
-            >
-              <Image
-                source={images.logo}
-                className="w-32 h-32"
-                resizeMode="contain"
-              />
-            </LinearGradient>
+            <View style={{ borderRadius: 24, overflow: 'hidden' }}>
+              <LinearGradient
+                colors={accentGradient}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={{
+                  padding: 4,
+                  borderRadius: 24,
+                }}
+              >
+                <View
+                  style={{
+                    borderRadius: 20,
+                    padding: 12,
+                  }}
+                >
+                  <Image
+                    source={images.logo}
+                    className="w-24 h-24"
+                    resizeMode="contain"
+                  />
+                </View>
+              </LinearGradient>
+            </View>
           </View>
 
+          {/* Title */}
           <View className="items-center mb-4">
             <Text
               className="text-4xl font-bold text-center leading-[44px]"
@@ -172,12 +249,14 @@ export default function AuthScreen() {
                 colors={accentGradient}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 0 }}
+                style={{ height: 48 }}
               >
                 <Text className="text-4xl font-bold opacity-0">FoodDeals</Text>
               </LinearGradient>
             </MaskedView>
           </View>
 
+          {/* Subtitle */}
           <View className="flex-row items-center gap-2">
             <Sparkles color={isDark ? '#A78BFA' : '#7C3AED'} size={16} />
             <Text
@@ -201,16 +280,29 @@ export default function AuthScreen() {
             <TouchableOpacity
               activeOpacity={0.8}
               onPress={() => router.push('/auth/phone-login')}
-              className="rounded-lg"
+              className="rounded-2xl overflow-hidden shadow-lg"
+              style={{
+                shadowColor: isDark ? '#6366F1' : '#4F46E5',
+                shadowOpacity: 0.3,
+                shadowRadius: 12,
+                elevation: 8,
+              }}
             >
               <LinearGradient
                 colors={accentGradient}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 0 }}
-                className="flex-row items-center justify-center px-6 py-4 gap-3 shadow-lg"
-                style={{ borderRadius: 16 }} // Tailwind 'rounded-xl' = 16
+                style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  paddingHorizontal: 24,
+                  paddingVertical: 16,
+                  gap: 12,
+                  borderRadius: 16,
+                }}
               >
-                <View className="w-10 h-10 rounded-lg items-center justify-center">
+                <View className="w-10 h-10 rounded-xl items-center justify-center bg-white/20">
                   <Phone color="#FFFFFF" size={22} strokeWidth={2.5} />
                 </View>
                 <Text className="text-white text-lg font-semibold text-center flex-1">
@@ -227,18 +319,28 @@ export default function AuthScreen() {
               transform: [{ translateY: button2SlideAnim }],
             }}
           >
-            <TouchableOpacity activeOpacity={0.8}>
+            <TouchableOpacity
+              activeOpacity={0.8}
+              className="rounded-2xl overflow-hidden"
+            >
               <BlurView
-                intensity={isDark ? 30 : 80}
+                intensity={isDark ? 40 : 90}
                 tint={isDark ? 'dark' : 'light'}
-                className="flex-row items-center justify-center px-6 py-4 rounded-xl gap-3 border overflow-hidden"
                 style={{
-                  backgroundColor: isDark ? '#FFFFFF15' : '#FFFFFF80',
-                  borderColor: isDark ? '#FFFFFF20' : '#00000010',
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  paddingHorizontal: 24,
+                  paddingVertical: 16,
+                  gap: 12,
+                  borderRadius: 16,
+                  backgroundColor: isDark ? '#FFFFFF15' : '#FFFFFF90',
+                  borderWidth: 1,
+                  borderColor: isDark ? '#FFFFFF20' : '#E2E8F0',
                 }}
               >
                 <View
-                  className="w-10 h-10 rounded-lg items-center justify-center"
+                  className="w-10 h-10 rounded-xl items-center justify-center"
                   style={{
                     backgroundColor: isDark ? '#FFFFFF15' : '#FFFFFF',
                   }}
@@ -262,18 +364,28 @@ export default function AuthScreen() {
               transform: [{ translateY: button3SlideAnim }],
             }}
           >
-            <TouchableOpacity activeOpacity={0.8}>
+            <TouchableOpacity
+              activeOpacity={0.8}
+              className="rounded-2xl overflow-hidden"
+            >
               <BlurView
-                intensity={isDark ? 30 : 80}
+                intensity={isDark ? 40 : 90}
                 tint={isDark ? 'dark' : 'light'}
-                className="flex-row items-center justify-center px-6 py-4 rounded-xl gap-3 border overflow-hidden"
                 style={{
-                  backgroundColor: isDark ? '#FFFFFF15' : '#FFFFFF80',
-                  borderColor: isDark ? '#FFFFFF20' : '#00000010',
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  paddingHorizontal: 24,
+                  paddingVertical: 16,
+                  gap: 12,
+                  borderRadius: 16,
+                  backgroundColor: isDark ? '#FFFFFF15' : '#FFFFFF90',
+                  borderWidth: 1,
+                  borderColor: isDark ? '#FFFFFF20' : '#E2E8F0',
                 }}
               >
                 <View
-                  className="w-10 h-10 rounded-lg items-center justify-center"
+                  className="w-10 h-10 rounded-xl items-center justify-center"
                   style={{
                     backgroundColor: isDark ? '#FFFFFF15' : '#FFFFFF',
                   }}
@@ -319,11 +431,11 @@ export default function AuthScreen() {
         {/* Footer */}
         <View className="items-center gap-4">
           <View
-            className="w-16 h-1 rounded-sm"
-            style={{ backgroundColor: isDark ? '#FFFFFF15' : '#00000010' }}
+            className="w-16 h-1 rounded-full"
+            style={{ backgroundColor: isDark ? '#FFFFFF20' : '#E2E8F0' }}
           />
           <Text
-            className="text-xs text-center leading-5"
+            className="text-xs text-center leading-5 px-4"
             style={{ color: isDark ? '#64748B' : '#94A3B8' }}
           >
             By continuing, you agree to our{' '}
@@ -343,6 +455,6 @@ export default function AuthScreen() {
           </Text>
         </View>
       </View>
-    </LinearGradient>
+    </View>
   );
 }

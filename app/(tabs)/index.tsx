@@ -55,7 +55,7 @@ const HERO_CARD_WIDTH = SCREEN_WIDTH - 40;
 const CARD_HEIGHTS = {
   HERO: 200,
   NEAR_YOU: 350,
-  OFFER_CARD: 200,
+  OFFER_CARD: 230,
   CATEGORY_CHIP: 56,
 };
 
@@ -197,8 +197,15 @@ export default function HomeScreen(): JSX.Element {
         >
           <LinearGradient
             colors={['rgba(0,0,0,0)', 'rgba(0,0,0,0.5)', 'rgba(0,0,0,0.85)']}
-            className="p-5 justify-end"
-            style={{ minHeight: 120 }}
+            style={{
+              position: 'absolute',
+              left: 0,
+              right: 0,
+              bottom: 0,
+              height: 120,
+              padding: 20,
+              justifyContent: 'flex-end',
+            }}
           >
             <View className="absolute top-4 right-4 bg-red-500 px-3 py-1.5 rounded-xl">
               <Text className="text-white text-sm font-bold">
@@ -283,23 +290,32 @@ export default function HomeScreen(): JSX.Element {
           router.push(`/(in_app_screens)/offer-details?id=${offer.id}`)
         }
       >
-        <Image
-          source={offer.image_url}
-          className="w-full"
-          style={{ height: 160 }}
-          resizeMode="cover"
-        />
-        <LinearGradient
-          colors={['transparent', 'rgba(50, 49, 49, 0.2)']}
-          className="absolute top-0 left-0 right-0 justify-start items-end p-3"
-          style={{ height: 160 }}
-        >
-          <View className="bg-red-500 px-2.5 py-1.5 rounded-lg">
-            <Text className="text-white text-xs font-bold">
-              -{offer.discount_percentage}%
-            </Text>
-          </View>
-        </LinearGradient>
+        <View style={{ position: 'relative' }}>
+          <Image
+            source={offer.image_url}
+            style={{ width: 280, height: 160 }}
+            resizeMode="cover"
+          />
+          <LinearGradient
+            colors={['transparent', 'rgba(50, 49, 49, 0.2)']}
+            style={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              right: 0,
+              height: 160,
+              justifyContent: 'flex-start',
+              alignItems: 'flex-end',
+              padding: 12,
+            }}
+          >
+            <View className="bg-red-500 px-2.5 py-1.5 rounded-lg">
+              <Text className="text-white text-xs font-bold">
+                -{offer.discount_percentage}%
+              </Text>
+            </View>
+          </LinearGradient>
+        </View>
 
         <View className="p-3.5 flex-1 justify-between">
           <View>
@@ -407,26 +423,27 @@ export default function HomeScreen(): JSX.Element {
   const renderOfferCard = useCallback(
     ({ item: offer }: { item: Offer }) => (
       <TouchableOpacity
-        className="rounded-2xl overflow-visible border border-2 shadow-sm"
+        className="rounded-2xl overflow-visible border-2 shadow-sm"
         style={{
           borderColor: theme.border,
           shadowColor: theme.shadow,
           height: CARD_HEIGHTS.OFFER_CARD,
+          backgroundColor: theme.card,
         }}
         onPress={() =>
           router.push(`/(in_app_screens)/offer-details?id=${offer.id}`)
         }
         activeOpacity={0.85}
       >
-        <LinearGradient
-          colors={[theme.card, theme.card]}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          className=" h-full"
-          style={[{ borderRadius: 12 }]}
+        <View
+          style={{
+            borderRadius: 12,
+            height: CARD_HEIGHTS.OFFER_CARD,
+            width: '100%',
+          }}
         >
           <View
-            className="absolute -top-20 left-0 right-0  items-center z-10"
+            className="absolute -top-20 left-0 right-0 items-center z-10"
             style={{ elevation: 10 }}
           >
             <Image
@@ -531,7 +548,7 @@ export default function HomeScreen(): JSX.Element {
               </View>
             </View>
           </View>
-        </LinearGradient>
+        </View>
       </TouchableOpacity>
     ),
     [theme]
@@ -541,7 +558,7 @@ export default function HomeScreen(): JSX.Element {
 
   // Skeleton Components
   const HeroSkeleton = () => (
-    <MotiView className="px-6 mb-6  md:px-8">
+    <MotiView className="px-6 mb-6 md:px-8">
       <Skeleton
         colorMode={colorMode}
         radius={24}
@@ -675,12 +692,20 @@ export default function HomeScreen(): JSX.Element {
       className="flex-1"
       style={{ backgroundColor: theme.background }}
     >
-      <LinearGradient
-        className="flex-1"
-        colors={[theme.background, theme.backgroundSecondary]}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-      >
+      <View style={{ flex: 1, width: '100%' }}>
+        <LinearGradient
+          colors={[theme.background, theme.backgroundSecondary]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={{
+            position: 'absolute',
+            left: 0,
+            right: 0,
+            top: 0,
+            bottom: 0,
+          }}
+        />
+
         {/* Header */}
         <View className="flex-row justify-between items-center px-6 pt-4 pb-6 md:px-8 md:pt-6">
           <View className="flex-row items-center gap-4">
@@ -953,7 +978,7 @@ export default function HomeScreen(): JSX.Element {
             )}
           </View>
         </ScrollView>
-      </LinearGradient>
+      </View>
       <FilterModal
         visible={filterVisible}
         onClose={() => setFilterVisible(false)}

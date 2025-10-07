@@ -5,6 +5,7 @@ import { useAppStore } from '@/stores/appStore';
 import { useTheme } from '@/hooks/useTheme';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
+import { Sparkles } from 'lucide-react-native';
 
 export default function CategoriesScreen() {
   const { theme } = useTheme();
@@ -100,21 +101,18 @@ export default function CategoriesScreen() {
       }
       activeOpacity={0.8}
     >
-      <LinearGradient
-        colors={
-          offer.is_featured
-            ? ['rgba(255, 215, 0, 0.8)', 'rgba(255, 165, 0, 0.8)']
-            : [theme.card, theme.card]
-        }
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        className="flex-1 rounded-xl"
-      >
+      <View className="flex-1 rounded-xl">
         <Image source={offer.image_url} className="w-full h-28" />
         <View className="absolute top-2 right-2 bg-[#FF6B35] px-1.5 py-1 rounded">
           <Text className="text-white text-[10px] font-bold">
             {offer.discount_percentage}% OFF
           </Text>
+        </View>
+        <View
+          className="absolute top-2 left-2 px-1.5 py-1.5 rounded-full"
+          style={{ backgroundColor: theme.primary + 'CC' }}
+        >
+          <Sparkles color={theme.text} size={16} />
         </View>
         <View className="p-3">
           <Text
@@ -149,7 +147,7 @@ export default function CategoriesScreen() {
             </Text>
           </View>
         </View>
-      </LinearGradient>
+      </View>
     </TouchableOpacity>
   );
 

@@ -97,10 +97,19 @@ export default function PhoneLoginScreen(): JSX.Element {
     : ['rgba(244,208,63,1)', 'rgb(247,177,57)'];
 
   return (
-    <LinearGradient className="flex-1 pt-10" colors={gradientColors}>
+    <LinearGradient
+      style={{
+        position: 'absolute',
+        left: 0,
+        right: 0,
+        top: 0,
+        bottom: 0,
+      }}
+      colors={gradientColors}
+    >
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        className="flex-1"
+        className="flex-1 pt-12"
       >
         {/* Header */}
         <View className="flex-row items-center px-5 pt-4 pb-6">
@@ -126,8 +135,15 @@ export default function PhoneLoginScreen(): JSX.Element {
           {/* Icon */}
           <LinearGradient
             colors={accentGradient}
-            className="w-18 h-18 p-5 rounded-xl items-center justify-center self-center mb-8"
-            style={{ borderRadius: 16 }} // Tailwind 'rounded-xl' = 16
+            style={{
+              borderRadius: 16,
+              width: 60,
+              height: 60,
+              alignItems: 'center',
+              justifyContent: 'center',
+              marginHorizontal: 'auto',
+              marginBottom: 20,
+            }} // Tailwind 'rounded-xl' = 16
           >
             <Phone color={theme.text} size={32} />
           </LinearGradient>

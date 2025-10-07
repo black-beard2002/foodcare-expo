@@ -99,7 +99,14 @@ export default function OnboardingStep3() {
     return (
       <LinearGradient
         colors={gradientColors}
-        className="flex-1 items-center justify-center px-6"
+        style={{
+          position: 'absolute',
+          left: 0,
+          right: 0,
+          top: 0,
+          bottom: 0,
+          paddingTop: 80,
+        }}
       >
         <MotiView
           from={{ scale: 0, opacity: 0 }}
@@ -111,8 +118,16 @@ export default function OnboardingStep3() {
         >
           <LinearGradient
             colors={successGradient}
-            style={{ borderRadius: 32 }}
-            className="w-32 h-32 justify-center items-center mb-8"
+            style={{
+              borderRadius: 32,
+              marginTop: 32,
+              width: 128,
+              height: 128,
+              alignSelf: 'center',
+              justifyContent: 'center',
+              alignItems: 'center',
+              marginBottom: 24,
+            }}
           >
             <PartyPopper color="#fff" size={72} />
           </LinearGradient>
@@ -157,7 +172,16 @@ export default function OnboardingStep3() {
   }
 
   return (
-    <LinearGradient colors={gradientColors} className="flex-1">
+    <LinearGradient
+      colors={gradientColors}
+      style={{
+        position: 'absolute',
+        left: 0,
+        right: 0,
+        top: 0,
+        bottom: 0,
+      }}
+    >
       <ScrollView
         className="flex-1"
         contentContainerStyle={{ flexGrow: 1 }}
@@ -177,8 +201,14 @@ export default function OnboardingStep3() {
           <View className="items-center mb-8">
             <LinearGradient
               colors={accentGradient}
-              style={{ borderRadius: 24 }}
-              className="w-24 h-24 justify-center items-center mb-6"
+              style={{
+                borderRadius: 24,
+                width: 96,
+                height: 96,
+                alignItems: 'center',
+                justifyContent: 'center',
+                marginBottom: 24,
+              }}
             >
               <Sparkles color="#fff" size={56} />
             </LinearGradient>
@@ -248,7 +278,11 @@ export default function OnboardingStep3() {
                   autoComplete="email"
                   editable={!isLoading}
                   className="flex-1 ml-3 text-base"
-                  style={{ color: theme.text }}
+                  style={{
+                    color: theme.text,
+                    height: 40,
+                    textAlignVertical: 'center',
+                  }}
                 />
               </View>
               {email && !validateEmail(email) && (

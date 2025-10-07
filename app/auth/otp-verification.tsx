@@ -158,7 +158,17 @@ export default function OTPVerificationScreen(): JSX.Element {
     : (['rgba(244,208,63,1)', 'rgb(247,177,57)'] as const);
 
   return (
-    <LinearGradient colors={gradientColors} className="flex-1 pt-16">
+    <LinearGradient
+      colors={gradientColors}
+      style={{
+        position: 'absolute',
+        left: 0,
+        right: 0,
+        top: 0,
+        bottom: 0,
+        paddingTop: 60,
+      }}
+    >
       {/* Header */}
       <View className="flex-row items-center px-6 mb-10">
         <TouchableOpacity onPress={() => router.back()} disabled={isLoading}>
@@ -173,8 +183,14 @@ export default function OTPVerificationScreen(): JSX.Element {
         {/* Icon */}
         <LinearGradient
           colors={accentGradient}
-          style={{ borderRadius: 16 }}
-          className="w-20 h-20  justify-center items-center mb-8"
+          style={{
+            borderRadius: 16,
+            width: 80,
+            height: 80,
+            justifyContent: 'center',
+            alignItems: 'center',
+            marginBottom: 20,
+          }}
         >
           <Shield color={theme.text} size={48} />
         </LinearGradient>
