@@ -62,7 +62,7 @@ export default function OnboardingStep3() {
       await new Promise((resolve) => setTimeout(resolve, 1500));
 
       showAlert(
-        'Welcome!',
+        `Welcome ${user.full_name}!`,
         "Your account is ready. Let's start exploring!",
         'success'
       );

@@ -17,11 +17,14 @@ export interface ApiResponse<T> {
 export type HttpMethod = 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH';
 
 // Base API Client
-class ApiClient {
+export class ApiClient {
   private baseURL: string;
   private timeout: number;
 
-  constructor(baseURL: string = API_CONFIG.BASE_URL, timeout: number = API_CONFIG.TIMEOUT) {
+  constructor(
+    baseURL: string = API_CONFIG.BASE_URL,
+    timeout: number = API_CONFIG.TIMEOUT
+  ) {
     this.baseURL = baseURL;
     this.timeout = timeout;
   }
@@ -42,7 +45,10 @@ class ApiClient {
         },
       };
 
-      if (data && (method === 'POST' || method === 'PUT' || method === 'PATCH')) {
+      if (
+        data &&
+        (method === 'POST' || method === 'PUT' || method === 'PATCH')
+      ) {
         config.body = JSON.stringify(data);
       }
 
@@ -60,36 +66,53 @@ class ApiClient {
       const result = await response.json();
       return {
         success: true,
-        data: result,
+        data: result.data,
       };
     } catch (error) {
       console.error(`API Error [${method} ${endpoint}]:`, error);
       return {
         success: false,
-        error: error instanceof Error ? error.message : 'Unknown error occurred',
+        error:
+          error instanceof Error ? error.message : 'Unknown error occurred',
       };
     }
   }
 
-  async get<T>(endpoint: string, headers?: Record<string, string>): Promise<ApiResponse<T>> {
+  async get<T>(
+    endpoint: string,
+    headers?: Record<string, string>
+  ): Promise<ApiResponse<T>> {
     return this.request<T>(endpoint, 'GET', undefined, headers);
   }
 
-  async post<T>(endpoint: string, data?: any, headers?: Record<string, string>): Promise<ApiResponse<T>> {
+  async post<T>(
+    endpoint: string,
+    data?: any,
+    headers?: Record<string, string>
+  ): Promise<ApiResponse<T>> {
     return this.request<T>(endpoint, 'POST', data, headers);
   }
 
-  async put<T>(endpoint: string, data?: any, headers?: Record<string, string>): Promise<ApiResponse<T>> {
+  async put<T>(
+    endpoint: string,
+    data?: any,
+    headers?: Record<string, string>
+  ): Promise<ApiResponse<T>> {
     return this.request<T>(endpoint, 'PUT', data, headers);
   }
 
-  async delete<T>(endpoint: string, headers?: Record<string, string>): Promise<ApiResponse<T>> {
+  async delete<T>(
+    endpoint: string,
+    headers?: Record<string, string>
+  ): Promise<ApiResponse<T>> {
     return this.request<T>(endpoint, 'DELETE', undefined, headers);
   }
 
-  async patch<T>(endpoint: string, data?: any, headers?: Record<string, string>): Promise<ApiResponse<T>> {
+  async patch<T>(
+    endpoint: string,
+    data?: any,
+    headers?: Record<string, string>
+  ): Promise<ApiResponse<T>> {
     return this.request<T>(endpoint, 'PATCH', data, headers);
   }
 }
-
-export const apiClient = new ApiClient();

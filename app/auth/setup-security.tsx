@@ -213,7 +213,7 @@ export default function SetupSecurityScreen(): JSX.Element {
     setBiometricEnabled(localBiometricEnabled);
     setPinEnabled(localPinEnabled);
     setOnboardingComplete(true);
-    router.replace('/(tabs)');
+    router.replace('/auth/onboarding-step-3');
   };
 
   const renderPinInput = (

@@ -7,6 +7,7 @@ import { authApi, SignUpData } from '@/api/auth';
 interface AuthState {
   user: User | null;
   isAuthenticated: boolean;
+  token: string | null;
   hasCompletedOnboarding: boolean;
   isLoading: boolean;
   error: string | null;
@@ -22,12 +23,11 @@ interface AuthState {
   // API Actions
   signInWithPhone: (
     phoneNumber: string
-  ) => Promise<{ success: boolean; verificationId?: string; error?: string }>;
+  ) => Promise<{ success: boolean; message: string }>;
   verifyOtp: (
-    verificationId: string,
     otp: string,
     phoneNumber: string
-  ) => Promise<{ success: boolean; error?: string }>;
+  ) => Promise<{ success: boolean; message?: string }>;
   signInWithEmail: (
     email: string,
     password: string
@@ -48,6 +48,7 @@ export const useAuthStore = create<AuthState>()(
       isAuthenticated: false,
       hasCompletedOnboarding: false,
       isLoading: false,
+      token: null,
       error: null,
       loadUserFromStorage: async () => {
         const storedUser = await AsyncStorage.getItem('user');
@@ -67,37 +68,37 @@ export const useAuthStore = create<AuthState>()(
         set({ isLoading: true, error: null });
         try {
           const response = await authApi.signInWithPhone(phoneNumber);
-          set({ isLoading: false });
-
-          if (response.success && response.data) {
+          if (response.success) {
             return {
               success: true,
-              verificationId: response.data.verificationId,
+              message: response.message || 'Sign in successful',
             };
           } else {
             set({ error: response.error });
-            return { success: false, error: response.error };
+            return {
+              success: false,
+              message: response.error || 'Sign in failed',
+            };
           }
         } catch (error) {
           set({ isLoading: false, error: 'Network error occurred' });
-          return { success: false, error: 'Network error occurred' };
+          return { success: false, message: 'Network error occurred' };
+        } finally {
+          set({ isLoading: false });
         }
       },
 
-      verifyOtp: async (
-        verificationId: string,
-        otp: string,
-        phoneNumber: string
-      ) => {
+      verifyOtp: async (otp: string, phoneNumber: string) => {
         set({ isLoading: true, error: null });
         try {
-          const response = await authApi.verifyOtp(verificationId, otp);
+          const response = await authApi.verifyOtp(phoneNumber, otp);
           set({ isLoading: false });
 
           if (response.success && response.data) {
             set({
               user: { ...response.data.user, phone_number: phoneNumber },
               isAuthenticated: true,
+              token: response.data.token,
               error: null,
             });
             return { success: true };

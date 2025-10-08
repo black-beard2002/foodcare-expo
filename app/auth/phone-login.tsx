@@ -17,12 +17,14 @@ import { useAuthStore } from '@/stores/authStore';
 import { useAlert } from '@/providers/AlertProvider';
 import { useTheme } from '@/hooks/useTheme';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useSettingsStore } from '@/stores/settingsStore';
 
 export default function PhoneLoginScreen(): JSX.Element {
   const [phoneNumber, setPhoneNumber] = useState<string>('');
   const [isValidNumber, setIsValidNumber] = useState<boolean>(false);
   const [show, setShow] = useState<boolean>(false);
   const { signInWithPhone, isLoading } = useAuthStore();
+  const { setBiometricEnabled, setPinEnabled, setUserPin } = useSettingsStore();
   const { showAlert } = useAlert();
   const { theme, isDark } = useTheme();
   const [country, setCountry] = useState<CountryItem>({
@@ -31,6 +33,15 @@ export default function PhoneLoginScreen(): JSX.Element {
     code: 'LB',
     flag: '🇱🇧',
   });
+
+  useEffect(() => {
+    async function handleSecurity() {
+      setBiometricEnabled(false);
+      setPinEnabled(false);
+      setUserPin('');
+    }
+    handleSecurity();
+  }, []);
 
   // Validate phone number
   useEffect(() => {
@@ -71,20 +82,16 @@ export default function PhoneLoginScreen(): JSX.Element {
   const handlePhoneSignIn = async (): Promise<void> => {
     const fullPhoneNumber = `+${country.code}${phoneNumber.replace(/\s/g, '')}`;
     const result = await signInWithPhone(fullPhoneNumber);
-    if (result.success && result.verificationId) {
+    if (result.success) {
+      showAlert('Success', result.message, 'success');
       router.push({
         pathname: '/auth/otp-verification',
         params: {
-          verificationId: result.verificationId,
           phoneNumber: fullPhoneNumber,
         },
       });
     } else {
-      showAlert(
-        'Error',
-        result.error || 'Failed to send verification code',
-        'error'
-      );
+      showAlert('Error', 'Failed to send verification code', 'error');
     }
   };
 

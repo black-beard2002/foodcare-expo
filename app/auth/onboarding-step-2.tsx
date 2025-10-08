@@ -195,7 +195,7 @@ export default function OnboardingStep2() {
     });
 
     if (result.success) {
-      router.push('/auth/onboarding-step-3');
+      router.push('/auth/setup-security');
     } else {
       showAlert('Error', result.error || 'Failed to save address', 'error');
     }
@@ -209,7 +209,7 @@ export default function OnboardingStep2() {
         { text: 'Cancel', style: 'cancel' },
         {
           text: 'Skip',
-          onPress: () => router.push('/auth/onboarding-step-3'),
+          onPress: () => router.push('/auth/setup-security'),
         },
       ]
     );

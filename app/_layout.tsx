@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { Stack, router } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useFrameworkReady } from '@/hooks/useFrameworkReady';
@@ -20,9 +20,13 @@ import { useNotificationsStore } from '@/stores/notificationsStore';
 import { usePromoCodesStore } from '@/stores/promoCodesStore';
 import { useLoyaltyStore } from '@/stores/loyaltyStore';
 import { useReviewsStore } from '@/stores/reviewsStore';
+import * as LocalAuthentication from 'expo-local-authentication';
 import { useBudgetStore } from '@/stores/budgetStore';
 import { useSearchHistoryStore } from '@/stores/searchHistoryStore';
 import { useAuthStore } from '@/stores/authStore';
+import CustomSplashScreen from '@/components/CustomSplashScreen';
+import { useSettingsStore } from '@/stores/settingsStore';
+import SecurityLockScreen from '@/components/SecurityLockScreen';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -30,35 +34,15 @@ export default function RootLayout() {
   useFrameworkReady();
   const { isDark } = useTheme();
   const [isReady, setIsReady] = useState(false);
+  const [showSplash, setShowSplash] = useState(true);
+  const [showLockScreen, setShowLockScreen] = useState(false);
+  const hasNavigated = useRef(false);
 
-  const loadFavorites = useFavoritesStore((state) => state.loadFavorites);
+  // stores
   const loadUserFromStorage = useAuthStore(
     (state) => state.loadUserFromStorage
   );
-  const loadRecentlyViewed = useRecentlyViewedStore(
-    (state) => state.loadRecentlyViewed
-  );
-  const loadNotifications = useNotificationsStore(
-    (state) => state.loadNotifications
-  );
-  const loadPreferences = useNotificationsStore(
-    (state) => state.loadPreferences
-  );
-  const loadPromoCodes = usePromoCodesStore((state) => state.loadPromoCodes);
-  const loadLoyaltyData = useLoyaltyStore((state) => state.loadLoyaltyData);
-  const loadReviews = useReviewsStore((state) => state.loadReviews);
-  const loadBudgetData = useBudgetStore((state) => state.loadBudgetData);
-  const loadSearchHistory = useSearchHistoryStore(
-    (state) => state.loadSearchHistory
-  );
-  const loadTrendingSearches = useSearchHistoryStore(
-    (state) => state.loadTrendingSearches
-  );
-  const user = useAuthStore((state) => state.user);
-  const hasCompletedOnboarding = useAuthStore(
-    (state) => state.hasCompletedOnboarding
-  );
-
+  const loadSettings = useSettingsStore((state) => state.loadSettings);
   const [fontsLoaded, fontError] = useFonts({
     'Inter-Regular': Inter_400Regular,
     'Inter-Medium': Inter_500Medium,
@@ -66,22 +50,27 @@ export default function RootLayout() {
     'Inter-Bold': Inter_700Bold,
   });
 
-  // Wait for all loads and navigate accordingly
+  const onSecuritySuccess = () => {
+    setShowLockScreen(false);
+    setIsReady(true);
+  };
+
+  const handleBiometricRetry = async () => {
+    const result = await LocalAuthentication.authenticateAsync({
+      promptMessage: 'Fingerprint authentication',
+      fallbackLabel: 'Use PIN instead',
+    });
+    return result.success;
+  };
+
+  // Load app data
   useEffect(() => {
     const prepareApp = async () => {
       try {
         await Promise.all([
-          loadFavorites(),
-          loadRecentlyViewed(),
-          loadNotifications(),
-          loadPreferences(),
-          loadPromoCodes(),
-          loadLoyaltyData(),
-          loadReviews(),
-          loadBudgetData(),
-          loadSearchHistory(),
-          loadTrendingSearches(),
           loadUserFromStorage(),
+          loadSettings(),
+          // ... other loads if needed
         ]);
       } catch (error) {
         console.error('Error loading app data:', error);
@@ -89,34 +78,70 @@ export default function RootLayout() {
         setIsReady(true);
       }
     };
-
     prepareApp();
   }, []);
 
-  // Handle splash screen and navigation
+  // Handle navigation and lock screen
   useEffect(() => {
     const handleNavigation = async () => {
-      if (isReady && (fontsLoaded || fontError)) {
+      if (hasNavigated.current) return;
+      if (!isReady || (!fontsLoaded && !fontError)) return;
+
+      try {
         await SplashScreen.hideAsync();
-        // if (user) {
-        //   if (hasCompletedOnboarding || user.has_completed_onboarding) {
-        //     router.replace('/(tabs)');
-        //   } else {
-        //     router.replace('/auth');
-        //   }
-        // } else {
-        //   router.replace('/auth');
-        // }
+        await new Promise((resolve) => setTimeout(resolve, 1500));
+
+        const user = useAuthStore.getState().user;
+        const hasCompletedOnboarding =
+          useAuthStore.getState().hasCompletedOnboarding;
+        const { biometricEnabled, pinEnabled, userPin } =
+          useSettingsStore.getState();
+
+        setShowSplash(false);
+
+        if (biometricEnabled || pinEnabled) {
+          console.log('biometric or pin enabled, showing lock screen');
+          setShowLockScreen(true);
+          return;
+        }
+
+        if (user && (hasCompletedOnboarding || user.has_completed_onboarding)) {
+          router.replace('/(tabs)');
+        } else {
+          router.replace('/auth');
+        }
+
+        hasNavigated.current = true;
+      } catch (error) {
+        console.error('Error during navigation:', error);
+        setShowSplash(false);
       }
     };
 
     handleNavigation();
-  }, [isReady, fontsLoaded, fontError, user, hasCompletedOnboarding]);
+  }, [isReady, fontsLoaded, fontError]);
 
-  if (!isReady || (!fontsLoaded && !fontError)) {
-    return null;
+  // SPLASH
+  if (showSplash) {
+    return <CustomSplashScreen />;
   }
 
+  // LOCK SCREEN
+  if (showLockScreen) {
+    const { biometricEnabled, pinEnabled, userPin } =
+      useSettingsStore.getState();
+    return (
+      <SecurityLockScreen
+        pinEnabled={pinEnabled}
+        userPin={userPin}
+        biometricEnabled={biometricEnabled}
+        onSuccess={onSecuritySuccess}
+        onBiometricRetry={handleBiometricRetry}
+      />
+    );
+  }
+
+  // MAIN APP
   return (
     <>
       <AlertProvider>

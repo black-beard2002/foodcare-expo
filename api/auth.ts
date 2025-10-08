@@ -1,4 +1,5 @@
-import { apiClient, ApiResponse } from './config';
+import { USER_API } from '@/constants/api_constants';
+import { ApiClient, ApiResponse } from './config';
 import { User } from '@/types/authTypes';
 
 export interface AuthApi {
@@ -6,7 +7,7 @@ export interface AuthApi {
     phoneNumber: string
   ) => Promise<ApiResponse<{ verificationId: string }>>;
   verifyOtp: (
-    verificationId: string,
+    phone_number: string,
     otp: string
   ) => Promise<ApiResponse<{ user: User; token: string }>>;
   signInWithEmail: (
@@ -36,20 +37,24 @@ export interface SignUpData {
 }
 
 class AuthApiImpl implements AuthApi {
-  async signInWithPhone(
-    phoneNumber: string
-  ): Promise<ApiResponse<{ verificationId: string }>> {
+  apiClient = new ApiClient(USER_API);
+
+  async signInWithPhone(phoneNumber: string) {
     try {
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-
-      // Simulate sending OTP
-      const verificationId = '000000';
-
-      return {
-        success: true,
-        data: { verificationId },
-        message: 'OTP sent successfully',
-      };
+      const response = await this.apiClient.post('/register-with-phone', {
+        phone_number: phoneNumber,
+      });
+      if (response.success) {
+        return {
+          success: true,
+          message: response.data.message,
+        };
+      } else {
+        return {
+          success: false,
+          error: response.error || 'Failed to send OTP',
+        };
+      }
     } catch (error) {
       return {
         success: false,
@@ -59,35 +64,37 @@ class AuthApiImpl implements AuthApi {
   }
 
   async verifyOtp(
-    verificationId: string,
+    phone_number: string,
     otp: string
   ): Promise<ApiResponse<{ user: User; token: string }>> {
     try {
-      await new Promise((resolve) => setTimeout(resolve, 800));
-      console.log('otp:', otp);
-      // For demo purposes, accept any 6-digit OTP
-      if (otp.length !== 6) {
+      const response = await this.apiClient.post('/verify-otp', {
+        phone_number,
+        otp,
+      });
+      if (response.success) {
+        const user: User = {
+          id: Date.now().toString(),
+          phone_number: '+1234567890',
+          has_completed_onboarding: false,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        };
+
+        const token = `token_${Date.now()}`;
+
+        return {
+          success: true,
+          data: { user, token },
+          message: 'OTP verified successfully',
+        };
+      } else {
         return {
           success: false,
-          error: 'Invalid OTP',
+          message: response.message || 'Failed to verify OTP',
+          error: response.error || 'Failed to verify OTP',
         };
       }
-
-      const user: User = {
-        id: Date.now().toString(),
-        phone_number: '+1234567890',
-        has_completed_onboarding: false,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      };
-
-      const token = `token_${Date.now()}`;
-
-      return {
-        success: true,
-        data: { user, token },
-        message: 'OTP verified successfully',
-      };
     } catch (error) {
       return {
         success: false,

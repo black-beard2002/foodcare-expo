@@ -23,12 +23,11 @@ import { useTheme } from '@/hooks/useTheme';
 import { LinearGradient } from 'expo-linear-gradient';
 
 export default function OTPVerificationScreen(): JSX.Element {
-  const [otp, setOtp] = useState<string[]>(['', '', '', '', '', '']);
+  const [otp, setOtp] = useState<string[]>(['', '', '', '']);
   const [timer, setTimer] = useState<number>(60);
   const [isResending, setIsResending] = useState<boolean>(false);
   const [hasVerified, setHasVerified] = useState<boolean>(false);
-  const { verificationId, phoneNumber } = useLocalSearchParams<{
-    verificationId: string;
+  const { phoneNumber } = useLocalSearchParams<{
     phoneNumber: string;
   }>();
   const { verifyOtp, signInWithPhone, isLoading } = useAuthStore();
@@ -74,9 +73,8 @@ export default function OTPVerificationScreen(): JSX.Element {
   }, []);
 
   const simulateOtpVerification = async (otpCode: string) => {
-    if (!verificationId) return false;
-    const result = await verifyOtp(verificationId, otpCode, phoneNumber);
-    return result.success;
+    const result = await verifyOtp(otpCode, phoneNumber);
+    return { success: result.success, message: result.message };
   };
 
   const handleAutoVerify = useCallback(async () => {
@@ -85,12 +83,17 @@ export default function OTPVerificationScreen(): JSX.Element {
     setHasVerified(true);
     const otpCode = otp.join('');
     try {
-      const valid = await simulateOtpVerification(otpCode);
-      if (valid) {
+      const response = await simulateOtpVerification(otpCode);
+      if (response.success) {
+        showAlert(
+          'Success',
+          response.message || 'Phone number verified successfully.',
+          'success'
+        );
         router.push('/auth/onboarding-step-1');
       } else {
         setHasVerified(false);
-        setOtp(['', '', '', '', '', '']);
+        setOtp(['', '', '', '']);
         inputRefs.current[0]?.focus();
         showAlert(
           'Invalid Code',
@@ -102,30 +105,30 @@ export default function OTPVerificationScreen(): JSX.Element {
       setHasVerified(false);
       showAlert('Error', 'Something went wrong. Please try again.', 'error');
     }
-  }, [otp, hasVerified, isLoading, verificationId, showAlert]);
+  }, [otp, hasVerified, isLoading, showAlert]);
 
   useEffect(() => {
     const otpCode = otp.join('');
-    if (otpCode.length === 6 && !isLoading && !hasVerified) handleAutoVerify();
+    if (otpCode.length === 4 && !isLoading && !hasVerified) handleAutoVerify();
   }, [otp, isLoading, hasVerified, handleAutoVerify]);
 
   const handleManualVerify = useCallback(() => {
     const otpCode = otp.join('');
-    if (otpCode.length === 6 && !hasVerified) handleAutoVerify();
+    if (otpCode.length === 4 && !hasVerified) handleAutoVerify();
   }, [otp, hasVerified, handleAutoVerify]);
 
   const simulateResendCode = async () => {
-    if (!phoneNumber) return false;
+    if (!phoneNumber) return { success: false, message: 'No phone number' };
     const result = await signInWithPhone(phoneNumber);
-    return result.success;
+    return result;
   };
 
   const handleCodeResend = useCallback(async () => {
     setIsResending(true);
     try {
-      const success = await simulateResendCode();
-      if (success) {
-        setOtp(['', '', '', '', '', '']);
+      const response = await simulateResendCode();
+      if (response.success) {
+        setOtp(['', '', '', '']);
         setTimer(60);
         setHasVerified(false);
         inputRefs.current[0]?.focus();
@@ -134,6 +137,9 @@ export default function OTPVerificationScreen(): JSX.Element {
           'A new verification code has been sent to your phone.',
           'success'
         );
+        setTimeout(() => {
+          showAlert('Code recieved', response.message, 'success');
+        }, 1000);
       } else
         showAlert('Error', 'Failed to resend code. Please try again.', 'error');
     } catch {
