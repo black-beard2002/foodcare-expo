@@ -6,7 +6,7 @@ export const API_CONFIG = {
 };
 
 // API Response Types
-export interface ApiResponse<T> {
+export interface ApiResponse<T = Record<string, string>> {
   success: boolean;
   data?: T;
   error?: string;
@@ -20,12 +20,15 @@ export type HttpMethod = 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH';
 export class ApiClient {
   private baseURL: string;
   private timeout: number;
+  private token: string;
 
   constructor(
     baseURL: string = API_CONFIG.BASE_URL,
+    token: string = '',
     timeout: number = API_CONFIG.TIMEOUT
   ) {
     this.baseURL = baseURL;
+    this.token = token;
     this.timeout = timeout;
   }
 
@@ -57,6 +60,8 @@ export class ApiClient {
       config.signal = controller.signal;
 
       const response = await fetch(url, config);
+      console.log(`API Request [${method} ${url}]`, { data, headers });
+      console.log(`API Response [${method} ${url}]`, response);
       clearTimeout(timeoutId);
 
       if (!response.ok) {
@@ -69,7 +74,10 @@ export class ApiClient {
         data: result.data,
       };
     } catch (error) {
-      console.error(`API Error [${method} ${endpoint}]:`, error);
+      console.error(
+        `API Error [${method} ${this.baseURL.concat(endpoint)}]:`,
+        error
+      );
       return {
         success: false,
         error:

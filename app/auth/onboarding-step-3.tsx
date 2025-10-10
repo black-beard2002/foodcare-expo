@@ -40,21 +40,14 @@ export default function OnboardingStep3() {
       return;
     }
 
-    if (!user?.id) {
-      showAlert(
-        'Error',
-        'User session not found. Please login again.',
-        'error'
-      );
-      return;
-    }
-
     setIsCompleting(true);
 
-    const result = await updateProfile({
-      email: email.trim().toLowerCase(),
-      has_completed_onboarding: true,
-    });
+    const fullUser = {
+      ...user,
+      email_address: email.trim().toLowerCase(),
+    };
+
+    const result = await updateProfile(fullUser);
 
     if (result.success) {
       setOnboardingComplete(true);
@@ -62,7 +55,7 @@ export default function OnboardingStep3() {
       await new Promise((resolve) => setTimeout(resolve, 1500));
 
       showAlert(
-        `Welcome ${user.full_name}!`,
+        `Welcome ${user?.first_name}!`,
         "Your account is ready. Let's start exploring!",
         'success'
       );

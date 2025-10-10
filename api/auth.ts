@@ -9,23 +9,24 @@ export interface AuthApi {
   verifyOtp: (
     phone_number: string,
     otp: string
-  ) => Promise<ApiResponse<{ user: User; token: string }>>;
+  ) => Promise<ApiResponse<{ user: Partial<User>; token: string }>>;
   signInWithEmail: (
     email: string,
     password: string
-  ) => Promise<ApiResponse<{ user: User; token: string }>>;
+  ) => Promise<ApiResponse<{ user: Partial<User>; token: string }>>;
   signUp: (
     userData: SignUpData
-  ) => Promise<ApiResponse<{ user: User; token: string }>>;
+  ) => Promise<ApiResponse<{ user: Partial<User>; token: string }>>;
   signOut: () => Promise<ApiResponse<void>>;
   refreshToken: (
     refreshToken: string
   ) => Promise<ApiResponse<{ token: string }>>;
-  getCurrentUser: () => Promise<ApiResponse<User>>;
+  getCurrentUser: () => Promise<ApiResponse<Partial<User>>>;
   updateProfile: (
     userId: string,
-    userData: Partial<User>
-  ) => Promise<ApiResponse<User>>;
+    userData: Partial<Partial<User>>,
+    token: string
+  ) => Promise<ApiResponse<Partial<User>>>;
   deleteAccount: (userId: string) => Promise<ApiResponse<void>>;
 }
 
@@ -66,26 +67,21 @@ class AuthApiImpl implements AuthApi {
   async verifyOtp(
     phone_number: string,
     otp: string
-  ): Promise<ApiResponse<{ user: User; token: string }>> {
+  ): Promise<
+    ApiResponse<{ user: Partial<User>; token: string; refresh_token: string }>
+  > {
     try {
       const response = await this.apiClient.post('/verify-otp', {
         phone_number,
         otp,
       });
       if (response.success) {
-        const user: User = {
-          id: Date.now().toString(),
-          phone_number: '+1234567890',
-          has_completed_onboarding: false,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        };
-
-        const token = `token_${Date.now()}`;
-
+        const user: Partial<User> = response.data.user;
+        const token: string = response.data.token.access_token;
+        const refresh_token: string = response.data.token.refresh_token;
         return {
           success: true,
-          data: { user, token },
+          data: { user, token, refresh_token },
           message: 'OTP verified successfully',
         };
       } else {
@@ -106,7 +102,7 @@ class AuthApiImpl implements AuthApi {
   async signInWithEmail(
     email: string,
     password: string
-  ): Promise<ApiResponse<{ user: User; token: string }>> {
+  ): Promise<ApiResponse<{ user: Partial<User>; token: string }>> {
     try {
       await new Promise((resolve) => setTimeout(resolve, 1000));
 
@@ -118,14 +114,11 @@ class AuthApiImpl implements AuthApi {
         };
       }
 
-      const user: User = {
+      const user: Partial<User> = {
         id: Date.now().toString(),
         phone_number: '+1234567890',
-        email,
-        full_name: 'Demo User',
-        has_completed_onboarding: true,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
+        email_address: email,
+        first_name: 'Demo User',
       };
 
       const token = `token_${Date.now()}`;
@@ -145,7 +138,7 @@ class AuthApiImpl implements AuthApi {
 
   async signUp(
     userData: SignUpData
-  ): Promise<ApiResponse<{ user: User; token: string }>> {
+  ): Promise<ApiResponse<{ user: Partial<User>; token: string }>> {
     try {
       await new Promise((resolve) => setTimeout(resolve, 1200));
 
@@ -156,14 +149,11 @@ class AuthApiImpl implements AuthApi {
         };
       }
 
-      const user: User = {
+      const user: Partial<User> = {
         id: Date.now().toString(),
         phone_number: userData.phone_number || '',
-        email: userData.email,
-        full_name: userData.full_name,
-        has_completed_onboarding: false,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
+        email_address: userData.email,
+        first_name: userData.full_name,
       };
 
       const token = `token_${Date.now()}`;
@@ -217,19 +207,16 @@ class AuthApiImpl implements AuthApi {
     }
   }
 
-  async getCurrentUser(): Promise<ApiResponse<User>> {
+  async getCurrentUser(): Promise<ApiResponse<Partial<User>>> {
     try {
       await new Promise((resolve) => setTimeout(resolve, 400));
 
       // Return demo user for now
-      const user: User = {
+      const user: Partial<User> = {
         id: '1',
         phone_number: '+1234567890',
-        email: 'demo@example.com',
-        full_name: 'Demo User',
-        has_completed_onboarding: true,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
+        email_address: 'demo@example.com',
+        first_name: 'Demo Partial<User>',
       };
 
       return {
@@ -246,31 +233,27 @@ class AuthApiImpl implements AuthApi {
 
   async updateProfile(
     userId: string,
-    userData: Partial<User>
-  ): Promise<ApiResponse<User>> {
+    userData: Partial<Partial<User>>,
+    token: string
+  ): Promise<ApiResponse<Partial<User>>> {
     try {
-      await new Promise((resolve) => setTimeout(resolve, 800));
-
-      const updatedUser: User = {
-        id: userId,
-        phone_number: userData.phone_number || '+1234567890',
-        email: userData.email,
-        full_name: userData.full_name,
-        address: userData.address,
-        latitude: userData.latitude,
-        longitude: userData.longitude,
-        date_of_birth: userData.date_of_birth,
-        avatar_url: userData.avatar_url,
-        has_completed_onboarding: userData.has_completed_onboarding,
-        created_at: '2024-01-01T00:00:00Z',
-        updated_at: new Date().toISOString(),
-      };
-
-      return {
-        success: true,
-        data: updatedUser,
-        message: 'Profile updated successfully',
-      };
+      console.log('data', userData);
+      const response = await this.apiClient.put(`/${userId}/update`, userData, {
+        Authorization: `Bearer ${token}`,
+      });
+      console.log('Update Profile Response:', response);
+      if (response.success) {
+        return {
+          success: true,
+          data: response.data as Partial<User>,
+          message: 'Profile updated successfully',
+        };
+      } else {
+        return {
+          success: false,
+          error: response.error || 'Failed to update profile',
+        };
+      }
     } catch (error) {
       return {
         success: false,

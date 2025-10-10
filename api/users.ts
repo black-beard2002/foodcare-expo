@@ -1,17 +1,34 @@
-import { apiClient, ApiResponse } from './config';
+import { USER_API } from '@/constants/api_constants';
+import { ApiClient, ApiResponse } from './config';
 import { User } from '@/types/authTypes';
 
 export interface UsersApi {
   getUsers: () => Promise<ApiResponse<User[]>>;
   getUserById: (id: string) => Promise<ApiResponse<User>>;
-  updateUser: (id: string, userData: Partial<User>) => Promise<ApiResponse<User>>;
+  updateUser: (
+    id: string,
+    userData: Partial<User>
+  ) => Promise<ApiResponse<User>>;
   deleteUser: (id: string) => Promise<ApiResponse<void>>;
   getUserPreferences: (userId: string) => Promise<ApiResponse<UserPreferences>>;
-  updateUserPreferences: (userId: string, preferences: Partial<UserPreferences>) => Promise<ApiResponse<UserPreferences>>;
+  updateUserPreferences: (
+    userId: string,
+    preferences: Partial<UserPreferences>
+  ) => Promise<ApiResponse<UserPreferences>>;
   getUserAddresses: (userId: string) => Promise<ApiResponse<UserAddress[]>>;
-  addUserAddress: (userId: string, address: Omit<UserAddress, 'id'>) => Promise<ApiResponse<UserAddress>>;
-  updateUserAddress: (userId: string, addressId: string, address: Partial<UserAddress>) => Promise<ApiResponse<UserAddress>>;
-  deleteUserAddress: (userId: string, addressId: string) => Promise<ApiResponse<void>>;
+  addUserAddress: (
+    userId: string,
+    address: Omit<UserAddress, 'id'>
+  ) => Promise<ApiResponse<UserAddress>>;
+  updateUserAddress: (
+    userId: string,
+    addressId: string,
+    address: Partial<UserAddress>
+  ) => Promise<ApiResponse<UserAddress>>;
+  deleteUserAddress: (
+    userId: string,
+    addressId: string
+  ) => Promise<ApiResponse<void>>;
 }
 
 export interface UserPreferences {
@@ -57,11 +74,12 @@ class UsersApiImpl implements UsersApi {
   private users: User[] = [];
   private preferences: UserPreferences[] = [];
   private addresses: UserAddress[] = [];
+  apiClient = new ApiClient(USER_API);
 
   async getUsers(): Promise<ApiResponse<User[]>> {
     try {
-      await new Promise(resolve => setTimeout(resolve, 400));
-      
+      await new Promise((resolve) => setTimeout(resolve, 400));
+
       return {
         success: true,
         data: this.users,
@@ -76,9 +94,9 @@ class UsersApiImpl implements UsersApi {
 
   async getUserById(id: string): Promise<ApiResponse<User>> {
     try {
-      await new Promise(resolve => setTimeout(resolve, 300));
-      
-      const user = this.users.find(u => u.id === id);
+      await new Promise((resolve) => setTimeout(resolve, 300));
+
+      const user = this.users.find((u) => u.id === id);
       if (!user) {
         return {
           success: false,
@@ -98,29 +116,26 @@ class UsersApiImpl implements UsersApi {
     }
   }
 
-  async updateUser(id: string, userData: Partial<User>): Promise<ApiResponse<User>> {
+  async updateUser(
+    id: string,
+    userData: Partial<User>
+  ): Promise<ApiResponse<User>> {
     try {
-      await new Promise(resolve => setTimeout(resolve, 600));
-      
-      const userIndex = this.users.findIndex(u => u.id === id);
-      if (userIndex === -1) {
+      const response = await this.apiClient.post(`/user/${id}/update`, {
+        userData,
+      });
+      if (response.success) {
+        return {
+          success: true,
+          data: response.data as User,
+          message: 'User updated successfully',
+        };
+      } else {
         return {
           success: false,
-          error: 'User not found',
+          error: response.error || 'Failed to update user',
         };
       }
-
-      this.users[userIndex] = {
-        ...this.users[userIndex],
-        ...userData,
-        updated_at: new Date().toISOString(),
-      };
-
-      return {
-        success: true,
-        data: this.users[userIndex],
-        message: 'User updated successfully',
-      };
     } catch (error) {
       return {
         success: false,
@@ -131,9 +146,9 @@ class UsersApiImpl implements UsersApi {
 
   async deleteUser(id: string): Promise<ApiResponse<void>> {
     try {
-      await new Promise(resolve => setTimeout(resolve, 800));
-      
-      const userIndex = this.users.findIndex(u => u.id === id);
+      await new Promise((resolve) => setTimeout(resolve, 800));
+
+      const userIndex = this.users.findIndex((u) => u.id === id);
       if (userIndex === -1) {
         return {
           success: false,
@@ -142,10 +157,10 @@ class UsersApiImpl implements UsersApi {
       }
 
       this.users.splice(userIndex, 1);
-      
+
       // Also remove related data
-      this.preferences = this.preferences.filter(p => p.userId !== id);
-      this.addresses = this.addresses.filter(a => a.userId !== id);
+      this.preferences = this.preferences.filter((p) => p.userId !== id);
+      this.addresses = this.addresses.filter((a) => a.userId !== id);
 
       return {
         success: true,
@@ -159,12 +174,14 @@ class UsersApiImpl implements UsersApi {
     }
   }
 
-  async getUserPreferences(userId: string): Promise<ApiResponse<UserPreferences>> {
+  async getUserPreferences(
+    userId: string
+  ): Promise<ApiResponse<UserPreferences>> {
     try {
-      await new Promise(resolve => setTimeout(resolve, 300));
-      
-      let userPrefs = this.preferences.find(p => p.userId === userId);
-      
+      await new Promise((resolve) => setTimeout(resolve, 300));
+
+      let userPrefs = this.preferences.find((p) => p.userId === userId);
+
       if (!userPrefs) {
         // Create default preferences
         userPrefs = {
@@ -205,11 +222,14 @@ class UsersApiImpl implements UsersApi {
     }
   }
 
-  async updateUserPreferences(userId: string, preferences: Partial<UserPreferences>): Promise<ApiResponse<UserPreferences>> {
+  async updateUserPreferences(
+    userId: string,
+    preferences: Partial<UserPreferences>
+  ): Promise<ApiResponse<UserPreferences>> {
     try {
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
-      const prefsIndex = this.preferences.findIndex(p => p.userId === userId);
+      await new Promise((resolve) => setTimeout(resolve, 500));
+
+      const prefsIndex = this.preferences.findIndex((p) => p.userId === userId);
       if (prefsIndex === -1) {
         return {
           success: false,
@@ -238,10 +258,10 @@ class UsersApiImpl implements UsersApi {
 
   async getUserAddresses(userId: string): Promise<ApiResponse<UserAddress[]>> {
     try {
-      await new Promise(resolve => setTimeout(resolve, 300));
-      
-      const userAddresses = this.addresses.filter(a => a.userId === userId);
-      
+      await new Promise((resolve) => setTimeout(resolve, 300));
+
+      const userAddresses = this.addresses.filter((a) => a.userId === userId);
+
       return {
         success: true,
         data: userAddresses,
@@ -254,10 +274,13 @@ class UsersApiImpl implements UsersApi {
     }
   }
 
-  async addUserAddress(userId: string, address: Omit<UserAddress, 'id'>): Promise<ApiResponse<UserAddress>> {
+  async addUserAddress(
+    userId: string,
+    address: Omit<UserAddress, 'id'>
+  ): Promise<ApiResponse<UserAddress>> {
     try {
-      await new Promise(resolve => setTimeout(resolve, 600));
-      
+      await new Promise((resolve) => setTimeout(resolve, 600));
+
       const newAddress: UserAddress = {
         ...address,
         id: Date.now().toString(),
@@ -281,11 +304,17 @@ class UsersApiImpl implements UsersApi {
     }
   }
 
-  async updateUserAddress(userId: string, addressId: string, address: Partial<UserAddress>): Promise<ApiResponse<UserAddress>> {
+  async updateUserAddress(
+    userId: string,
+    addressId: string,
+    address: Partial<UserAddress>
+  ): Promise<ApiResponse<UserAddress>> {
     try {
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
-      const addressIndex = this.addresses.findIndex(a => a.id === addressId && a.userId === userId);
+      await new Promise((resolve) => setTimeout(resolve, 500));
+
+      const addressIndex = this.addresses.findIndex(
+        (a) => a.id === addressId && a.userId === userId
+      );
       if (addressIndex === -1) {
         return {
           success: false,
@@ -312,11 +341,16 @@ class UsersApiImpl implements UsersApi {
     }
   }
 
-  async deleteUserAddress(userId: string, addressId: string): Promise<ApiResponse<void>> {
+  async deleteUserAddress(
+    userId: string,
+    addressId: string
+  ): Promise<ApiResponse<void>> {
     try {
-      await new Promise(resolve => setTimeout(resolve, 400));
-      
-      const addressIndex = this.addresses.findIndex(a => a.id === addressId && a.userId === userId);
+      await new Promise((resolve) => setTimeout(resolve, 400));
+
+      const addressIndex = this.addresses.findIndex(
+        (a) => a.id === addressId && a.userId === userId
+      );
       if (addressIndex === -1) {
         return {
           success: false,

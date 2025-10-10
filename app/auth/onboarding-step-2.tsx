@@ -35,7 +35,7 @@ export default function OnboardingStep2() {
   const [isGettingLocation, setIsGettingLocation] = useState(false);
   const [locationError, setLocationError] = useState<string | null>(null);
   const [focusedField, setFocusedField] = useState(false);
-  const { updateProfile, isLoading, user } = useAuthStore();
+  const { setUser, isLoading, user } = useAuthStore();
   const { showAlert } = useAlert();
   const { theme, isDark } = useTheme();
 
@@ -138,6 +138,10 @@ export default function OnboardingStep2() {
 
       if (addressString) {
         setAddress(addressString);
+        setUser({
+          ...user,
+          address: addressString.trim(),
+        });
         showAlert(
           'Location Found',
           'Your current location has been detected successfully',
@@ -145,6 +149,10 @@ export default function OnboardingStep2() {
         );
       } else {
         setAddress(`${latitude.toFixed(6)}, ${longitude.toFixed(6)}`);
+        setUser({
+          ...user,
+          address: `${latitude.toFixed(6)}, ${longitude.toFixed(6)}`,
+        });
         showAlert(
           'Location Found',
           'Please refine your address manually',
@@ -175,31 +183,10 @@ export default function OnboardingStep2() {
       return;
     }
 
-    if (!user?.id) {
-      showAlert(
-        'Error',
-        'User session not found. Please login again.',
-        'error'
-      );
-      return;
-    }
+    console.log('user info', user);
 
-    // Use detected coordinates or default coordinates
-    const lat = coordinates?.latitude || 0;
-    const lng = coordinates?.longitude || 0;
-
-    const result = await updateProfile({
-      address: address.trim(),
-      latitude: lat,
-      longitude: lng,
-    });
-
-    if (result.success) {
-      router.push('/auth/setup-security');
-    } else {
-      showAlert('Error', result.error || 'Failed to save address', 'error');
-    }
-  }, [address, coordinates, isFormValid, user, updateProfile, showAlert]);
+    router.push('/auth/setup-security');
+  }, [address, coordinates, isFormValid, user, showAlert]);
 
   const handleSkip = useCallback(() => {
     Alert.alert(

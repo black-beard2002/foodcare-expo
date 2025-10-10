@@ -74,6 +74,7 @@ export default function OTPVerificationScreen(): JSX.Element {
 
   const simulateOtpVerification = async (otpCode: string) => {
     const result = await verifyOtp(otpCode, phoneNumber);
+    console.log('OTP Verification Result:', result);
     return { success: result.success, message: result.message };
   };
 

@@ -20,13 +20,11 @@ import { useNotificationsStore } from '@/stores/notificationsStore';
 import { usePromoCodesStore } from '@/stores/promoCodesStore';
 import { useLoyaltyStore } from '@/stores/loyaltyStore';
 import { useReviewsStore } from '@/stores/reviewsStore';
-import * as LocalAuthentication from 'expo-local-authentication';
 import { useBudgetStore } from '@/stores/budgetStore';
 import { useSearchHistoryStore } from '@/stores/searchHistoryStore';
 import { useAuthStore } from '@/stores/authStore';
 import CustomSplashScreen from '@/components/CustomSplashScreen';
 import { useSettingsStore } from '@/stores/settingsStore';
-import SecurityLockScreen from '@/components/SecurityLockScreen';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -35,14 +33,9 @@ export default function RootLayout() {
   const { isDark } = useTheme();
   const [isReady, setIsReady] = useState(false);
   const [showSplash, setShowSplash] = useState(true);
-  const [showLockScreen, setShowLockScreen] = useState(false);
+
   const hasNavigated = useRef(false);
 
-  // stores
-  const loadUserFromStorage = useAuthStore(
-    (state) => state.loadUserFromStorage
-  );
-  const loadSettings = useSettingsStore((state) => state.loadSettings);
   const [fontsLoaded, fontError] = useFonts({
     'Inter-Regular': Inter_400Regular,
     'Inter-Medium': Inter_500Medium,
@@ -50,62 +43,47 @@ export default function RootLayout() {
     'Inter-Bold': Inter_700Bold,
   });
 
-  const onSecuritySuccess = () => {
-    setShowLockScreen(false);
-    setIsReady(true);
-  };
-
-  const handleBiometricRetry = async () => {
-    const result = await LocalAuthentication.authenticateAsync({
-      promptMessage: 'Fingerprint authentication',
-      fallbackLabel: 'Use PIN instead',
-    });
-    return result.success;
-  };
-
   // Load app data
   useEffect(() => {
     const prepareApp = async () => {
       try {
-        await Promise.all([
-          loadUserFromStorage(),
-          loadSettings(),
-          // ... other loads if needed
-        ]);
+        await Promise.all(
+          [
+            useAuthStore.getState().loadUserFromStorage(),
+            useSettingsStore.getState().loadSettings(),
+            useFavoritesStore.getState().loadFavorites?.(),
+            useRecentlyViewedStore.getState().loadRecentlyViewed?.(),
+            useSearchHistoryStore.getState().loadSearchHistory?.(),
+            useNotificationsStore.getState().loadNotifications?.(),
+            usePromoCodesStore.getState().loadPromoCodes?.(),
+            useLoyaltyStore.getState().loadLoyaltyData?.(),
+            useReviewsStore.getState().loadReviews?.(),
+            useBudgetStore.getState().loadBudgetData?.(),
+          ].filter(Boolean)
+        );
       } catch (error) {
         console.error('Error loading app data:', error);
       } finally {
         setIsReady(true);
+        setShowSplash(false);
+        SplashScreen.hideAsync();
       }
     };
     prepareApp();
   }, []);
 
-  // Handle navigation and lock screen
+  // Handle navigation
   useEffect(() => {
     const handleNavigation = async () => {
       if (hasNavigated.current) return;
       if (!isReady || (!fontsLoaded && !fontError)) return;
 
       try {
-        await SplashScreen.hideAsync();
-        await new Promise((resolve) => setTimeout(resolve, 1500));
+        const authState = useAuthStore.getState();
+        const user = authState.user;
 
-        const user = useAuthStore.getState().user;
-        const hasCompletedOnboarding =
-          useAuthStore.getState().hasCompletedOnboarding;
-        const { biometricEnabled, pinEnabled, userPin } =
-          useSettingsStore.getState();
-
-        setShowSplash(false);
-
-        if (biometricEnabled || pinEnabled) {
-          console.log('biometric or pin enabled, showing lock screen');
-          setShowLockScreen(true);
-          return;
-        }
-
-        if (user && (hasCompletedOnboarding || user.has_completed_onboarding)) {
+        // Simple navigation logic: if user exists, go to tabs, else go to auth
+        if (user) {
           router.replace('/(tabs)');
         } else {
           router.replace('/auth');
@@ -114,31 +92,15 @@ export default function RootLayout() {
         hasNavigated.current = true;
       } catch (error) {
         console.error('Error during navigation:', error);
-        setShowSplash(false);
       }
     };
 
     handleNavigation();
   }, [isReady, fontsLoaded, fontError]);
 
-  // SPLASH
+  // SPLASH SCREEN
   if (showSplash) {
     return <CustomSplashScreen />;
-  }
-
-  // LOCK SCREEN
-  if (showLockScreen) {
-    const { biometricEnabled, pinEnabled, userPin } =
-      useSettingsStore.getState();
-    return (
-      <SecurityLockScreen
-        pinEnabled={pinEnabled}
-        userPin={userPin}
-        biometricEnabled={biometricEnabled}
-        onSuccess={onSecuritySuccess}
-        onBiometricRetry={handleBiometricRetry}
-      />
-    );
   }
 
   // MAIN APP

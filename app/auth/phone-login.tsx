@@ -80,7 +80,10 @@ export default function PhoneLoginScreen(): JSX.Element {
   };
 
   const handlePhoneSignIn = async (): Promise<void> => {
-    const fullPhoneNumber = `+${country.code}${phoneNumber.replace(/\s/g, '')}`;
+    const fullPhoneNumber = `${country.dial_code}${phoneNumber.replace(
+      /\s/g,
+      ''
+    )}`;
     const result = await signInWithPhone(fullPhoneNumber);
     if (result.success) {
       showAlert('Success', result.message, 'success');
