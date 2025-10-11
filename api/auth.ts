@@ -1,6 +1,7 @@
 import { USER_API } from '@/constants/api_constants';
-import { ApiClient, ApiResponse } from './config';
+import { ApiClient } from './config';
 import { User } from '@/types/authTypes';
+import { ApiResponse } from '@/types/apiTypes';
 
 export interface AuthApi {
   signInWithPhone: (
@@ -9,23 +10,21 @@ export interface AuthApi {
   verifyOtp: (
     phone_number: string,
     otp: string
-  ) => Promise<ApiResponse<{ user: Partial<User>; token: string }>>;
-  signInWithEmail: (
-    email: string,
-    password: string
-  ) => Promise<ApiResponse<{ user: Partial<User>; token: string }>>;
-  signUp: (
-    userData: SignUpData
-  ) => Promise<ApiResponse<{ user: Partial<User>; token: string }>>;
+  ) => Promise<
+    ApiResponse<{ user: Partial<User>; token: string; refresh_token: string }>
+  >;
+  // signInWithEmail: (
+  //   email: string,
+  //   password: string
+  // ) => Promise<ApiResponse<{ user: Partial<User>; token: string }>>;
+  // signUp: (
+  //   userData: SignUpData
+  // ) => Promise<ApiResponse<{ user: Partial<User>; token: string }>>;
   signOut: () => Promise<ApiResponse<void>>;
-  refreshToken: (
-    refreshToken: string
-  ) => Promise<ApiResponse<{ token: string }>>;
   getCurrentUser: () => Promise<ApiResponse<Partial<User>>>;
   updateProfile: (
     userId: string,
-    userData: Partial<Partial<User>>,
-    token: string
+    userData: Partial<Partial<User>>
   ) => Promise<ApiResponse<Partial<User>>>;
   deleteAccount: (userId: string) => Promise<ApiResponse<void>>;
 }
@@ -46,6 +45,7 @@ class AuthApiImpl implements AuthApi {
         phone_number: phoneNumber,
       });
       if (response.success) {
+        console.log('OTP sent successfully:', response);
         return {
           success: true,
           message: response.data.message,
@@ -76,7 +76,12 @@ class AuthApiImpl implements AuthApi {
         otp,
       });
       if (response.success) {
-        const user: Partial<User> = response.data.user;
+        // replace id in type User by user_id
+        const apiUser = response.data.user;
+        const user: Partial<User> = {
+          ...apiUser,
+          id: apiUser.user_id, // map to the expected field
+        };
         const token: string = response.data.token.access_token;
         const refresh_token: string = response.data.token.refresh_token;
         return {
@@ -99,77 +104,77 @@ class AuthApiImpl implements AuthApi {
     }
   }
 
-  async signInWithEmail(
-    email: string,
-    password: string
-  ): Promise<ApiResponse<{ user: Partial<User>; token: string }>> {
-    try {
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+  // async signInWithEmail(
+  //   email: string,
+  //   password: string
+  // ): Promise<ApiResponse<{ user: Partial<User>; token: string }>> {
+  //   try {
+  //     await new Promise((resolve) => setTimeout(resolve, 1000));
 
-      // Demo validation
-      if (!email || !password) {
-        return {
-          success: false,
-          error: 'Email and password are required',
-        };
-      }
+  //     // Demo validation
+  //     if (!email || !password) {
+  //       return {
+  //         success: false,
+  //         error: 'Email and password are required',
+  //       };
+  //     }
 
-      const user: Partial<User> = {
-        id: Date.now().toString(),
-        phone_number: '+1234567890',
-        email_address: email,
-        first_name: 'Demo User',
-      };
+  //     const user: Partial<User> = {
+  //       id: Date.now().toString(),
+  //       phone_number: '+1234567890',
+  //       email_address: email,
+  //       first_name: 'Demo User',
+  //     };
 
-      const token = `token_${Date.now()}`;
+  //     const token = `token_${Date.now()}`;
 
-      return {
-        success: true,
-        data: { user, token },
-        message: 'Signed in successfully',
-      };
-    } catch (error) {
-      return {
-        success: false,
-        error: 'Failed to sign in',
-      };
-    }
-  }
+  //     return {
+  //       success: true,
+  //       data: { user, token },
+  //       message: 'Signed in successfully',
+  //     };
+  //   } catch (error) {
+  //     return {
+  //       success: false,
+  //       error: 'Failed to sign in',
+  //     };
+  //   }
+  // }
 
-  async signUp(
-    userData: SignUpData
-  ): Promise<ApiResponse<{ user: Partial<User>; token: string }>> {
-    try {
-      await new Promise((resolve) => setTimeout(resolve, 1200));
+  // async signUp(
+  //   userData: SignUpData
+  // ): Promise<ApiResponse<{ user: Partial<User>; token: string }>> {
+  //   try {
+  //     await new Promise((resolve) => setTimeout(resolve, 1200));
 
-      if (!userData.full_name) {
-        return {
-          success: false,
-          error: 'Full name is required',
-        };
-      }
+  //     if (!userData.full_name) {
+  //       return {
+  //         success: false,
+  //         error: 'Full name is required',
+  //       };
+  //     }
 
-      const user: Partial<User> = {
-        id: Date.now().toString(),
-        phone_number: userData.phone_number || '',
-        email_address: userData.email,
-        first_name: userData.full_name,
-      };
+  //     const user: Partial<User> = {
+  //       id: Date.now().toString(),
+  //       phone_number: userData.phone_number || '',
+  //       email_address: userData.email,
+  //       first_name: userData.full_name,
+  //     };
 
-      const token = `token_${Date.now()}`;
+  //     const token = `token_${Date.now()}`;
 
-      return {
-        success: true,
-        data: { user, token },
-        message: 'Account created successfully',
-      };
-    } catch (error) {
-      return {
-        success: false,
-        error: 'Failed to create account',
-      };
-    }
-  }
+  //     return {
+  //       success: true,
+  //       data: { user, token },
+  //       message: 'Account created successfully',
+  //     };
+  //   } catch (error) {
+  //     return {
+  //       success: false,
+  //       error: 'Failed to create account',
+  //     };
+  //   }
+  // }
 
   async signOut(): Promise<ApiResponse<void>> {
     try {
@@ -183,26 +188,6 @@ class AuthApiImpl implements AuthApi {
       return {
         success: false,
         error: 'Failed to sign out',
-      };
-    }
-  }
-
-  async refreshToken(
-    refreshToken: string
-  ): Promise<ApiResponse<{ token: string }>> {
-    try {
-      await new Promise((resolve) => setTimeout(resolve, 600));
-
-      const token = `token_${Date.now()}`;
-
-      return {
-        success: true,
-        data: { token },
-      };
-    } catch (error) {
-      return {
-        success: false,
-        error: 'Failed to refresh token',
       };
     }
   }
@@ -233,15 +218,10 @@ class AuthApiImpl implements AuthApi {
 
   async updateProfile(
     userId: string,
-    userData: Partial<Partial<User>>,
-    token: string
+    userData: Partial<Partial<User>>
   ): Promise<ApiResponse<Partial<User>>> {
     try {
-      console.log('data', userData);
-      const response = await this.apiClient.put(`/${userId}/update`, userData, {
-        Authorization: `Bearer ${token}`,
-      });
-      console.log('Update Profile Response:', response);
+      const response = await this.apiClient.put(`/${userId}/update`, userData);
       if (response.success) {
         return {
           success: true,

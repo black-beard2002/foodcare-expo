@@ -17,7 +17,6 @@ import {
   ImageBackground,
   Dimensions,
   Animated,
-  Platform,
 } from 'react-native';
 import { router } from 'expo-router';
 import {
@@ -46,14 +45,15 @@ import { useAppStore } from '@/stores/appStore';
 import { useTheme } from '@/hooks/useTheme';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
-import { FilterOptions, Offer } from '@/types/appTypes';
+import { Category, FilterOptions, Offer } from '@/types/appTypes';
 import FilterModal from '@/components/HomeScreenFilter';
-import { MotiView, AnimatePresence } from 'moti';
+import { MotiView } from 'moti';
 import { Skeleton } from 'moti/skeleton';
 import { useAlert } from '@/providers/AlertProvider';
 import { useFavoritesStore } from '@/stores/favoritesStore';
 import { useAuthStore } from '@/stores/authStore';
 import * as Haptics from 'expo-haptics';
+import { ColorTheme } from '@/constants/theme';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 const HERO_CARD_WIDTH = SCREEN_WIDTH - 40;
@@ -70,7 +70,7 @@ const Spacer = ({ height = 16, width = 0 }) => (
 );
 
 // Animated Badge Component
-const AnimatedBadge = ({ count, color }) => {
+const AnimatedBadge = ({ count, color }: { count: number; color: string }) => {
   const scaleAnim = useRef(new Animated.Value(1)).current;
 
   useEffect(() => {
@@ -115,7 +115,15 @@ const AnimatedBadge = ({ count, color }) => {
 };
 
 // Network Status Banner
-const NetworkStatusBanner = ({ isOffline, syncStatus, theme }) => {
+const NetworkStatusBanner = ({
+  isOffline,
+  syncStatus,
+  theme,
+}: {
+  isOffline: boolean;
+  syncStatus: 'idle' | 'syncing' | 'success' | 'error';
+  theme: ColorTheme;
+}) => {
   if (!isOffline && syncStatus === 'idle') return null;
 
   return (
@@ -166,9 +174,15 @@ const NetworkStatusBanner = ({ isOffline, syncStatus, theme }) => {
 };
 
 // Enhanced Featured Card with Parallax
-const EnhancedFeaturedCard = ({ item, theme, index }) => {
-  const scrollY = useRef(new Animated.Value(0)).current;
-
+const EnhancedFeaturedCard = ({
+  item,
+  theme,
+  index,
+}: {
+  item: Offer;
+  theme: ColorTheme;
+  index: number;
+}) => {
   return (
     <MotiView
       from={{ opacity: 0, scale: 0.9 }}
@@ -197,7 +211,7 @@ const EnhancedFeaturedCard = ({ item, theme, index }) => {
         activeOpacity={0.95}
       >
         <ImageBackground
-          source={item.image_url}
+          source={{ uri: item.image_url }}
           className="w-full h-full justify-end"
           imageStyle={{ borderRadius: 24 }}
           resizeMode="cover"
@@ -267,7 +281,15 @@ const EnhancedFeaturedCard = ({ item, theme, index }) => {
 };
 
 // Enhanced Category Chip with Animation
-const EnhancedCategoryChip = ({ item, theme, index }) => (
+const EnhancedCategoryChip = ({
+  item,
+  theme,
+  index,
+}: {
+  item: Category;
+  theme: ColorTheme;
+  index: number;
+}) => (
   <MotiView
     from={{ opacity: 0, translateY: 20 }}
     animate={{ opacity: 1, translateY: 0 }}
@@ -302,9 +324,11 @@ const EnhancedCategoryChip = ({ item, theme, index }) => (
         <View className="flex-row items-center gap-3 h-full px-5">
           <View className="w-12 h-12 rounded-2xl overflow-hidden shadow-md">
             <Image
-              source={{ uri: item.image_url }}
+              source={{
+                uri: item.image_url,
+              }}
               className="w-full h-full"
-              resizeMode="cover"
+              resizeMode="contain"
             />
           </View>
           <Text
@@ -320,7 +344,15 @@ const EnhancedCategoryChip = ({ item, theme, index }) => (
 );
 
 // Enhanced Near You Card with Micro-interactions
-const EnhancedNearYouCard = ({ item: offer, theme, onAddToCart }) => {
+const EnhancedNearYouCard = ({
+  item: offer,
+  theme,
+  onAddToCart,
+}: {
+  item: Offer;
+  theme: ColorTheme;
+  onAddToCart: (offer: Offer) => Promise<void>;
+}) => {
   const scaleAnim = useRef(new Animated.Value(1)).current;
 
   const handlePressIn = () => {
@@ -361,7 +393,7 @@ const EnhancedNearYouCard = ({ item: offer, theme, onAddToCart }) => {
       >
         <View style={{ position: 'relative' }}>
           <Image
-            source={offer.image_url}
+            source={{ uri: offer.image_url }}
             style={{ width: 300, height: 180 }}
             resizeMode="cover"
           />
@@ -490,7 +522,13 @@ const EnhancedNearYouCard = ({ item: offer, theme, onAddToCart }) => {
 };
 
 // Enhanced Offer Card with 3D effect
-const EnhancedOfferCard = ({ item: offer, theme }) => (
+const EnhancedOfferCard = ({
+  item: offer,
+  theme,
+}: {
+  item: Offer;
+  theme: ColorTheme;
+}) => (
   <MotiView
     from={{ opacity: 0, scale: 0.8, rotateY: '90deg' }}
     animate={{ opacity: 1, scale: 1, rotateY: '0deg' }}
@@ -546,7 +584,7 @@ const EnhancedOfferCard = ({ item: offer, theme }) => (
               }}
             >
               <Image
-                source={offer.image_url}
+                source={{ uri: offer.image_url }}
                 className="w-full h-full"
                 resizeMode="cover"
               />

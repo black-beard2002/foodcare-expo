@@ -1,6 +1,7 @@
-import { ApiClient, ApiResponse } from './config';
+import { ApiClient } from './config';
 import { Category } from '@/types/appTypes';
 import { CATALOG_API } from '@/constants/api_constants';
+import { ApiResponse } from '@/types/apiTypes';
 
 export interface CategoriesApi {
   getCategories: (token: string) => Promise<ApiResponse<Category[]>>;
@@ -12,10 +13,13 @@ class CategoriesApiImpl implements CategoriesApi {
   async getCategories(token: string): Promise<ApiResponse<Category[]>> {
     try {
       console.log('Fetching categories from API...', CATALOG_API);
-      const response = await this.apiClient.get('/category/get-all', {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`,
-      });
+      const response = await this.apiClient.get(
+        '/configuration/category/get-all',
+        {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        }
+      );
       console.log('categories:', response);
       if (response.success) {
         return {
@@ -38,7 +42,7 @@ class CategoriesApiImpl implements CategoriesApi {
 
   async getCategoryById(id: string): Promise<ApiResponse<Category>> {
     try {
-      const response = await this.apiClient.get('/categories/' + id);
+      const response = await this.apiClient.get('/configuration/' + id);
       if (response.success) {
         return {
           success: true,

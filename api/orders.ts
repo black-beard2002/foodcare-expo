@@ -1,6 +1,7 @@
 import { TRANSACTION_API } from '@/constants/api_constants';
-import { ApiClient, ApiResponse } from './config';
+import { ApiClient } from './config';
 import { Order } from '@/types/appTypes';
+import { ApiResponse } from '@/types/apiTypes';
 
 export interface OrdersApi {
   getOrders: (userId?: string) => Promise<ApiResponse<Order[]>>;

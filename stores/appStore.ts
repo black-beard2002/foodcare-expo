@@ -1,5 +1,5 @@
 import { CartItem, Category, Offer, Restaurant } from '@/types/appTypes';
-import { categoriesApi } from '@/api';
+import { categoriesApi, offersApi } from '@/api';
 import { create } from 'zustand';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useAuthStore } from './authStore';
@@ -102,15 +102,12 @@ export const useAppStore = create<AppState>()((set, get) => ({
 
   // Smart data persistence with batching
   persistData: async () => {
-    const { offers, categories, restaurants, cart, lastSync, pendingActions } =
-      get();
+    const { offers, categories, lastSync, pendingActions } = get();
 
     try {
-      const dataToStore = [
+      const dataToStore: [string, string][] = [
         [STORAGE_KEYS.OFFERS, JSON.stringify(offers)],
         [STORAGE_KEYS.CATEGORIES, JSON.stringify(categories)],
-        [STORAGE_KEYS.RESTAURANTS, JSON.stringify(restaurants)],
-        [STORAGE_KEYS.CART, JSON.stringify(cart)],
         [STORAGE_KEYS.LAST_SYNC, String(lastSync || Date.now())],
         [STORAGE_KEYS.PENDING_ACTIONS, JSON.stringify(pendingActions)],
       ];
@@ -127,8 +124,6 @@ export const useAppStore = create<AppState>()((set, get) => ({
       const keys = [
         STORAGE_KEYS.OFFERS,
         STORAGE_KEYS.CATEGORIES,
-        STORAGE_KEYS.RESTAURANTS,
-        STORAGE_KEYS.CART,
         STORAGE_KEYS.LAST_SYNC,
         STORAGE_KEYS.PENDING_ACTIONS,
       ];
@@ -138,16 +133,11 @@ export const useAppStore = create<AppState>()((set, get) => ({
 
       const cachedOffers = dataMap[STORAGE_KEYS.OFFERS]?.[1];
       const cachedCategories = dataMap[STORAGE_KEYS.CATEGORIES]?.[1];
-      const cachedRestaurants = dataMap[STORAGE_KEYS.RESTAURANTS]?.[1];
-      const cachedCart = dataMap[STORAGE_KEYS.CART]?.[1];
       const lastSyncStr = dataMap[STORAGE_KEYS.LAST_SYNC]?.[1];
       const pendingActionsStr = dataMap[STORAGE_KEYS.PENDING_ACTIONS]?.[1];
 
       if (cachedOffers) set({ offers: JSON.parse(cachedOffers) });
       if (cachedCategories) set({ categories: JSON.parse(cachedCategories) });
-      if (cachedRestaurants)
-        set({ restaurants: JSON.parse(cachedRestaurants) });
-      if (cachedCart) set({ cart: JSON.parse(cachedCart) });
       if (lastSyncStr) set({ lastSync: Number(lastSyncStr) });
       if (pendingActionsStr)
         set({ pendingActions: JSON.parse(pendingActionsStr) });
@@ -231,8 +221,7 @@ export const useAppStore = create<AppState>()((set, get) => ({
     set({ isLoading: true, error: null });
 
     try {
-      const token = useAuthStore.getState().token;
-      const response = await categoriesApi.getOffers(token || '');
+      const response = await offersApi.getOffers();
 
       if (response.success && response.data) {
         set({
@@ -251,7 +240,6 @@ export const useAppStore = create<AppState>()((set, get) => ({
       set({
         error: hasCachedData ? null : 'No cached data available',
         isLoading: false,
-        isOffline: true,
       });
     }
   },
