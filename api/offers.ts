@@ -1,6 +1,7 @@
 import { CATALOG_API } from '@/constants/api_constants';
-import { ApiClient, ApiResponse } from './config';
+import { ApiClient } from './config';
 import { Offer } from '@/types/appTypes';
+import { ApiResponse } from '@/types/apiTypes';
 
 export interface OffersApi {
   getOffers: (offerId?: string) => Promise<ApiResponse<Offer[]>>;
@@ -12,7 +13,12 @@ class OffersApiImpl implements OffersApi {
   apiClient = new ApiClient(CATALOG_API);
   async getOffers(): Promise<ApiResponse<Offer[]>> {
     try {
-      const response = await this.apiClient.get('/offers');
+      const response = await this.apiClient.get(
+        '/item/get-all',
+        {},
+        { item_type: 'OFFER' }
+      );
+      console.log('offers:', response);
       if (response.success) {
         return {
           success: true,

@@ -79,7 +79,6 @@ export const useSettingsStore = create<SettingsState>()(
               ...defaultSettings,
               ...parsed.state,
             });
-            console.log('Settings loaded successfully:', parsed.state);
           } else {
             console.log('No stored settings found, using defaults');
             set(defaultSettings);
@@ -103,7 +102,7 @@ export const useSettingsStore = create<SettingsState>()(
       name: 'settings-storage',
       storage: createJSONStorage(() => AsyncStorage),
       onRehydrateStorage: () => (state) => {
-        console.log('Settings hydration complete:', state);
+        //console.log('Settings hydration complete:', state);
       },
     }
   )

@@ -1,6 +1,7 @@
 import { USER_API } from '@/constants/api_constants';
-import { ApiClient, ApiResponse } from './config';
+import { ApiClient } from './config';
 import { User } from '@/types/authTypes';
+import { ApiResponse } from '@/types/apiTypes';
 
 export interface UsersApi {
   getUsers: () => Promise<ApiResponse<User[]>>;
