@@ -28,6 +28,7 @@ import OrderCancelModal from '@/components/OrderCancelModal';
 import { formatDateTime } from '@/utils/formatters';
 import { MotiView } from 'moti';
 import { Skeleton } from 'moti/skeleton';
+import { formatPrice } from '@/utils/helpers';
 
 export default function OrderHistoryScreen() {
   const { theme, isDark } = useTheme();
@@ -259,7 +260,7 @@ export default function OrderHistoryScreen() {
                   style={{ color: theme.textSecondary }}
                 >
                   Qty: {item.quantity || 1} • $
-                  {item.offer.discounted_price.toFixed(2)}
+                  {formatPrice(item.offer.sale_price ?? item.offer.price)}
                 </Text>
               </View>
             </View>

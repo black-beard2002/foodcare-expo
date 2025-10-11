@@ -41,6 +41,7 @@ export default function PhoneLoginScreen(): JSX.Element {
       setUserPin('');
     }
     handleSecurity();
+    console.log('isLoading', isLoading);
   }, []);
 
   // Validate phone number
