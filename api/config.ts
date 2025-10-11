@@ -31,6 +31,7 @@ export class ApiClient {
         headers,
         params
       );
+      console.log('responseeee:', response);
 
       // 🧩 If access token expired, attempt refresh
       if (response.status === 401 && refresh_token) {

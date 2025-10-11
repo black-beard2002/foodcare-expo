@@ -5,6 +5,8 @@ import { useAppStore } from '@/stores/appStore';
 import { useTheme } from '@/hooks/useTheme';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Sparkles } from 'lucide-react-native';
+import { Offer } from '@/types/appTypes';
+import { formatPrice, getDiscountPercentage } from '@/utils/helpers';
 
 export default function CategoriesScreen() {
   const { theme } = useTheme();
@@ -83,7 +85,7 @@ export default function CategoriesScreen() {
     </TouchableOpacity>
   );
 
-  const renderOfferItem = ({ item: offer }: { item: any }) => (
+  const renderOfferItem = ({ item: offer }: { item: Offer }) => (
     <TouchableOpacity
       className="flex-[0.5] rounded-2xl overflow-hidden border m-2"
       style={{
@@ -101,10 +103,13 @@ export default function CategoriesScreen() {
       activeOpacity={0.8}
     >
       <View className="flex-1 rounded-xl">
-        <Image source={offer.image_url} className="w-full h-28" />
+        <Image
+          source={{ uri: offer.main_image ?? '' }}
+          className="w-full h-28"
+        />
         <View className="absolute top-2 right-2 bg-[#FF6B35] px-1.5 py-1 rounded">
           <Text className="text-white text-[10px] font-bold">
-            {offer.discount_percentage}% OFF
+            {getDiscountPercentage(offer.price, offer.sale_price ?? 0)}% OFF
           </Text>
         </View>
         <View
@@ -127,7 +132,7 @@ export default function CategoriesScreen() {
               color: offer.is_featured ? theme.text : theme.textSecondary,
             }}
           >
-            {offer.restaurant.name}
+            {'restaurant_name'}
           </Text>
           <View className="flex-row items-center gap-2">
             <Text
@@ -136,13 +141,13 @@ export default function CategoriesScreen() {
                 color: offer.is_featured ? theme.text : theme.textSecondary,
               }}
             >
-              ${offer.original_price.toFixed(2)}
+              ${formatPrice(offer.price)}
             </Text>
             <Text
               className="text-base font-bold"
               style={{ color: theme.success }}
             >
-              ${offer.discounted_price.toFixed(2)}
+              ${formatPrice(offer.sale_price ?? offer.price)}
             </Text>
           </View>
         </View>

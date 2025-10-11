@@ -16,7 +16,7 @@ class OffersApiImpl implements OffersApi {
       const response = await this.apiClient.get(
         '/item/get-all',
         {},
-        { item_type: 'PRODUCT' }
+        { item_type: 'OFFER' }
       );
       console.log('offers:', response);
       if (response.success) {

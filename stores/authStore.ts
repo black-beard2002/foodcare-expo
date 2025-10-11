@@ -83,6 +83,7 @@ export const useAuthStore = create<AuthState>()(
       // === Auth Flows ===
       signInWithPhone: async (phoneNumber: string) => {
         set({ isLoading: true, error: null });
+
         try {
           const response = await authApi.signInWithPhone(phoneNumber);
           if (response.success) {
@@ -260,6 +261,12 @@ export const useAuthStore = create<AuthState>()(
     {
       name: 'auth-storage',
       storage: createJSONStorage(() => AsyncStorage),
+      // ✅ Reset loading state after hydration
+      onRehydrateStorage: () => (state) => {
+        if (state) {
+          state.isLoading = false;
+        }
+      },
     }
   )
 );

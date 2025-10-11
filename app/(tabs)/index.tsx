@@ -54,6 +54,7 @@ import { useFavoritesStore } from '@/stores/favoritesStore';
 import { useAuthStore } from '@/stores/authStore';
 import * as Haptics from 'expo-haptics';
 import { ColorTheme } from '@/constants/theme';
+import { formatPrice, getDiscountPercentage } from '@/utils/helpers';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 const HERO_CARD_WIDTH = SCREEN_WIDTH - 40;
@@ -211,7 +212,7 @@ const EnhancedFeaturedCard = ({
         activeOpacity={0.95}
       >
         <ImageBackground
-          source={{ uri: item.image_url }}
+          source={{ uri: item.main_image ?? '' }}
           className="w-full h-full justify-end"
           imageStyle={{ borderRadius: 24 }}
           resizeMode="cover"
@@ -237,7 +238,8 @@ const EnhancedFeaturedCard = ({
               <View className="flex-row items-center gap-1">
                 <Zap color="#fff" size={16} fill="#fff" />
                 <Text className="text-white text-sm font-bold">
-                  {item.discount_percentage}% OFF
+                  {getDiscountPercentage(item.price, item.sale_price ?? 0)} %
+                  OFF
                 </Text>
               </View>
             </MotiView>
@@ -262,15 +264,13 @@ const EnhancedFeaturedCard = ({
                   className="text-white text-sm font-semibold flex-1"
                   numberOfLines={1}
                 >
-                  {item.restaurant.name}
+                  {'restaurant_name'}
                 </Text>
               </View>
 
               <View className="flex-row items-center gap-1.5 bg-yellow-400/30 px-3 py-1.5 rounded-xl">
                 <Star color="#FFD700" size={16} fill="#FFD700" />
-                <Text className="text-white text-sm font-bold">
-                  {item.rating.toFixed(1)}
-                </Text>
+                <Text className="text-white text-sm font-bold">{'5'}</Text>
               </View>
             </View>
           </LinearGradient>
@@ -393,7 +393,7 @@ const EnhancedNearYouCard = ({
       >
         <View style={{ position: 'relative' }}>
           <Image
-            source={{ uri: offer.image_url }}
+            source={{ uri: offer.main_image ?? '' }}
             style={{ width: 300, height: 180 }}
             resizeMode="cover"
           />
@@ -417,7 +417,7 @@ const EnhancedNearYouCard = ({
               className="bg-gradient-to-r from-red-500 to-pink-600 px-3 py-2 rounded-2xl shadow-lg"
             >
               <Text className="text-white text-sm font-bold">
-                -{offer.discount_percentage}%
+                -{getDiscountPercentage(offer.price, offer.sale_price ?? 0)}%
               </Text>
             </MotiView>
           </LinearGradient>
@@ -445,7 +445,7 @@ const EnhancedNearYouCard = ({
                   className="text-sm font-bold"
                   style={{ color: theme.text }}
                 >
-                  {offer.rating.toFixed(1)}
+                  {'5'}
                 </Text>
               </View>
             </View>
@@ -463,7 +463,7 @@ const EnhancedNearYouCard = ({
                   style={{ color: theme.textSecondary }}
                   numberOfLines={1}
                 >
-                  {offer.restaurant.address}
+                  {'123 food street'}
                 </Text>
               </View>
               <View className="flex-row items-center gap-2">
@@ -478,7 +478,7 @@ const EnhancedNearYouCard = ({
                   style={{ color: theme.textSecondary }}
                   numberOfLines={1}
                 >
-                  {offer.restaurant.opening_hours}
+                  {`10am-10pm`}
                 </Text>
               </View>
             </View>
@@ -505,13 +505,13 @@ const EnhancedNearYouCard = ({
                 className="text-xs font-inter-regular line-through"
                 style={{ color: theme.textSecondary }}
               >
-                ${offer.original_price}
+                ${formatPrice(offer.price)}
               </Text>
               <Text
                 className="text-3xl font-bold"
                 style={{ color: theme.success }}
               >
-                ${offer.discounted_price}
+                ${formatPrice(offer.sale_price ?? offer.price)}
               </Text>
             </View>
           </View>
@@ -584,7 +584,7 @@ const EnhancedOfferCard = ({
               }}
             >
               <Image
-                source={{ uri: offer.image_url }}
+                source={{ uri: offer.main_image ?? '' }}
                 className="w-full h-full"
                 resizeMode="cover"
               />
@@ -599,7 +599,7 @@ const EnhancedOfferCard = ({
             style={{ backgroundColor: theme.error }}
           >
             <Text className="text-white text-xs font-bold">
-              -{offer.discount_percentage}%
+              -{getDiscountPercentage(offer.price, offer.sale_price ?? 0)}%
             </Text>
           </MotiView>
         </View>
@@ -627,7 +627,7 @@ const EnhancedOfferCard = ({
                   style={{ color: theme.textSecondary }}
                   numberOfLines={1}
                 >
-                  {offer.restaurant.name}
+                  {'restaurant_name'}
                 </Text>
               </View>
               <View className="flex-row items-center gap-2">
@@ -642,7 +642,7 @@ const EnhancedOfferCard = ({
                   style={{ color: theme.textSecondary }}
                   numberOfLines={1}
                 >
-                  {offer.review_count} reviews
+                  {'30'} reviews
                 </Text>
               </View>
             </View>
@@ -657,13 +657,13 @@ const EnhancedOfferCard = ({
                 className="text-xs font-inter-regular line-through"
                 style={{ color: theme.textSecondary }}
               >
-                ${offer.original_price.toFixed(2)}
+                ${formatPrice(offer.price)}
               </Text>
               <Text
                 className="text-2xl font-bold"
                 style={{ color: theme.success }}
               >
-                ${offer.discounted_price.toFixed(2)}
+                ${formatPrice(offer.sale_price ?? offer.price)}
               </Text>
             </View>
             <View
@@ -672,7 +672,7 @@ const EnhancedOfferCard = ({
             >
               <Star color={theme.warning} size={14} fill={theme.warning} />
               <Text className="text-sm font-bold" style={{ color: theme.text }}>
-                {offer.rating.toFixed(1)}
+                {'5'}
               </Text>
             </View>
           </View>
@@ -739,7 +739,7 @@ export default function HomeScreen(): JSX.Element {
   );
 
   const nearYouOffers = useMemo(
-    () => filteredOffers.filter((offer) => offer.isNear),
+    () => filteredOffers.filter((offer) => offer.is_Near),
     [filteredOffers]
   );
 
@@ -773,7 +773,7 @@ export default function HomeScreen(): JSX.Element {
 
       if (filters.priceRange.length > 0) {
         filtered = filtered.filter((offer: Offer) => {
-          const price = offer.discounted_price;
+          const price = offer.sale_price ?? offer.price;
           return filters.priceRange.some((range) => {
             if (range === '$1-9') return price < 10;
             if (range === '$10-19') return price >= 10 && price < 20;
@@ -786,16 +786,16 @@ export default function HomeScreen(): JSX.Element {
 
       if (filters.rating) {
         filtered = filtered.filter(
-          (offer: Offer) => offer.rating >= filters.rating!
+          (offer: Offer) => (offer.rating ?? 0) >= (filters.rating ?? 0)
         );
       }
 
       if (filters.sortBy === 'rating') {
-        filtered.sort((a, b) => b.rating - a.rating);
+        filtered.sort((a, b) => (b.rating ?? 0) - (a.rating ?? 0));
       } else if (filters.sortBy === 'price_low') {
-        filtered.sort((a, b) => a.discounted_price - b.discounted_price);
+        filtered.sort((a, b) => (a.sale_price ?? 0) - (b.sale_price ?? 0));
       } else if (filters.sortBy === 'price_high') {
-        filtered.sort((a, b) => b.discounted_price - a.discounted_price);
+        filtered.sort((a, b) => (b.sale_price ?? 0) - (a.sale_price ?? 0));
       }
 
       setFilteredOffers(filtered);

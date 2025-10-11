@@ -28,11 +28,13 @@ import { useFavoritesStore } from '@/stores/favoritesStore';
 import { useRecentlyViewedStore } from '@/stores/recentlyViewedStore';
 import { useAlert } from '@/providers/AlertProvider';
 import { BlurView } from 'expo-blur';
+import { formatPrice, getDiscountPercentage } from '@/utils/helpers';
 
 export default function OfferDetailsScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const [offer, setOffer] = useState<Offer | null>(null);
   const { addToRecentlyViewed } = useRecentlyViewedStore();
+  const { offers } = useAppStore();
   const { showAlert } = useAlert();
   const {
     isFavorite,
@@ -45,7 +47,7 @@ export default function OfferDetailsScreen() {
   const { addToCart } = useAppStore();
 
   useEffect(() => {
-    const foundOffer = dummyOffers.find((o) => o.id === id);
+    const foundOffer = offers.find((o) => o.id === id);
     if (foundOffer) addToRecentlyViewed(foundOffer);
     setOffer(foundOffer || null);
   }, [id]);
@@ -143,7 +145,7 @@ export default function OfferDetailsScreen() {
         {/* Offer Image */}
         <View className="relative">
           <Image
-            source={offer.image_url}
+            source={{ uri: offer.main_image ?? '' }}
             className="w-full h-72 rounded-2xl"
             resizeMode="contain"
           />
@@ -152,7 +154,7 @@ export default function OfferDetailsScreen() {
             style={{ backgroundColor: theme.primary }}
           >
             <Text className="text-white text-sm font-inter-bold">
-              {offer.discount_percentage}% OFF
+              {getDiscountPercentage(offer.price, offer.sale_price ?? 0)}% OFF
             </Text>
           </View>
         </View>
@@ -199,7 +201,7 @@ export default function OfferDetailsScreen() {
                 className="text-xs mt-1 text-center"
                 style={{ color: theme.text }}
               >
-                {offer.restaurant.name}
+                {'restaurant_name'}
               </Text>
             </View>
             <View
@@ -212,7 +214,7 @@ export default function OfferDetailsScreen() {
                 className="text-xs mt-1 text-center"
                 style={{ color: theme.text }}
               >
-                {offer.restaurant.rating}
+                {'5'}
               </Text>
             </View>
             <View
@@ -225,7 +227,7 @@ export default function OfferDetailsScreen() {
                 className="text-xs mt-1 text-center"
                 style={{ color: theme.text }}
               >
-                {offer.restaurant.delivery_time} mins
+                {'15-20'} mins
               </Text>
             </View>
             <View
@@ -240,7 +242,7 @@ export default function OfferDetailsScreen() {
                 style={{ color: theme.text }}
                 className="text-xs mt-1 text-center"
               >
-                {offer.restaurant.address}
+                {'123 food street'}
               </Text>
             </View>
           </View>
@@ -252,14 +254,16 @@ export default function OfferDetailsScreen() {
                 className="text-sm line-through font-inter-regular mb-1"
                 style={{ color: theme.textSecondary }}
               >
-                Was ${offer.original_price.toFixed(2)}
+                {offer.sale_price ? 'Was' : 'Now'} ${formatPrice(offer.price)}
               </Text>
-              <Text
-                className="text-2xl font-inter-bold"
-                style={{ color: theme.primary }}
-              >
-                Now ${offer.discounted_price.toFixed(2)}
-              </Text>
+              {offer.sale_price && (
+                <Text
+                  className="text-2xl font-inter-bold"
+                  style={{ color: theme.primary }}
+                >
+                  Now ${formatPrice(offer.sale_price)}
+                </Text>
+              )}
             </View>
             <View
               className="flex-row items-center gap-1 px-4 py-2 rounded-xl"
@@ -272,13 +276,13 @@ export default function OfferDetailsScreen() {
                 className="text-base font-inter-medium"
                 style={{ color: theme.success }}
               >
-                {(offer.original_price - offer.discounted_price).toFixed(2)}$
+                {(offer.price - (offer.sale_price ?? 0)).toFixed(2)}$
               </Text>
             </View>
           </View>
 
           {/* Tags */}
-          {offer.tags?.length > 0 && (
+          {offer.tags && offer.tags?.length > 0 && (
             <View className="flex-row flex-wrap gap-2 mb-8">
               {offer.tags.map((tag, i) => (
                 <View
@@ -298,7 +302,7 @@ export default function OfferDetailsScreen() {
           )}
 
           {/* Included Items */}
-          <View className="mb-24">
+          {/* <View className="mb-24">
             <Text
               className="text-lg font-inter-bold mb-4"
               style={{ color: theme.text }}
@@ -312,7 +316,7 @@ export default function OfferDetailsScreen() {
               scrollEnabled={false}
               contentContainerClassName="gap-3 pb-4"
             />
-          </View>
+          </View> */}
         </View>
       </ScrollView>
 
@@ -327,20 +331,22 @@ export default function OfferDetailsScreen() {
         }}
       >
         <View className="flex-row justify-between items-center p-6">
-          <View>
-            <Text
-              className="text-xl font-inter-bold"
-              style={{ color: theme.primary }}
-            >
-              ${offer.discounted_price.toFixed(2)}
-            </Text>
-            <Text
-              className="text-sm font-inter-medium"
-              style={{ color: theme.success }}
-            >
-              Save ${(offer.original_price - offer.discounted_price).toFixed(2)}
-            </Text>
-          </View>
+          {offer.sale_price && (
+            <View>
+              <Text
+                className="text-xl font-inter-bold"
+                style={{ color: theme.primary }}
+              >
+                ${formatPrice(offer.sale_price)}
+              </Text>
+              <Text
+                className="text-sm font-inter-medium"
+                style={{ color: theme.success }}
+              >
+                Save ${(offer.price - offer.sale_price).toFixed(2)}
+              </Text>
+            </View>
+          )}
           <TouchableOpacity
             onPress={handleAddToCart}
             className="flex-row items-center px-6 py-4 rounded-xl gap-2"

@@ -306,14 +306,14 @@ export default function AuthScreen() {
                   <Phone color="#FFFFFF" size={22} strokeWidth={2.5} />
                 </View>
                 <Text className="text-white text-lg font-semibold text-center flex-1">
-                  Continue with Phone
+                  Signup with Phone
                 </Text>
               </LinearGradient>
             </TouchableOpacity>
           </Animated.View>
 
           {/* Google Button */}
-          <Animated.View
+          {/* <Animated.View
             style={{
               opacity: button2OpacityAnim,
               transform: [{ translateY: button2SlideAnim }],
@@ -355,10 +355,10 @@ export default function AuthScreen() {
                 </Text>
               </BlurView>
             </TouchableOpacity>
-          </Animated.View>
+          </Animated.View> */}
 
           {/* Apple Button */}
-          <Animated.View
+          {/* <Animated.View
             style={{
               opacity: button3OpacityAnim,
               transform: [{ translateY: button3SlideAnim }],
@@ -404,7 +404,7 @@ export default function AuthScreen() {
                 </Text>
               </BlurView>
             </TouchableOpacity>
-          </Animated.View>
+          </Animated.View> */}
 
           {/* Skip Button */}
           <Animated.View

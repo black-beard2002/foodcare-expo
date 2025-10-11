@@ -13,6 +13,8 @@ import { useAppStore } from '@/stores/appStore';
 import { useTheme } from '@/hooks/useTheme';
 import { useAlert } from '@/providers/AlertProvider';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { CartItem } from '@/types/appTypes';
+import { formatPrice } from '@/utils/helpers';
 
 export default function CartScreen() {
   const { theme } = useTheme();
@@ -25,14 +27,17 @@ export default function CartScreen() {
     getCartItemCount,
   } = useAppStore();
 
-  const renderCartItem = ({ item }: { item: any }) => (
+  const renderCartItem = ({ item }: { item: CartItem }) => (
     <View
       style={[
         styles.cartItem,
         { backgroundColor: theme.card, borderColor: theme.border },
       ]}
     >
-      <Image source={item.offer.image_url} style={styles.itemImage} />
+      <Image
+        source={{ uri: item.offer.main_image ?? '' }}
+        style={styles.itemImage}
+      />
 
       <View style={styles.itemDetails}>
         <Text
@@ -42,10 +47,10 @@ export default function CartScreen() {
           {item.offer.title}
         </Text>
         <Text style={[styles.restaurantName, { color: theme.textSecondary }]}>
-          {item.offer.restaurant.name}
+          {'restaurant_name'}
         </Text>
         <Text style={[styles.itemPrice, { color: theme.primary }]}>
-          ${item.offer.discounted_price.toFixed(2)}
+          ${formatPrice(item.offer.sale_price ?? item.offer.price)}
         </Text>
       </View>
 

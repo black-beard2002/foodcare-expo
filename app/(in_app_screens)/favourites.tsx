@@ -24,6 +24,7 @@ import { useTheme } from '@/hooks/useTheme';
 import { useFavoritesStore } from '@/stores/favoritesStore';
 import { useAppStore } from '@/stores/appStore';
 import { useAlert } from '@/providers/AlertProvider';
+import { formatPrice } from '@/utils/helpers';
 
 export default function FavouritesScreen() {
   const { theme } = useTheme();
@@ -179,8 +180,8 @@ export default function FavouritesScreen() {
             <View className="px-5 py-6 gap-5">
               {favorites.map((favorite) => {
                 const hasPriceDrop =
-                  favorite.favorited.discounted_price <
-                  favorite.favorited.original_price;
+                  favorite.favorited.sale_price &&
+                  favorite.favorited.sale_price < favorite.favorited.price;
 
                 return (
                   <View
@@ -207,7 +208,7 @@ export default function FavouritesScreen() {
                     >
                       <View className="flex-row">
                         <Image
-                          source={favorite.favorited.image_url}
+                          source={{ uri: favorite.favorited.main_image ?? '' }}
                           className="w-36 h-36 rounded-lt-3xl"
                           resizeMode="cover"
                         />
@@ -231,7 +232,7 @@ export default function FavouritesScreen() {
                                   style={{ color: theme.textSecondary }}
                                   numberOfLines={1}
                                 >
-                                  {favorite.favorited.restaurant.name}
+                                  {'restaurant_name'}
                                 </Text>
                               </View>
                             </View>
@@ -252,7 +253,7 @@ export default function FavouritesScreen() {
                                 className="text-xs font-semibold"
                                 style={{ color: theme.text }}
                               >
-                                {favorite.favorited.rating.toFixed(1)}
+                                {'5'}
                               </Text>
                             </View>
                           </View>
@@ -278,13 +279,13 @@ export default function FavouritesScreen() {
                               className="text-xs line-through"
                               style={{ color: theme.textSecondary }}
                             >
-                              ${favorite.favorited.original_price.toFixed(2)}
+                              ${formatPrice(favorite.favorited.price)}
                             </Text>
                             <Text
                               className="text-lg font-extrabold"
                               style={{ color: theme.success }}
                             >
-                              ${favorite.favorited.discounted_price.toFixed(2)}
+                              ${formatPrice(favorite.favorited.sale_price ?? 0)}
                             </Text>
                           </View>
                         </View>

@@ -79,8 +79,8 @@ export default function RootLayout() {
       if (!isReady || (!fontsLoaded && !fontError)) return;
 
       try {
-        const { user, token } = useAuthStore.getState();
-
+        const { user, token, isLoading } = useAuthStore.getState();
+        console.log('Auth State:', { user, token, isLoading });
         // Simple navigation logic: if user exists, go to tabs, else go to auth
         if (user || token) {
           router.replace('/(tabs)');
