@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { Stack, router } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useFrameworkReady } from '@/hooks/useFrameworkReady';
@@ -23,6 +23,8 @@ import { useReviewsStore } from '@/stores/reviewsStore';
 import { useBudgetStore } from '@/stores/budgetStore';
 import { useSearchHistoryStore } from '@/stores/searchHistoryStore';
 import { useAuthStore } from '@/stores/authStore';
+import CustomSplashScreen from '@/components/CustomSplashScreen';
+import { useSettingsStore } from '@/stores/settingsStore';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -30,34 +32,9 @@ export default function RootLayout() {
   useFrameworkReady();
   const { isDark } = useTheme();
   const [isReady, setIsReady] = useState(false);
+  const [showSplash, setShowSplash] = useState(true);
 
-  const loadFavorites = useFavoritesStore((state) => state.loadFavorites);
-  const loadUserFromStorage = useAuthStore(
-    (state) => state.loadUserFromStorage
-  );
-  const loadRecentlyViewed = useRecentlyViewedStore(
-    (state) => state.loadRecentlyViewed
-  );
-  const loadNotifications = useNotificationsStore(
-    (state) => state.loadNotifications
-  );
-  const loadPreferences = useNotificationsStore(
-    (state) => state.loadPreferences
-  );
-  const loadPromoCodes = usePromoCodesStore((state) => state.loadPromoCodes);
-  const loadLoyaltyData = useLoyaltyStore((state) => state.loadLoyaltyData);
-  const loadReviews = useReviewsStore((state) => state.loadReviews);
-  const loadBudgetData = useBudgetStore((state) => state.loadBudgetData);
-  const loadSearchHistory = useSearchHistoryStore(
-    (state) => state.loadSearchHistory
-  );
-  const loadTrendingSearches = useSearchHistoryStore(
-    (state) => state.loadTrendingSearches
-  );
-  const user = useAuthStore((state) => state.user);
-  const hasCompletedOnboarding = useAuthStore(
-    (state) => state.hasCompletedOnboarding
-  );
+  const hasNavigated = useRef(false);
 
   const [fontsLoaded, fontError] = useFonts({
     'Inter-Regular': Inter_400Regular,
@@ -66,57 +43,67 @@ export default function RootLayout() {
     'Inter-Bold': Inter_700Bold,
   });
 
-  // Wait for all loads and navigate accordingly
+  // Load app data
   useEffect(() => {
     const prepareApp = async () => {
       try {
-        await Promise.all([
-          loadFavorites(),
-          loadRecentlyViewed(),
-          loadNotifications(),
-          loadPreferences(),
-          loadPromoCodes(),
-          loadLoyaltyData(),
-          loadReviews(),
-          loadBudgetData(),
-          loadSearchHistory(),
-          loadTrendingSearches(),
-          loadUserFromStorage(),
-        ]);
+        await Promise.all(
+          [
+            useAuthStore.getState().loadUserFromStorage(),
+            useSettingsStore.getState().loadSettings(),
+            useFavoritesStore.getState().loadFavorites?.(),
+            useRecentlyViewedStore.getState().loadRecentlyViewed?.(),
+            useSearchHistoryStore.getState().loadSearchHistory?.(),
+            useNotificationsStore.getState().loadNotifications?.(),
+            usePromoCodesStore.getState().loadPromoCodes?.(),
+            useLoyaltyStore.getState().loadLoyaltyData?.(),
+            useReviewsStore.getState().loadReviews?.(),
+            useBudgetStore.getState().loadBudgetData?.(),
+          ].filter(Boolean)
+        );
       } catch (error) {
         console.error('Error loading app data:', error);
       } finally {
         setIsReady(true);
+        setShowSplash(false);
+        SplashScreen.hideAsync();
       }
     };
-
     prepareApp();
   }, []);
 
-  // Handle splash screen and navigation
+  // Handle navigation
   useEffect(() => {
     const handleNavigation = async () => {
-      if (isReady && (fontsLoaded || fontError)) {
-        await SplashScreen.hideAsync();
-        // if (user) {
-        //   if (hasCompletedOnboarding || user.has_completed_onboarding) {
-        //     router.replace('/(tabs)');
-        //   } else {
-        //     router.replace('/auth');
-        //   }
-        // } else {
-        //   router.replace('/auth');
-        // }
+      if (hasNavigated.current) return;
+      if (!isReady || (!fontsLoaded && !fontError)) return;
+
+      try {
+        const authState = useAuthStore.getState();
+        const user = authState.user;
+
+        // Simple navigation logic: if user exists, go to tabs, else go to auth
+        if (user) {
+          router.replace('/(tabs)');
+        } else {
+          router.replace('/auth');
+        }
+
+        hasNavigated.current = true;
+      } catch (error) {
+        console.error('Error during navigation:', error);
       }
     };
 
     handleNavigation();
-  }, [isReady, fontsLoaded, fontError, user, hasCompletedOnboarding]);
+  }, [isReady, fontsLoaded, fontError]);
 
-  if (!isReady || (!fontsLoaded && !fontError)) {
-    return null;
+  // SPLASH SCREEN
+  if (showSplash) {
+    return <CustomSplashScreen />;
   }
 
+  // MAIN APP
   return (
     <>
       <AlertProvider>

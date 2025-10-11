@@ -1,4 +1,5 @@
-import { apiClient, ApiResponse } from './config';
+import { TRANSACTION_API } from '@/constants/api_constants';
+import { ApiClient, ApiResponse } from './config';
 import { Order } from '@/types/appTypes';
 
 export interface OrdersApi {
@@ -11,8 +12,7 @@ export interface OrdersApi {
     id: string,
     status: OrderStatus
   ) => Promise<ApiResponse<Order>>;
-  cancelOrder: (id: string) => Promise<ApiResponse<void>>;
-  getOrderHistory: (userId: string) => Promise<ApiResponse<Order[]>>;
+  cancelOrder: (id: string) => Promise<ApiResponse<Order>>;
 }
 
 export type OrderStatus = 'pending' | 'completed' | 'cancelled';
@@ -24,35 +24,22 @@ export interface OrderWithStatus extends Order {
 }
 
 class OrdersApiImpl implements OrdersApi {
-  private orders: OrderWithStatus[] = [];
+  apiClient = new ApiClient(TRANSACTION_API);
 
   async getOrders(userId?: string): Promise<ApiResponse<Order[]>> {
     try {
-      // const response = await apiClient.get('/orders');
-      // if(response.success){
-      //   return {
-      //     success: true,
-      //     data: response.data as Order[],
-      //   }
-      // }
-      // else{
-      //   return {
-      //     success: false,
-      //     error: response.error || 'Failed to fetch orders',
-      //   };
-      // }
-      await new Promise((resolve) => setTimeout(resolve, 500));
-
-      let filteredOrders = this.orders;
-      if (userId) {
-        // In a real app, you'd filter by userId
-        filteredOrders = this.orders;
+      const response = await this.apiClient.get('/orders');
+      if (response.success) {
+        return {
+          success: true,
+          data: response.data as Order[],
+        };
+      } else {
+        return {
+          success: false,
+          error: response.error || 'Failed to fetch orders',
+        };
       }
-
-      return {
-        success: true,
-        data: filteredOrders,
-      };
     } catch (error) {
       return {
         success: false,
@@ -62,34 +49,19 @@ class OrdersApiImpl implements OrdersApi {
   }
 
   async getOrderById(id: string): Promise<ApiResponse<Order>> {
-    // const response = await apiClient.get('/orders' + id);
-    // if(response.success){
-    //   return {
-    //     success: true,
-    //     data: response.data as Order,
-    //   }
-    // }
-    // else{
-    //   return {
-    //     success: false,
-    //     error: response.error || 'Failed to fetch order',
-    //   };
-    // }
     try {
-      await new Promise((resolve) => setTimeout(resolve, 300));
-
-      const order = this.orders.find((o) => o.id === id);
-      if (!order) {
+      const response = await this.apiClient.get('/orders' + id);
+      if (response.success) {
+        return {
+          success: true,
+          data: response.data as Order,
+        };
+      } else {
         return {
           success: false,
-          error: 'Order not found',
+          error: response.error || 'Failed to fetch order',
         };
       }
-
-      return {
-        success: true,
-        data: order,
-      };
     } catch (error) {
       return {
         success: false,
@@ -102,39 +74,19 @@ class OrdersApiImpl implements OrdersApi {
     orderData: Omit<Order, 'id' | 'createdAt'>
   ): Promise<ApiResponse<Order>> {
     try {
-      // const response = await apiClient.post('/orders', orderData);
-      // if(response.success){
-      //   const newOrder = response.data as Order;
-      //   this.orders.push(newOrder);
-      //   return {
-      //     success: true,
-      //     data: response.data as Order,
-      //     message: 'Order placed successfully',
-      //   }
-      // }
-      // else{
-      //   return {
-      //     success: false,
-      //     error: response.error || 'Failed to create order',
-      //   };
-      // }
-      await new Promise((resolve) => setTimeout(resolve, 800));
-
-      const newOrder: OrderWithStatus = {
-        ...orderData,
-        id: `ORD${Date.now()}`,
-        createdAt: new Date().toISOString(),
-        status: 'pending',
-        estimatedReadyTime: new Date(Date.now() + 30 * 60 * 1000).toISOString(), // 30 minutes from now
-      };
-
-      this.orders.push(newOrder);
-
-      return {
-        success: true,
-        data: newOrder,
-        message: 'Order created successfully',
-      };
+      const response = await this.apiClient.post('/orders', orderData);
+      if (response.success) {
+        return {
+          success: true,
+          data: response.data as Order,
+          message: 'Order placed successfully',
+        };
+      } else {
+        return {
+          success: false,
+          error: response.error || 'Failed to create order',
+        };
+      }
     } catch (error) {
       return {
         success: false,
@@ -148,58 +100,21 @@ class OrdersApiImpl implements OrdersApi {
     status: OrderStatus
   ): Promise<ApiResponse<Order>> {
     try {
-      // const orderIndex = this.orders.findIndex((o) => o.id === id);
-      // if (orderIndex === -1) {
-      //   return {
-      //     success: false,
-      //     error: 'Order not found',
-      //   };
-      // }
-      // const response = await apiClient.put('/orders' + id, { status });
-      // if(response.success){
-      // const updatedOrder = response.data as Order
+      const response = await this.apiClient.put('/orders' + id, { status });
+      if (response.success) {
+        const updatedOrder = response.data as Order;
 
-      // this.orders[orderIndex] = {
-      //   ...this.orders[orderIndex],
-      //   status: updatedOrder.status,
-      // };
-
-      // return {
-      //   success: true,
-      //   data: this.orders[orderIndex],
-      //   message: `Order status updated to ${status}`,
-      // };
-      //   return {
-      //     success: true,
-      //     data: response.data as Order,
-      //   }
-      // }
-      // else{
-      //   return {
-      //     success: false,
-      //     error: response.error || 'Failed to update order status',
-      //   };
-      // }
-      await new Promise((resolve) => setTimeout(resolve, 400));
-
-      const orderIndex = this.orders.findIndex((o) => o.id === id);
-      if (orderIndex === -1) {
+        return {
+          success: true,
+          data: updatedOrder,
+          message: `Order status updated to ${status}`,
+        };
+      } else {
         return {
           success: false,
-          error: 'Order not found',
+          error: response.error || 'Failed to update order status',
         };
       }
-
-      this.orders[orderIndex] = {
-        ...this.orders[orderIndex],
-        status,
-      };
-
-      return {
-        success: true,
-        data: this.orders[orderIndex],
-        message: `Order status updated to ${status}`,
-      };
     } catch (error) {
       return {
         success: false,
@@ -208,84 +123,29 @@ class OrdersApiImpl implements OrdersApi {
     }
   }
 
-  async cancelOrder(id: string): Promise<ApiResponse<void>> {
+  async cancelOrder(id: string): Promise<ApiResponse<Order>> {
     try {
-      // const orderIndex = this.orders.findIndex((o) => o.id === id);
-      // if (orderIndex === -1) {
-      //   return {
-      //     success: false,
-      //     error: 'Order not found',
-      //   };
-      // }
-      // const response = await apiClient.put('/orders' + id, { status: 'CANCELLED' });
-      // if(response.success){
-      // const updatedOrder = response.data as Order
+      const response = await this.apiClient.put('/orders' + id, {
+        status: 'CANCELLED',
+      });
+      if (response.success) {
+        const updatedOrder = response.data as Order;
 
-      // this.orders[orderIndex] = {
-      //   ...this.orders[orderIndex],
-      //   status: updatedOrder.status,
-      // };
-
-      // return {
-      //   success: true,
-      //   data: this.orders[orderIndex],
-      //   message: `Order status updated to ${status}`,
-      // };
-      //   return {
-      //     success: true,
-      //     data: response.data as Order,
-      //   }
-      // }
-      // else{
-      //   return {
-      //     success: false,
-      //     error: response.error || 'Failed to update order status',
-      //   };
-      // }
-      await new Promise((resolve) => setTimeout(resolve, 600));
-
-      const orderIndex = this.orders.findIndex((o) => o.id === id);
-      if (orderIndex === -1) {
+        return {
+          success: true,
+          data: updatedOrder,
+          message: `Order is cancelled successfully`,
+        };
+      } else {
         return {
           success: false,
-          error: 'Order not found',
+          error: response.error || 'Failed to update order status',
         };
       }
-
-      this.orders[orderIndex] = {
-        ...this.orders[orderIndex],
-        status: 'cancelled',
-      };
-
-      return {
-        success: true,
-        message: 'Order cancelled successfully',
-      };
     } catch (error) {
       return {
         success: false,
         error: 'Failed to cancel order',
-      };
-    }
-  }
-
-  async getOrderHistory(userId: string): Promise<ApiResponse<Order[]>> {
-    try {
-      await new Promise((resolve) => setTimeout(resolve, 400));
-
-      // Filter completed and cancelled orders
-      const historyOrders = this.orders.filter(
-        (o) => o.status === 'completed' || o.status === 'cancelled'
-      );
-
-      return {
-        success: true,
-        data: historyOrders,
-      };
-    } catch (error) {
-      return {
-        success: false,
-        error: 'Failed to fetch order history',
       };
     }
   }

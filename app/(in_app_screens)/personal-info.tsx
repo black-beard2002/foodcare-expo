@@ -41,11 +41,12 @@ export default function PersonalInfoScreen() {
   const HERO_CARD_WIDTH = SCREEN_WIDTH - 48;
 
   const [formData, setFormData] = useState({
-    full_name: user?.full_name || '',
-    email: user?.email || '',
+    first_name: user?.first_name || '',
+    last_name: user?.last_name || '',
+    email_address: user?.email_address || '',
     phone_number: user?.phone_number || '',
     address: user?.address || '',
-    date_of_birth: user?.date_of_birth || '',
+    birthdate: user?.birthdate || '',
   });
 
   const [isEditing, setIsEditing] = useState(false);
@@ -66,11 +67,12 @@ export default function PersonalInfoScreen() {
 
   const handleCancel = () => {
     setFormData({
-      full_name: user?.full_name || '',
-      email: user?.email || '',
+      first_name: user?.first_name || '',
+      last_name: user?.last_name || '',
+      email_address: user?.email_address || '',
       phone_number: user?.phone_number || '',
       address: user?.address || '',
-      date_of_birth: user?.date_of_birth || '',
+      birthdate: user?.birthdate || '',
     });
     setIsEditing(false);
     Keyboard.dismiss();
@@ -79,16 +81,24 @@ export default function PersonalInfoScreen() {
   const fields = [
     {
       icon: User,
-      label: 'Full Name',
-      key: 'full_name',
-      placeholder: 'Enter your full name',
+      label: 'First Name',
+      key: 'first_name',
+      placeholder: 'Enter your first name',
+      editable: true,
+      color: '#3B82F6',
+    },
+    {
+      icon: User,
+      label: 'Last Name',
+      key: 'last_name',
+      placeholder: 'Enter your last name',
       editable: true,
       color: '#3B82F6',
     },
     {
       icon: Mail,
       label: 'Email Address',
-      key: 'email',
+      key: 'email_address',
       placeholder: 'Enter your email',
       editable: true,
       keyboardType: 'email-address' as const,
@@ -115,7 +125,7 @@ export default function PersonalInfoScreen() {
     {
       icon: Calendar,
       label: 'Date of Birth',
-      key: 'date_of_birth',
+      key: 'birthdate',
       placeholder: 'YYYY-MM-DD',
       editable: true,
       color: '#EC4899',
@@ -268,13 +278,14 @@ export default function PersonalInfoScreen() {
                   className="text-2xl font-bold mb-1"
                   style={{ color: theme.text }}
                 >
-                  {formData.full_name || 'Your Name'}
+                  {formData.first_name.concat(` ${formData.last_name}`) ||
+                    'Your Name'}
                 </Text>
                 <Text
                   className="text-sm"
                   style={{ color: theme.textSecondary }}
                 >
-                  {formData.email || 'your.email@example.com'}
+                  {formData.email_address || 'your.email@example.com'}
                 </Text>
               </View>
 

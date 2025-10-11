@@ -120,6 +120,7 @@ export default function SettingScreen() {
     if (!value) {
       const authenticated = await authenticateBeforeDisable('biometric');
       if (!authenticated) return;
+      else setBiometricEnabled(false);
     } else {
       if (!biometricAvailable) {
         showAlert(
@@ -407,14 +408,14 @@ export default function SettingScreen() {
               className="text-xl font-bold mb-1"
               style={{ color: theme.text }}
             >
-              {user?.full_name || 'Guest User'}
+              {user?.first_name?.concat(` ${user.last_name}`) || 'Guest User'}
             </Text>
           </View>
           <View className="gap-1 flex-1">
             <View className="flex-row items-center gap-1 mb-1">
               <Mail color={theme.textSecondary} size={14} />
               <Text className="text-sm" style={{ color: theme.textSecondary }}>
-                {user?.email || 'No email'}
+                {user?.email_address || 'No email'}
               </Text>
             </View>
 
@@ -428,7 +429,7 @@ export default function SettingScreen() {
             <View className="flex-row items-center gap-1">
               <Calendar color={theme.textSecondary} size={14} />
               <Text className="text-sm" style={{ color: theme.textSecondary }}>
-                {new Date(user?.date_of_birth ?? '').toLocaleDateString()}
+                {new Date(user?.birthdate ?? '').toLocaleDateString()}
               </Text>
             </View>
           </View>
@@ -654,7 +655,10 @@ export default function SettingScreen() {
                 style={{ backgroundColor: theme.primary }}
                 onPress={() => {
                   if (authPin === userPin) {
-                    if (pendingToggle === 'pin') setLocalPinEnabled(false);
+                    if (pendingToggle === 'pin') {
+                      setLocalPinEnabled(false);
+                      setPinEnabled(false);
+                    }
                     if (pendingToggle === 'biometric')
                       setLocalBiometricEnabled(false);
                     setAuthModalVisible(false);

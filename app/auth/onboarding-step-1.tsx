@@ -24,7 +24,7 @@ export default function OnboardingStep1() {
   const [dateOfBirth, setDateOfBirth] = useState<Date | null>(null);
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [focusedField, setFocusedField] = useState<'name' | 'dob' | null>(null);
-  const { updateProfile, isLoading, user } = useAuthStore();
+  const { isLoading, user, setUser } = useAuthStore();
   const { showAlert } = useAlert();
   const { theme, isDark } = useTheme();
 
@@ -102,15 +102,15 @@ export default function OnboardingStep1() {
     const day = String(dateOfBirth.getDate()).padStart(2, '0');
     const isoDate = `${year}-${month}-${day}`;
 
-    const result = await updateProfile({
-      full_name: fullName.trim(),
-      date_of_birth: isoDate,
+    setUser({
+      ...user,
+      first_name: fullName.split(' ')[0],
+      last_name: fullName.split(' ')[1],
+      birthdate: isoDate,
     });
 
-    if (result.success) router.push('/auth/onboarding-step-2');
-    else
-      showAlert('Error', result.error || 'Failed to save information', 'error');
-  }, [fullName, dateOfBirth, isFormValid, user, updateProfile, showAlert]);
+    router.push('/auth/onboarding-step-2');
+  }, [fullName, dateOfBirth, isFormValid, user, showAlert]);
 
   const gradientColors: [ColorValue, ColorValue, ColorValue] = isDark
     ? ['rgba(15,23,42,1)', 'rgba(30,41,59,1)', 'rgba(15,23,42,1)']

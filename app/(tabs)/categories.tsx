@@ -4,7 +4,6 @@ import { router, useLocalSearchParams } from 'expo-router';
 import { useAppStore } from '@/stores/appStore';
 import { useTheme } from '@/hooks/useTheme';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { LinearGradient } from 'expo-linear-gradient';
 import { Sparkles } from 'lucide-react-native';
 
 export default function CategoriesScreen() {

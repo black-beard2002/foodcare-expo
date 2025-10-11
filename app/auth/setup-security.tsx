@@ -19,20 +19,6 @@ import { useAlert } from '@/providers/AlertProvider';
 import { useTheme } from '@/hooks/useTheme';
 import { LinearGradient } from 'expo-linear-gradient';
 
-interface ColorTheme {
-  background: string;
-  primary: string;
-  primaryLight: string;
-  text: string;
-  textSecondary: string;
-  card: string;
-  border: string;
-  success: string;
-  error: string;
-  modalBackground: string;
-  overlay: string;
-}
-
 export default function SetupSecurityScreen(): JSX.Element {
   const { setOnboardingComplete } = useAuthStore();
   const {
@@ -213,7 +199,7 @@ export default function SetupSecurityScreen(): JSX.Element {
     setBiometricEnabled(localBiometricEnabled);
     setPinEnabled(localPinEnabled);
     setOnboardingComplete(true);
-    router.replace('/(tabs)');
+    router.replace('/auth/onboarding-step-3');
   };
 
   const renderPinInput = (
