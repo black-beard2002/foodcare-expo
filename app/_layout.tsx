@@ -43,6 +43,14 @@ export default function RootLayout() {
     'Inter-Bold': Inter_700Bold,
   });
 
+  // ✅ Setup auth event listeners
+  useEffect(() => {
+    const setupEventListeners = useAuthStore.getState().setupEventListeners;
+    const cleanup = setupEventListeners();
+
+    return cleanup;
+  }, []);
+
   // Load app data
   useEffect(() => {
     const prepareApp = async () => {
@@ -79,10 +87,11 @@ export default function RootLayout() {
       if (!isReady || (!fontsLoaded && !fontError)) return;
 
       try {
-        const { user, token, isLoading } = useAuthStore.getState();
-        console.log('Auth State:', { user, token, isLoading });
+        const { user, access_token, isLoading } = useAuthStore.getState();
+        console.log('Auth State:', { user, access_token, isLoading });
+
         // Simple navigation logic: if user exists, go to tabs, else go to auth
-        if (user || token) {
+        if (user && access_token) {
           router.replace('/(tabs)');
         } else {
           router.replace('/auth');

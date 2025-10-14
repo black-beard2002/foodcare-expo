@@ -3,11 +3,12 @@ import { createJSONStorage, persist } from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { User } from '@/types/authTypes';
 import { authApi } from '@/api/auth';
+import { subscribeToAuthEvents, AUTH_EVENTS } from '@/utils/authEvents';
 
 interface AuthState {
   user: Partial<User> | null;
   isAuthenticated: boolean;
-  token: string | null;
+  access_token: string | null;
   refresh_token: string | null;
   hasCompletedOnboarding: boolean;
   isLoading: boolean;
@@ -19,9 +20,12 @@ interface AuthState {
   setOnboardingComplete: (complete: boolean) => void;
   setLoading: (loading: boolean) => void;
   setError: (error: string | null) => void;
-  setToken: (token: string | null) => void;
+  setAccessToken: (token: string | null) => void;
   setRefreshToken: (refresh_token: string | null) => void;
   loadUserFromStorage: () => Promise<void>;
+
+  // Event listener setup
+  setupEventListeners: () => () => void;
 
   // API Actions
   signInWithPhone: (
@@ -31,13 +35,6 @@ interface AuthState {
     otp: string,
     phoneNumber: string
   ) => Promise<{ success: boolean; message?: string }>;
-  // signInWithEmail: (
-  //   email: string,
-  //   password: string
-  // ) => Promise<{ success: boolean; error?: string }>;
-  // signUp: (
-  //   userData: SignUpData
-  // ) => Promise<{ success: boolean; error?: string }>;
   updateProfile: (
     userData: Partial<User>
   ) => Promise<{ success: boolean; error?: string }>;
@@ -51,22 +48,72 @@ export const useAuthStore = create<AuthState>()(
       isAuthenticated: false,
       hasCompletedOnboarding: false,
       isLoading: false,
-      token: null,
+      access_token: null,
       refresh_token: null,
       error: null,
-      setToken: (token) => set({ token }),
+      setAccessToken: (token) => set({ access_token: token }),
       setRefreshToken: (refresh_token) => set({ refresh_token }),
+
+      // === Event Listeners Setup ===
+      setupEventListeners: () => {
+        const handleTokenRefresh = (data: { token: string }) => {
+          const newToken = data?.token;
+          if (newToken) {
+            console.log('Token refreshed, updating auth store');
+            set({ access_token: newToken });
+          }
+        };
+
+        const handleAuthLogout = (data?: { reason?: string }) => {
+          console.log('Auth logout triggered:', data);
+
+          // Clear state
+          set({
+            user: null,
+            access_token: null,
+            refresh_token: null,
+            isAuthenticated: false,
+            error: null,
+          });
+
+          // Clear AsyncStorage (already done by interceptor, but be safe)
+          AsyncStorage.multiRemove([
+            'user',
+            'access_token',
+            'refresh_token',
+          ]).catch((error) =>
+            console.error('Error clearing AsyncStorage:', error)
+          );
+        };
+
+        // Subscribe to auth events
+        const unsubscribeTokenRefresh = subscribeToAuthEvents(
+          AUTH_EVENTS.TOKEN_REFRESHED,
+          handleTokenRefresh
+        );
+
+        const unsubscribeLogout = subscribeToAuthEvents(
+          AUTH_EVENTS.LOGOUT,
+          handleAuthLogout
+        );
+
+        // Return cleanup function that unsubscribes from both events
+        return () => {
+          unsubscribeTokenRefresh();
+          unsubscribeLogout();
+        };
+      },
 
       // === Base Actions ===
       loadUserFromStorage: async () => {
         const storedUser = await AsyncStorage.getItem('user');
-        const storedToken = await AsyncStorage.getItem('token');
+        const storedToken = await AsyncStorage.getItem('access_token');
         const storedRefresh = await AsyncStorage.getItem('refresh_token');
 
         if (storedUser && storedToken) {
           set({
             user: JSON.parse(storedUser),
-            token: storedToken,
+            access_token: storedToken,
             refresh_token: storedRefresh,
             isAuthenticated: true,
           });
@@ -89,13 +136,13 @@ export const useAuthStore = create<AuthState>()(
           if (response.success) {
             return {
               success: true,
-              message: response.message || 'Sign in successful',
+              message: response.data.message ?? 'Sign in successful',
             };
           } else {
-            set({ error: response.error });
+            set({ error: response.data.error ?? 'Sign in failed' });
             return {
               success: false,
-              message: response.error || 'Sign in failed',
+              message: response.data.error ?? 'Sign in failed',
             };
           }
         } catch {
@@ -116,7 +163,10 @@ export const useAuthStore = create<AuthState>()(
             const user = response.data.user;
 
             await AsyncStorage.setItem('user', JSON.stringify(user));
-            await AsyncStorage.setItem('token', response.data.token);
+            await AsyncStorage.setItem(
+              'access_token',
+              response.data.access_token
+            );
             await AsyncStorage.setItem(
               'refresh_token',
               response.data.refresh_token
@@ -125,12 +175,12 @@ export const useAuthStore = create<AuthState>()(
             set({
               user,
               isAuthenticated: true,
-              token: response.data.token,
+              access_token: response.data.access_token,
               refresh_token: response.data.refresh_token,
               error: null,
             });
 
-            return { success: true };
+            return { success: true, message: response.message };
           } else {
             set({ error: response.error });
             return { success: false, message: response.error };
@@ -140,82 +190,6 @@ export const useAuthStore = create<AuthState>()(
           return { success: false, message: 'Network error occurred' };
         }
       },
-
-      // signInWithEmail: async (email: string, password: string) => {
-      //   set({ isLoading: true, error: null });
-      //   try {
-      //     const response = await authApi.signInWithEmail(email, password);
-      //     set({ isLoading: false });
-
-      //     if (response.success && response.data) {
-      //       await AsyncStorage.setItem(
-      //         'user',
-      //         JSON.stringify(response.data.user)
-      //       );
-      //       await AsyncStorage.setItem(
-      //         'token',
-      //         response.data.token.access_token
-      //       );
-      //       await AsyncStorage.setItem(
-      //         'refresh_token',
-      //         response.data.token.refresh_token
-      //       );
-
-      //       set({
-      //         user: response.data.user,
-      //         isAuthenticated: true,
-      //         token: response.data.token.access_token,
-      //         refresh_token: response.data.token.refresh_token,
-      //         error: null,
-      //       });
-      //       return { success: true };
-      //     } else {
-      //       set({ error: response.error });
-      //       return { success: false, error: response.error };
-      //     }
-      //   } catch {
-      //     set({ isLoading: false, error: 'Network error occurred' });
-      //     return { success: false, error: 'Network error occurred' };
-      //   }
-      // },
-
-      // signUp: async (userData: SignUpData) => {
-      //   set({ isLoading: true, error: null });
-      //   try {
-      //     const response = await authApi.signUp(userData);
-      //     set({ isLoading: false });
-
-      //     if (response.success && response.data) {
-      //       await AsyncStorage.setItem(
-      //         'user',
-      //         JSON.stringify(response.data.user)
-      //       );
-      //       await AsyncStorage.setItem(
-      //         'token',
-      //         response.data.token.access_token
-      //       );
-      //       await AsyncStorage.setItem(
-      //         'refresh_token',
-      //         response.data.token.refresh_token
-      //       );
-
-      //       set({
-      //         user: response.data.user,
-      //         isAuthenticated: true,
-      //         token: response.data.token.access_token,
-      //         refresh_token: response.data.token.refresh_token,
-      //         error: null,
-      //       });
-      //       return { success: true };
-      //     } else {
-      //       set({ error: response.error });
-      //       return { success: false, error: response.error };
-      //     }
-      //   } catch {
-      //     set({ isLoading: false, error: 'Network error occurred' });
-      //     return { success: false, error: 'Network error occurred' };
-      //   }
-      // },
 
       updateProfile: async (userData: Partial<User>) => {
         const { user, setError } = get();
@@ -244,11 +218,15 @@ export const useAuthStore = create<AuthState>()(
       signOut: async () => {
         set({ isLoading: true });
         try {
-          await AsyncStorage.multiRemove(['user', 'token', 'refresh_token']);
+          await AsyncStorage.multiRemove([
+            'user',
+            'access_token',
+            'refresh_token',
+          ]);
           set({
             user: null,
             isAuthenticated: false,
-            token: null,
+            access_token: null,
             refresh_token: null,
             isLoading: false,
             error: null,
@@ -261,7 +239,6 @@ export const useAuthStore = create<AuthState>()(
     {
       name: 'auth-storage',
       storage: createJSONStorage(() => AsyncStorage),
-      // ✅ Reset loading state after hydration
       onRehydrateStorage: () => (state) => {
         if (state) {
           state.isLoading = false;

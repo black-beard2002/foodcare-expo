@@ -1,7 +1,8 @@
 import { CATALOG_API } from '@/constants/api_constants';
-import { ApiClient } from './config';
+
 import { Offer } from '@/types/appTypes';
 import { ApiResponse } from '@/types/apiTypes';
+import { createAxiosInstance } from './axiosInstance';
 
 export interface OffersApi {
   getOffers: (offerId?: string) => Promise<ApiResponse<Offer[]>>;
@@ -10,24 +11,25 @@ export interface OffersApi {
 }
 
 class OffersApiImpl implements OffersApi {
-  apiClient = new ApiClient(CATALOG_API);
+  catalog_api = createAxiosInstance(CATALOG_API ?? '');
   async getOffers(): Promise<ApiResponse<Offer[]>> {
     try {
-      const response = await this.apiClient.get(
-        '/item/get-all',
-        {},
-        { item_type: 'OFFER' }
-      );
-      console.log('offers:', response);
-      if (response.success) {
+      const response_api = await this.catalog_api.get('/item/get-all', {
+        params: {
+          item_type: 'OFFER',
+        },
+      });
+      const responseBody = response_api.data;
+      console.log('offers:', responseBody.data);
+      if (responseBody.success) {
         return {
           success: true,
-          data: response.data as Offer[],
+          data: responseBody.data as Offer[],
         };
       } else {
         return {
           success: false,
-          error: response.error || 'Failed to fetch offers',
+          error: responseBody.error || 'Failed to fetch offers',
         };
       }
     } catch (error) {
@@ -40,16 +42,17 @@ class OffersApiImpl implements OffersApi {
 
   async getOfferById(id: string): Promise<ApiResponse<Offer>> {
     try {
-      const response = await this.apiClient.get('/offers' + id);
-      if (response.success) {
+      const response_api = await this.catalog_api.get(`/item/${id}`);
+      const responseBody = response_api.data;
+      if (responseBody.success) {
         return {
           success: true,
-          data: response.data as Offer,
+          data: responseBody.data as Offer,
         };
       } else {
         return {
           success: false,
-          error: response.error || 'Failed to fetch offer',
+          error: responseBody.error || 'Failed to fetch offer',
         };
       }
     } catch (error) {
@@ -62,9 +65,10 @@ class OffersApiImpl implements OffersApi {
 
   async getOffersByCategory(categoryId: string): Promise<ApiResponse<Offer[]>> {
     try {
-      const response = await this.apiClient.get('/offers');
-      if (response.success) {
-        const filteredOffers = (response.data as Offer[]).filter(
+      const response_api = await this.catalog_api.get('/item/get-all');
+      const responseBody = response_api.data;
+      if (responseBody.success) {
+        const filteredOffers = (responseBody.data as Offer[]).filter(
           (offer) => offer.category_id === categoryId
         );
         return {
@@ -74,7 +78,7 @@ class OffersApiImpl implements OffersApi {
       } else {
         return {
           success: false,
-          error: response.error || 'Failed to fetch categorized offers',
+          error: responseBody.error || 'Failed to fetch categorized offers',
         };
       }
     } catch (error) {

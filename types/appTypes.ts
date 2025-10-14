@@ -112,6 +112,7 @@ export interface Order {
   status: 'pending' | 'completed' | 'cancelled';
   total: number;
   createdAt: string;
+  created_by: string;
 }
 export interface FilterOptions {
   priceRange: string[];
@@ -253,3 +254,68 @@ export interface OrderTracking {
     timestamp: string;
   }[];
 }
+// Enums as union types
+export type TransactionType =
+  | 'RESERVATION'
+  | 'ORDER'
+  | 'SALE'
+  | 'REFUND'
+  | 'EXCHANGE'
+  | 'RETURN'
+  | 'OTHER';
+
+export type TransactionStatus =
+  | 'PENDING'
+  | 'COMPLETED'
+  | 'CANCELLED'
+  | 'DELIVERED';
+
+export type PaymentMethod =
+  | 'CREDIT_CARD'
+  | 'DEBIT_CARD'
+  | 'PAYPAL'
+  | 'BANK_TRANSFER'
+  | 'CASH'
+  | 'CRYPTO'
+  | 'OTHER';
+
+export type PaymentStatus =
+  | 'PAID'
+  | 'PENDING'
+  | 'FAILED'
+  | 'REFUNDED'
+  | 'PARTIALLY_PAID';
+
+export type OrderClientData = {
+  first_name: string;
+  last_name: string;
+  phone_number: string;
+  email: string;
+  address: string;
+};
+export type OrderItem = {
+  item: Partial<Offer>;
+  quantity: number;
+  total: number;
+};
+// TransactionBase model
+export type TransactionBase = {
+  id: string;
+  user_id?: string;
+  transaction_type?: TransactionType;
+  status?: TransactionStatus;
+  unit_price?: number;
+  currency?: string;
+  total_price?: number;
+  items?: OrderItem[]; // list of dicts
+  total_items: number;
+  payment_status?: PaymentStatus;
+  payment_method?: PaymentMethod;
+  expiry?: string;
+  date_trx?: string;
+  delivered_at?: string;
+  client_data?: OrderClientData;
+  created_at?: string;
+  updated_at?: string;
+  created_by?: string;
+};

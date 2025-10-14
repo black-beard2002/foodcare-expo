@@ -55,8 +55,7 @@ export const useFavoritesStore = create<FavoritesState>((set, get) => ({
       favorited: offer,
       added_at: new Date().toISOString(),
       price_alert_enabled: enablePriceAlert,
-      original_price_tracked:
-        offer.discounted_price || offer.original_price || 0,
+      original_price_tracked: offer.sale_price || offer.price || 0,
     };
 
     const updated = [...favorites, newFavorite];
@@ -119,7 +118,8 @@ export const useFavoritesStore = create<FavoritesState>((set, get) => ({
     return favorites.filter(
       (fav) =>
         fav.price_alert_enabled &&
-        fav.favorited.discounted_price < fav.original_price_tracked
+        fav.favorited.sale_price &&
+        fav.favorited.sale_price < fav.original_price_tracked
     );
   },
 

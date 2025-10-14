@@ -1,17 +1,19 @@
 import { USER_API } from '@/constants/api_constants';
-import { ApiClient } from './config';
 import { User } from '@/types/authTypes';
 import { ApiResponse } from '@/types/apiTypes';
+import { createAxiosInstance } from './axiosInstance';
 
 export interface AuthApi {
-  signInWithPhone: (
-    phoneNumber: string
-  ) => Promise<ApiResponse<{ verificationId: string }>>;
+  signInWithPhone: (phoneNumber: string) => Promise<ApiResponse>;
   verifyOtp: (
     phone_number: string,
     otp: string
   ) => Promise<
-    ApiResponse<{ user: Partial<User>; token: string; refresh_token: string }>
+    ApiResponse<{
+      user: Partial<User>;
+      access_token: string;
+      refresh_token: string;
+    }>
   >;
   // signInWithEmail: (
   //   email: string,
@@ -20,13 +22,13 @@ export interface AuthApi {
   // signUp: (
   //   userData: SignUpData
   // ) => Promise<ApiResponse<{ user: Partial<User>; token: string }>>;
-  signOut: () => Promise<ApiResponse<void>>;
-  getCurrentUser: () => Promise<ApiResponse<Partial<User>>>;
+  signOut: () => Promise<ApiResponse>;
+  getUser: (id: string) => Promise<ApiResponse<Partial<User>>>;
   updateProfile: (
     userId: string,
     userData: Partial<Partial<User>>
   ) => Promise<ApiResponse<Partial<User>>>;
-  deleteAccount: (userId: string) => Promise<ApiResponse<void>>;
+  deleteAccount: (userId: string) => Promise<ApiResponse>;
 }
 
 export interface SignUpData {
@@ -37,29 +39,27 @@ export interface SignUpData {
 }
 
 class AuthApiImpl implements AuthApi {
-  apiClient = new ApiClient(USER_API);
+  auth_api = createAxiosInstance(USER_API ?? '');
 
   async signInWithPhone(phoneNumber: string) {
     try {
-      const response = await this.apiClient.post('/register-with-phone', {
-        phone_number: phoneNumber,
-      });
-      if (response.success) {
-        console.log('OTP sent successfully:', response);
-        return {
-          success: true,
-          message: response.data.message,
-        };
-      } else {
-        return {
-          success: false,
-          error: response.error || 'Failed to send OTP',
-        };
-      }
+      const api_response = await this.auth_api.post(
+        '/user/register-with-phone',
+        {
+          phone_number: phoneNumber,
+        }
+      );
+      const responseBody = api_response.data;
+      return {
+        success: true,
+        data: responseBody.data,
+      };
     } catch (error) {
+      console.log('signInWithPhone Error', error);
       return {
         success: false,
-        error: 'Failed to send OTP',
+        message: 'unexpected error occured',
+        error: 'unexpected error occured',
       };
     }
   }
@@ -68,32 +68,38 @@ class AuthApiImpl implements AuthApi {
     phone_number: string,
     otp: string
   ): Promise<
-    ApiResponse<{ user: Partial<User>; token: string; refresh_token: string }>
+    ApiResponse<{
+      user: Partial<User>;
+      access_token: string;
+      refresh_token: string;
+    }>
   > {
     try {
-      const response = await this.apiClient.post('/verify-otp', {
+      const api_response = await this.auth_api.post('/user/verify-otp', {
         phone_number,
         otp,
       });
-      if (response.success) {
+      const responseBody = api_response.data;
+      if (responseBody.data) {
         // replace id in type User by user_id
-        const apiUser = response.data.user;
+        const apiUser = responseBody.data.user;
         const user: Partial<User> = {
           ...apiUser,
           id: apiUser.user_id, // map to the expected field
         };
-        const token: string = response.data.token.access_token;
-        const refresh_token: string = response.data.token.refresh_token;
+        const access_token: string = responseBody.data.token.access_token;
+        const refresh_token: string = responseBody.data.token.refresh_token;
+        console.log('otp res:', responseBody);
         return {
           success: true,
-          data: { user, token, refresh_token },
-          message: 'OTP verified successfully',
+          data: { user, access_token, refresh_token },
+          message: responseBody.message ?? 'OTP verified successfully',
         };
       } else {
         return {
           success: false,
-          message: response.message || 'Failed to verify OTP',
-          error: response.error || 'Failed to verify OTP',
+          message: responseBody.message || 'Failed to verify OTP',
+          error: responseBody.error || 'Failed to verify OTP',
         };
       }
     } catch (error) {
@@ -176,14 +182,21 @@ class AuthApiImpl implements AuthApi {
   //   }
   // }
 
-  async signOut(): Promise<ApiResponse<void>> {
+  async signOut(): Promise<ApiResponse> {
     try {
-      await new Promise((resolve) => setTimeout(resolve, 500));
-
-      return {
-        success: true,
-        message: 'Signed out successfully',
-      };
+      const api_response = await this.auth_api.post('/auth/logout');
+      const responseBody = api_response.data;
+      if (responseBody.success) {
+        return {
+          success: true,
+          message: 'Signed out successfully',
+        };
+      } else {
+        return {
+          success: false,
+          error: 'Failed to sign out',
+        };
+      }
     } catch (error) {
       return {
         success: false,
@@ -192,26 +205,26 @@ class AuthApiImpl implements AuthApi {
     }
   }
 
-  async getCurrentUser(): Promise<ApiResponse<Partial<User>>> {
+  async getUser(id: string): Promise<ApiResponse<Partial<User>>> {
     try {
-      await new Promise((resolve) => setTimeout(resolve, 400));
-
-      // Return demo user for now
-      const user: Partial<User> = {
-        id: '1',
-        phone_number: '+1234567890',
-        email_address: 'demo@example.com',
-        first_name: 'Demo Partial<User>',
-      };
-
-      return {
-        success: true,
-        data: user,
-      };
+      const api_response = await this.auth_api.get(`/user/${id}`);
+      const responseBody = api_response.data;
+      if (responseBody.success && responseBody.data) {
+        return {
+          success: true,
+          message: 'user retrieved successfully',
+          data: responseBody.data,
+        };
+      } else {
+        return {
+          success: false,
+          error: 'Failed to get user',
+        };
+      }
     } catch (error) {
       return {
         success: false,
-        error: 'Failed to get current user',
+        error: 'Failed to get user',
       };
     }
   }
@@ -221,17 +234,22 @@ class AuthApiImpl implements AuthApi {
     userData: Partial<Partial<User>>
   ): Promise<ApiResponse<Partial<User>>> {
     try {
-      const response = await this.apiClient.put(`/${userId}/update`, userData);
-      if (response.success) {
+      const api_response = await this.auth_api.put(
+        `/user/${userId}/update`,
+        userData
+      );
+      const responseBody = api_response.data;
+      console.log('update response:', responseBody);
+      if (responseBody.success) {
         return {
           success: true,
-          data: response.data as Partial<User>,
+          data: responseBody.data as Partial<User>,
           message: 'Profile updated successfully',
         };
       } else {
         return {
           success: false,
-          error: response.error || 'Failed to update profile',
+          error: responseBody.error || 'Failed to update profile',
         };
       }
     } catch (error) {

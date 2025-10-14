@@ -184,8 +184,8 @@ export const useAppStore = create<AppState>()((set, get) => ({
     set({ isLoading: true, error: null });
 
     try {
-      const token = useAuthStore.getState().token;
-      const response = await categoriesApi.getCategories(token || '');
+      const token = useAuthStore.getState().access_token;
+      const response = await categoriesApi.getCategories();
 
       if (response.success && response.data) {
         set({
@@ -347,7 +347,7 @@ export const useAppStore = create<AppState>()((set, get) => ({
   getCartTotal: () => {
     const { cart } = get();
     return cart.reduce(
-      (total, item) => total + item.offer.discounted_price * item.quantity,
+      (total, item) => total + (item.offer.sale_price ?? 0) * item.quantity,
       0
     );
   },
