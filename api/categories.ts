@@ -1,35 +1,31 @@
-import { ApiClient } from './config';
 import { Category } from '@/types/appTypes';
 import { CATALOG_API } from '@/constants/api_constants';
 import { ApiResponse } from '@/types/apiTypes';
+import { createAxiosInstance } from './axiosInstance';
 
 export interface CategoriesApi {
-  getCategories: (token: string) => Promise<ApiResponse<Category[]>>;
+  getCategories: () => Promise<ApiResponse<Category[]>>;
   getCategoryById: (id: string) => Promise<ApiResponse<Category>>;
 }
 
 class CategoriesApiImpl implements CategoriesApi {
-  apiClient = new ApiClient(CATALOG_API);
-  async getCategories(token: string): Promise<ApiResponse<Category[]>> {
+  catalog_api = createAxiosInstance(CATALOG_API ?? '');
+  async getCategories(): Promise<ApiResponse<Category[]>> {
     try {
-      console.log('Fetching categories from API...', CATALOG_API);
-      const response = await this.apiClient.get(
-        '/configuration/category/get-all',
-        {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        }
+      const api_response = await this.catalog_api.get(
+        '/configuration/category/get-all'
       );
-      console.log('categories:', response);
-      if (response.success) {
+      const responseBody = api_response.data;
+      console.log('categories:', responseBody.data);
+      if (responseBody.success) {
         return {
           success: true,
-          data: response.data as Category[],
+          data: responseBody.data as Category[],
         };
       } else {
         return {
           success: false,
-          error: response.error || 'Failed to fetch categories',
+          error: responseBody.error || 'Failed to fetch categories',
         };
       }
     } catch (error) {
@@ -42,16 +38,17 @@ class CategoriesApiImpl implements CategoriesApi {
 
   async getCategoryById(id: string): Promise<ApiResponse<Category>> {
     try {
-      const response = await this.apiClient.get('/configuration/' + id);
-      if (response.success) {
+      const api_response = await this.catalog_api.get('/configuration/' + id);
+      const responseBody = api_response.data;
+      if (responseBody.success) {
         return {
           success: true,
-          data: response.data as Category,
+          data: responseBody.data as Category,
         };
       } else {
         return {
           success: false,
-          error: response.error || 'Failed to fetch category',
+          error: responseBody.error || 'Failed to fetch category',
         };
       }
     } catch (error) {

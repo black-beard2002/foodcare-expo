@@ -54,7 +54,12 @@ import { useFavoritesStore } from '@/stores/favoritesStore';
 import { useAuthStore } from '@/stores/authStore';
 import * as Haptics from 'expo-haptics';
 import { ColorTheme } from '@/constants/theme';
-import { formatPrice, getDiscountPercentage } from '@/utils/helpers';
+import {
+  formatPrice,
+  getDiscountPercentage,
+  handleImageSrc,
+} from '@/utils/helpers';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 const HERO_CARD_WIDTH = SCREEN_WIDTH - 40;
@@ -325,9 +330,10 @@ const EnhancedCategoryChip = ({
           <View className="w-12 h-12 rounded-2xl overflow-hidden shadow-md">
             <Image
               source={{
-                uri: item.image_url,
+                uri: handleImageSrc(item.image_url),
               }}
-              className="w-full h-full"
+              className="w-12 h-12"
+              style={{ width: 50, height: 50 }}
               resizeMode="contain"
             />
           </View>
@@ -699,7 +705,6 @@ export default function HomeScreen(): JSX.Element {
   const { isNewFavoritedAdded } = useFavoritesStore();
   const { user } = useAuthStore();
   const { showAlert } = useAlert();
-
   const [refreshing, setRefreshing] = useState(false);
   const [filterVisible, setFilterVisible] = useState(false);
   const [activeFilters, setActiveFilters] = useState<FilterOptions | null>(

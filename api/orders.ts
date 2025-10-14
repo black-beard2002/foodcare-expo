@@ -1,44 +1,42 @@
 import { TRANSACTION_API } from '@/constants/api_constants';
-import { ApiClient } from './config';
-import { Order } from '@/types/appTypes';
+import { TransactionBase, TransactionStatus } from '@/types/appTypes';
 import { ApiResponse } from '@/types/apiTypes';
+import { createAxiosInstance } from './axiosInstance';
 
 export interface OrdersApi {
-  getOrders: (userId?: string) => Promise<ApiResponse<Order[]>>;
-  getOrderById: (id: string) => Promise<ApiResponse<Order>>;
+  getOrders: (userId?: string) => Promise<ApiResponse<TransactionBase[]>>;
+  getOrderById: (id: string) => Promise<ApiResponse<TransactionBase>>;
   createOrder: (
-    order: Omit<Order, 'id' | 'createdAt'>
-  ) => Promise<ApiResponse<Order>>;
+    order: Omit<TransactionBase, 'id' | 'createdAt'>
+  ) => Promise<ApiResponse<TransactionBase>>;
   updateOrderStatus: (
     id: string,
     status: OrderStatus
-  ) => Promise<ApiResponse<Order>>;
-  cancelOrder: (id: string) => Promise<ApiResponse<Order>>;
+  ) => Promise<ApiResponse<TransactionBase>>;
+  cancelOrder: (id: string) => Promise<ApiResponse<TransactionBase>>;
 }
 
-export type OrderStatus = 'pending' | 'completed' | 'cancelled';
-
-export interface OrderWithStatus extends Order {
-  status: OrderStatus;
-  estimatedReadyTime?: string;
-  notes?: string;
-}
+export type OrderStatus = TransactionStatus;
 
 class OrdersApiImpl implements OrdersApi {
-  apiClient = new ApiClient(TRANSACTION_API);
+  transaction_api = createAxiosInstance(TRANSACTION_API ?? '');
 
-  async getOrders(userId?: string): Promise<ApiResponse<Order[]>> {
+  async getOrders(userId?: string): Promise<ApiResponse<TransactionBase[]>> {
     try {
-      const response = await this.apiClient.get('/orders');
-      if (response.success) {
+      const response_api = await this.transaction_api.get(
+        '/transaction/get-all',
+        { params: { user_id: userId, transaction_type: 'ORDER' } }
+      );
+      const responseBody = response_api.data;
+      if (responseBody.success) {
         return {
           success: true,
-          data: response.data as Order[],
+          data: responseBody.data as TransactionBase[],
         };
       } else {
         return {
           success: false,
-          error: response.error || 'Failed to fetch orders',
+          error: responseBody.error || 'Failed to fetch orders',
         };
       }
     } catch (error) {
@@ -49,18 +47,19 @@ class OrdersApiImpl implements OrdersApi {
     }
   }
 
-  async getOrderById(id: string): Promise<ApiResponse<Order>> {
+  async getOrderById(id: string): Promise<ApiResponse<TransactionBase>> {
     try {
-      const response = await this.apiClient.get('/orders' + id);
-      if (response.success) {
+      const response_api = await this.transaction_api.get(`/transaction/${id}`);
+      const responseBody = response_api.data;
+      if (responseBody.success) {
         return {
           success: true,
-          data: response.data as Order,
+          data: responseBody.data as TransactionBase,
         };
       } else {
         return {
           success: false,
-          error: response.error || 'Failed to fetch order',
+          error: responseBody.error || 'Failed to fetch order',
         };
       }
     } catch (error) {
@@ -72,20 +71,24 @@ class OrdersApiImpl implements OrdersApi {
   }
 
   async createOrder(
-    orderData: Omit<Order, 'id' | 'createdAt'>
-  ): Promise<ApiResponse<Order>> {
+    orderData: Omit<TransactionBase, 'id' | 'createdAt'>
+  ): Promise<ApiResponse<TransactionBase>> {
     try {
-      const response = await this.apiClient.post('/orders', orderData);
-      if (response.success) {
+      const response_api = await this.transaction_api.post(
+        '/transaction/add',
+        orderData
+      );
+      const responseBody = response_api.data;
+      if (responseBody.success) {
         return {
           success: true,
-          data: response.data as Order,
-          message: 'Order placed successfully',
+          data: responseBody.data as TransactionBase,
+          message: 'TransactionBase placed successfully',
         };
       } else {
         return {
           success: false,
-          error: response.error || 'Failed to create order',
+          error: responseBody.error || 'Failed to create order',
         };
       }
     } catch (error) {
@@ -99,21 +102,27 @@ class OrdersApiImpl implements OrdersApi {
   async updateOrderStatus(
     id: string,
     status: OrderStatus
-  ): Promise<ApiResponse<Order>> {
+  ): Promise<ApiResponse<TransactionBase>> {
     try {
-      const response = await this.apiClient.put('/orders' + id, { status });
-      if (response.success) {
-        const updatedOrder = response.data as Order;
+      const response_api = await this.transaction_api.put(
+        `/transaction/${id}/update`,
+        {
+          status,
+        }
+      );
+      const responseBody = response_api.data;
+      if (responseBody.success) {
+        const updatedOrder = responseBody.data as TransactionBase;
 
         return {
           success: true,
           data: updatedOrder,
-          message: `Order status updated to ${status}`,
+          message: `TransactionBase status updated to ${status}`,
         };
       } else {
         return {
           success: false,
-          error: response.error || 'Failed to update order status',
+          error: responseBody.error || 'Failed to update order status',
         };
       }
     } catch (error) {
@@ -124,23 +133,24 @@ class OrdersApiImpl implements OrdersApi {
     }
   }
 
-  async cancelOrder(id: string): Promise<ApiResponse<Order>> {
+  async cancelOrder(id: string): Promise<ApiResponse<TransactionBase>> {
     try {
-      const response = await this.apiClient.put('/orders' + id, {
+      const response_api = await this.transaction_api.put('/orders' + id, {
         status: 'CANCELLED',
       });
-      if (response.success) {
-        const updatedOrder = response.data as Order;
+      const responseBody = response_api.data;
+      if (responseBody.success) {
+        const updatedOrder = responseBody.data as TransactionBase;
 
         return {
           success: true,
           data: updatedOrder,
-          message: `Order is cancelled successfully`,
+          message: `TransactionBase is cancelled successfully`,
         };
       } else {
         return {
           success: false,
-          error: response.error || 'Failed to update order status',
+          error: responseBody.error || 'Failed to update order status',
         };
       }
     } catch (error) {

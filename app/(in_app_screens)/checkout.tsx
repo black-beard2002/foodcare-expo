@@ -27,12 +27,20 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import OrderSuccessModal from '@/components/OrderSuccessModal';
 import { spacing, borderRadius, fontSize, shadows } from '@/constants/theme';
 import { useBudgetStore } from '@/stores/budgetStore';
+import { useAuthStore } from '@/stores/authStore';
+import {
+  PaymentMethod,
+  PaymentStatus,
+  TransactionStatus,
+  TransactionType,
+} from '@/types/appTypes';
 
 export default function CheckoutScreen() {
   const { theme } = useTheme();
   const { cart, getCartTotal, clearCart } = useAppStore();
   const { showAlert } = useAlert();
   const { addExpense } = useBudgetStore();
+  const { user } = useAuthStore();
   const { createOrder, isLoading } = useOrderStore();
 
   const [customerInfo, setCustomerInfo] = useState({
@@ -55,13 +63,21 @@ export default function CheckoutScreen() {
     }
 
     const orderData = {
-      customerName: customerInfo.name,
-      customerPhone: customerInfo.phone,
-      pickupTime: customerInfo.pickupTime,
-      specialInstructions: customerInfo.specialInstructions,
-      offers: cart,
-      status: 'pending' as const,
-      total: getCartTotal(),
+      transaction_type: 'ORDER' as TransactionType,
+      status: 'PENDING' as TransactionStatus,
+      currency: 'USD',
+      total_price: getCartTotal(),
+      total_items: cart.length,
+      payment_status: 'PENDING' as PaymentStatus,
+      payment_method: 'CASH' as PaymentMethod,
+      client_data: {
+        first_name: customerInfo.name.split(' ')[0],
+        last_name: customerInfo.name.split(' ')[1] ?? '',
+        phone_number: customerInfo.phone ?? '',
+        email: user?.email_address ?? '',
+        address: user?.address ?? '',
+      },
+      created_by: user?.id,
     };
 
     const result = await createOrder(orderData);
@@ -72,8 +88,8 @@ export default function CheckoutScreen() {
       // Update budget store with the new expense according to each cart item category
       cart.forEach(async (item) => {
         await addExpense(
-          item.offer.category.name,
-          item.offer.discounted_price * item.quantity
+          item.offer.category_id,
+          item.offer.sale_price ?? item.offer.price * item.quantity
         );
       });
       clearCart();
@@ -151,7 +167,12 @@ export default function CheckoutScreen() {
                   shadows.sm,
                 ]}
               >
-                <Image source={item.offer.image_url} style={styles.itemImage} />
+                <Image
+                  source={{
+                    uri: item.offer.main_image,
+                  }}
+                  style={styles.itemImage}
+                />
                 <View style={styles.itemInfo}>
                   <Text
                     style={[styles.itemName, { color: theme.text }]}
@@ -182,13 +203,13 @@ export default function CheckoutScreen() {
                           { color: theme.textTertiary },
                         ]}
                       >
-                        ${item.offer.original_price.toFixed(2)}
+                        ${item.offer.price.toFixed(2)}
                       </Text>
                       <Text
                         style={[styles.itemPrice, { color: theme.primary }]}
                       >
                         $
-                        {(item.offer.discounted_price * item.quantity).toFixed(
+                        {(item.offer.sale_price ?? 0 * item.quantity).toFixed(
                           2
                         )}
                       </Text>
@@ -370,8 +391,7 @@ export default function CheckoutScreen() {
                   .reduce(
                     (sum, item) =>
                       sum +
-                      (item.offer.original_price -
-                        item.offer.discounted_price) *
+                      (item.offer.price - (item.offer.sale_price ?? 0)) *
                         item.quantity,
                     0
                   )

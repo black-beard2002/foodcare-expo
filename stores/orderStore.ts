@@ -1,25 +1,27 @@
-import {create} from 'zustand';
-import { Order } from '@/types/appTypes';
+import { create } from 'zustand';
+import { TransactionBase } from '@/types/appTypes';
 import { ordersApi } from '@/api/orders';
 
-
-
 interface OrderStore {
-  orders: Order[];
+  orders: TransactionBase[];
   isLoading: boolean;
   error: string | null;
-  
+
   // Actions
-  addOrder: (order: Omit<Order, 'createdAt'>) => void;
+  addOrder: (order: Omit<TransactionBase, 'createdAt'>) => void;
   removeOrder: (orderId: string) => void;
   clearOrders: () => void;
   setLoading: (loading: boolean) => void;
   setError: (error: string | null) => void;
-  
+
   // API Actions
   fetchOrders: (userId?: string) => Promise<void>;
-  createOrder: (order: Omit<Order, 'id' | 'createdAt'>) => Promise<{ success: boolean; orderId?: string; error?: string }>;
-  cancelOrder: (orderId: string) => Promise<{ success: boolean; error?: string }>;
+  createOrder: (
+    order: Omit<TransactionBase, 'id' | 'createdAt'>
+  ) => Promise<{ success: boolean; orderId?: string; error?: string }>;
+  cancelOrder: (
+    orderId: string
+  ) => Promise<{ success: boolean; error?: string }>;
 }
 
 export const useOrderStore = create<OrderStore>((set, get) => ({
@@ -44,10 +46,10 @@ export const useOrderStore = create<OrderStore>((set, get) => ({
     })),
 
   clearOrders: () => set({ orders: [] }),
-  
+
   setLoading: (loading) => set({ isLoading: loading }),
   setError: (error) => set({ error }),
-  
+
   fetchOrders: async (userId?: string) => {
     set({ isLoading: true, error: null });
     try {
@@ -55,14 +57,17 @@ export const useOrderStore = create<OrderStore>((set, get) => ({
       if (response.success && response.data) {
         set({ orders: response.data, isLoading: false });
       } else {
-        set({ error: response.error || 'Failed to fetch orders', isLoading: false });
+        set({
+          error: response.error || 'Failed to fetch orders',
+          isLoading: false,
+        });
       }
     } catch (error) {
       set({ error: 'Network error occurred', isLoading: false });
     }
   },
-  
-  createOrder: async (orderData: Omit<Order, 'id' | 'createdAt'>) => {
+
+  createOrder: async (orderData: Omit<TransactionBase, 'id' | 'createdAt'>) => {
     set({ isLoading: true, error: null });
     try {
       const response = await ordersApi.createOrder(orderData);
@@ -72,7 +77,10 @@ export const useOrderStore = create<OrderStore>((set, get) => ({
         set({ isLoading: false });
         return { success: true, orderId: response.data.id };
       } else {
-        set({ error: response.error || 'Failed to create order', isLoading: false });
+        set({
+          error: response.error || 'Failed to create order',
+          isLoading: false,
+        });
         return { success: false, error: response.error };
       }
     } catch (error) {
@@ -80,7 +88,7 @@ export const useOrderStore = create<OrderStore>((set, get) => ({
       return { success: false, error: 'Network error occurred' };
     }
   },
-  
+
   cancelOrder: async (orderId: string) => {
     set({ isLoading: true, error: null });
     try {
@@ -91,7 +99,10 @@ export const useOrderStore = create<OrderStore>((set, get) => ({
         set({ isLoading: false });
         return { success: true };
       } else {
-        set({ error: response.error || 'Failed to cancel order', isLoading: false });
+        set({
+          error: response.error || 'Failed to cancel order',
+          isLoading: false,
+        });
         return { success: false, error: response.error };
       }
     } catch (error) {
