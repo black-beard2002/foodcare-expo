@@ -24,6 +24,7 @@ import {
   Wheat,
   ShoppingCart,
   HeartPulse,
+  Leaf,
 } from 'lucide-react-native';
 import { useAppStore } from '@/stores/appStore';
 import { Offer } from '@/types/appTypes';
@@ -104,6 +105,10 @@ export default function OfferDetailsScreen() {
   useEffect(() => {
     setIsNewFavoritedAdded(false);
   }, []);
+  const ingredients =
+    offer && typeof offer.custom_properties?.ingredients === 'string'
+      ? offer.custom_properties.ingredients
+      : offer && String(offer.custom_properties?.ingredients);
 
   if (!offer) {
     return (
@@ -420,7 +425,57 @@ export default function OfferDetailsScreen() {
               </View>
             </View>
           )}
+          {/* Ingredients */}
+          {}
+          {ingredients &&
+            Object.keys(offer.custom_properties || {}).length > 0 && (
+              <View className="mb-6">
+                {/* Section Header */}
+                <View className="flex-row gap-2 items-center mb-3">
+                  <Leaf size={30} color={theme.success} />
+                  <Text
+                    className="text-3xl font-inter-bold"
+                    style={{ color: theme.text }}
+                  >
+                    Ingredients
+                  </Text>
+                  <Text
+                    className="text-base font-inter-bold"
+                    style={{ color: theme.textSecondary }}
+                  >
+                    ({ingredients.split(',').length})
+                  </Text>
+                </View>
 
+                {/* Ingredient Chips */}
+                <View
+                  className="rounded-2xl p-5 border flex-row flex-wrap gap-2"
+                  style={{
+                    backgroundColor: theme.card,
+                    borderColor: theme.border,
+                  }}
+                >
+                  {ingredients &&
+                    ingredients.split(',').map((ingredient: string, index) => (
+                      <View
+                        key={index}
+                        className="px-4 py-2 rounded-full border"
+                        style={{
+                          backgroundColor: theme.background,
+                          borderColor: theme.border,
+                        }}
+                      >
+                        <Text
+                          className="text-sm font-inter-medium"
+                          style={{ color: theme.text }}
+                        >
+                          {ingredient.trim()}
+                        </Text>
+                      </View>
+                    ))}
+                </View>
+              </View>
+            )}
           {/* Nutrition Facts */}
           {offer.custom_properties &&
             Object.keys(offer.custom_properties || {}).length > 0 && (
@@ -449,8 +504,9 @@ export default function OfferDetailsScreen() {
                   }}
                 >
                   <View className="flex-row flex-wrap gap-3">
-                    {Object.entries(offer.custom_properties).map(
-                      ([key, value], index) => {
+                    {Object.entries(offer.custom_properties)
+                      .filter(([key, value]) => key !== 'ingredients')
+                      .map(([key, value], index) => {
                         const Icon = getNutritionIcon(key);
 
                         return (
@@ -489,8 +545,7 @@ export default function OfferDetailsScreen() {
                             </Text>
                           </View>
                         );
-                      }
-                    )}
+                      })}
                   </View>
                 </View>
               </View>
