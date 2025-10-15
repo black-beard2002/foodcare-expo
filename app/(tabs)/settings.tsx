@@ -400,6 +400,12 @@ export default function SettingScreen() {
               <LinearGradient
                 colors={[theme.primary, `${theme.accent}CC`]}
                 className="w-full h-full justify-center items-center"
+                style={{
+                  width: 96,
+                  height: 96,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
               >
                 <User color="#fff" size={40} strokeWidth={2} />
               </LinearGradient>

@@ -1,7 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import { View, Text, Animated, Easing, Image } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { images } from '@/constants';
+import * as images from '@/constants/images';
 
 export default function CustomSplashScreen() {
   const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -116,7 +116,7 @@ export default function CustomSplashScreen() {
               padding: 10,
             }}
           >
-            <Image source={images.logo} className="w-full h-full" />
+            <Image source={images.APP_LOGO} className="w-full h-full" />
           </LinearGradient>
         </View>
 

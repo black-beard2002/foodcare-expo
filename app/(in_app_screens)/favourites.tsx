@@ -18,13 +18,13 @@ import {
   Star,
   ChefHat,
   Trash2,
-  ShoppingCart,
 } from 'lucide-react-native';
 import { useTheme } from '@/hooks/useTheme';
+import * as images from '@/constants/images';
 import { useFavoritesStore } from '@/stores/favoritesStore';
 import { useAppStore } from '@/stores/appStore';
 import { useAlert } from '@/providers/AlertProvider';
-import { formatPrice } from '@/utils/helpers';
+import { formatPrice, handleImageSrc } from '@/utils/helpers';
 
 export default function FavouritesScreen() {
   const { theme } = useTheme();
@@ -206,10 +206,18 @@ export default function FavouritesScreen() {
                         )
                       }
                     >
-                      <View className="flex-row">
+                      <View className="flex-row p-1">
                         <Image
-                          source={{ uri: favorite.favorited.main_image ?? '' }}
-                          className="w-36 h-36 rounded-lt-3xl"
+                          source={
+                            favorite.favorited.main_image
+                              ? {
+                                  uri: handleImageSrc(
+                                    favorite.favorited.main_image
+                                  ),
+                                }
+                              : images.OFFER_PLACEHOLDER_IMAGE
+                          }
+                          className="w-36 h-36 rounded-3xl"
                           resizeMode="cover"
                         />
                         <View className="flex-1 p-4">
@@ -294,7 +302,7 @@ export default function FavouritesScreen() {
 
                     {/* Buttons */}
                     <View
-                      className="flex-row items-center px-4 py-3 border-t"
+                      className="flex-row items-center justify-between px-4 py-3 border-t"
                       style={{ borderTopColor: theme.border }}
                     >
                       <TouchableOpacity
@@ -326,23 +334,6 @@ export default function FavouritesScreen() {
                           }}
                         >
                           Alert
-                        </Text>
-                      </TouchableOpacity>
-
-                      <TouchableOpacity
-                        activeOpacity={0.8}
-                        className="flex-1 flex-row items-center justify-center gap-2 px-3 py-2 rounded-xl mr-2"
-                        style={{
-                          backgroundColor: theme.primary,
-                          shadowColor: theme.primary,
-                          shadowOpacity: 0.3,
-                          shadowRadius: 6,
-                        }}
-                        onPress={() => handleAddToCart(favorite.favorited)}
-                      >
-                        <ShoppingCart color="#fff" size={16} />
-                        <Text className="text-xs font-semibold text-white">
-                          Add to Cart
                         </Text>
                       </TouchableOpacity>
 

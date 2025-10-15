@@ -19,6 +19,7 @@ import {
   Animated,
 } from 'react-native';
 import { router } from 'expo-router';
+import * as images from '../../constants/images';
 import {
   Star,
   Search,
@@ -59,7 +60,7 @@ import {
   getDiscountPercentage,
   handleImageSrc,
 } from '@/utils/helpers';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Easing } from 'react-native-reanimated';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 const HERO_CARD_WIDTH = SCREEN_WIDTH - 40;
@@ -102,8 +103,8 @@ const AnimatedBadge = ({ count, color }: { count: number; color: string }) => {
       style={{
         transform: [{ scale: scaleAnim }],
         position: 'absolute',
-        top: 8,
-        right: 8,
+        top: -3,
+        right: -3,
         backgroundColor: color,
         borderRadius: 10,
         minWidth: 20,
@@ -144,7 +145,8 @@ const NetworkStatusBanner = ({
         left: 0,
         right: 0,
         zIndex: 100,
-        paddingVertical: 12,
+        paddingTop: 25,
+        paddingBottom: 5,
         paddingHorizontal: 20,
         backgroundColor: isOffline ? theme.error : theme.success,
         flexDirection: 'row',
@@ -217,7 +219,7 @@ const EnhancedFeaturedCard = ({
         activeOpacity={0.95}
       >
         <ImageBackground
-          source={{ uri: item.main_image ?? '' }}
+          source={{ uri: handleImageSrc(item.main_image ?? '') }}
           className="w-full h-full justify-end"
           imageStyle={{ borderRadius: 24 }}
           resizeMode="cover"
@@ -329,11 +331,12 @@ const EnhancedCategoryChip = ({
         <View className="flex-row items-center gap-3 h-full px-5">
           <View className="w-12 h-12 rounded-2xl overflow-hidden shadow-md">
             <Image
-              source={{
-                uri: handleImageSrc(item.image_url),
-              }}
-              className="w-12 h-12"
-              style={{ width: 50, height: 50 }}
+              source={
+                item.main_image
+                  ? { uri: handleImageSrc(item.main_image) }
+                  : images.CATEGORY_PLACEHOLDER_IMAGE
+              }
+              className="w-full h-full"
               resizeMode="contain"
             />
           </View>
@@ -387,7 +390,7 @@ const EnhancedNearYouCard = ({
           shadowOffset: { width: 0, height: 6 },
           shadowOpacity: 0.25,
           shadowRadius: 12,
-          elevation: 10,
+          elevation: 20,
         }}
         activeOpacity={0.9}
         onPressIn={handlePressIn}
@@ -399,12 +402,16 @@ const EnhancedNearYouCard = ({
       >
         <View style={{ position: 'relative' }}>
           <Image
-            source={{ uri: offer.main_image ?? '' }}
+            source={
+              offer.main_image
+                ? { uri: handleImageSrc(offer.main_image) }
+                : images.OFFER_PLACEHOLDER_IMAGE
+            }
             style={{ width: 300, height: 180 }}
             resizeMode="cover"
           />
           <LinearGradient
-            colors={['transparent', 'rgba(0,0,0,0.3)']}
+            colors={['transparent', theme.primary + '70']}
             style={{
               position: 'absolute',
               top: 0,
@@ -416,16 +423,24 @@ const EnhancedNearYouCard = ({
               padding: 12,
             }}
           >
-            <MotiView
-              from={{ scale: 0, rotate: '-45deg' }}
-              animate={{ scale: 1, rotate: '0deg' }}
-              transition={{ type: 'spring' }}
-              className="bg-gradient-to-r from-red-500 to-pink-600 px-3 py-2 rounded-2xl shadow-lg"
+            <LinearGradient
+              colors={['#ef4444', '#db277780']}
+              style={{
+                paddingHorizontal: 12,
+                borderRadius: 10,
+                paddingVertical: 8,
+              }}
             >
-              <Text className="text-white text-sm font-bold">
-                -{getDiscountPercentage(offer.price, offer.sale_price ?? 0)}%
-              </Text>
-            </MotiView>
+              <MotiView
+                from={{ scale: 0, rotate: '-45deg' }}
+                animate={{ scale: 1, rotate: '0deg' }}
+                transition={{ type: 'spring' }}
+              >
+                <Text className="text-white text-sm font-bold">
+                  -{getDiscountPercentage(offer.price, offer.sale_price ?? 0)}%
+                </Text>
+              </MotiView>
+            </LinearGradient>
           </LinearGradient>
         </View>
 
@@ -456,7 +471,7 @@ const EnhancedNearYouCard = ({
               </View>
             </View>
 
-            <View className="gap-2.5">
+            <View className="gap-2.5 mb-2">
               <View className="flex-row items-center gap-2">
                 <View
                   className="p-1.5 rounded-lg"
@@ -499,12 +514,14 @@ const EnhancedNearYouCard = ({
                 Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
                 onAddToCart(offer);
               }}
-              className="flex-row items-center gap-2 px-6 py-3.5 rounded-2xl shadow-lg"
-              style={{ backgroundColor: theme.warning }}
+              className="flex-row flex-1 max-w-40 items-center gap-2 px-6 py-3.5 rounded-2xl shadow-md"
+              style={{ backgroundColor: theme.warning, elevation: 20 }}
               activeOpacity={0.8}
             >
               <ShoppingCart color="#fff" size={18} />
-              <Text className="text-base font-bold text-white">Add</Text>
+              <Text className="text-base font-bold text-white w-full">
+                Add To Cart
+              </Text>
             </TouchableOpacity>
             <View className="items-end">
               <Text
@@ -536,155 +553,169 @@ const EnhancedOfferCard = ({
   theme: ColorTheme;
 }) => (
   <MotiView
-    from={{ opacity: 0, scale: 0.8, rotateY: '90deg' }}
-    animate={{ opacity: 1, scale: 1, rotateY: '0deg' }}
+    from={{ opacity: 0, translateY: 50 }}
+    animate={{ opacity: 1, translateY: 0 }}
     transition={{
-      type: 'spring',
-      damping: 15,
+      type: 'timing',
+      duration: 600,
+      easing: Easing.out(Easing.cubic),
     }}
   >
-    <TouchableOpacity
-      className="rounded-3xl overflow-visible shadow-xl"
-      style={{
-        height: CARD_HEIGHTS.OFFER_CARD,
-        backgroundColor: theme.card,
-        shadowColor: theme.shadow,
-        shadowOffset: { width: 0, height: 6 },
-        shadowOpacity: 0.2,
-        shadowRadius: 12,
-        elevation: 8,
-      }}
-      onPress={() => {
-        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-        router.push(`/(in_app_screens)/offer-details?id=${offer.id}`);
-      }}
-      activeOpacity={0.9}
-    >
-      <LinearGradient
-        colors={[theme.card, theme.backgroundSecondary]}
-        style={{
-          borderRadius: 24,
-          height: CARD_HEIGHTS.OFFER_CARD,
-          width: '100%',
-        }}
-      >
-        <View
-          className="absolute -top-20 left-0 right-0 items-center z-10"
-          style={{ elevation: 10 }}
+    <View className="mb-6 relative">
+      {/* Floating image + badge */}
+      <View className="absolute -top-20 left-0 right-0 items-center z-10">
+        <MotiView
+          from={{ rotateY: '180deg', opacity: 0 }}
+          animate={{ rotateY: '0deg', opacity: 1 }}
+          transition={{
+            type: 'spring',
+            damping: 20,
+            stiffness: 80,
+            mass: 1,
+            delay: 200,
+          }}
         >
-          <MotiView
-            from={{ scale: 0, rotate: '-180deg' }}
-            animate={{ scale: 1, rotate: '0deg' }}
-            transition={{ type: 'spring', damping: 12 }}
-          >
-            <View
-              className="w-44 h-44 rounded-full overflow-hidden shadow-2xl"
-              style={{
-                borderWidth: 4,
-                borderColor: theme.card,
-                backgroundColor: theme.background,
-                shadowColor: theme.shadow,
-                shadowOffset: { width: 0, height: 8 },
-                shadowOpacity: 0.3,
-                shadowRadius: 16,
-              }}
-            >
-              <Image
-                source={{ uri: offer.main_image ?? '' }}
-                className="w-full h-full"
-                resizeMode="cover"
-              />
-            </View>
-          </MotiView>
-
-          <MotiView
-            from={{ scale: 0, translateY: -20 }}
-            animate={{ scale: 1, translateY: 0 }}
-            transition={{ type: 'spring', delay: 200 }}
-            className="absolute -top-2 -right-2 px-3 py-1.5 rounded-xl shadow-lg"
-            style={{ backgroundColor: theme.error }}
-          >
-            <Text className="text-white text-xs font-bold">
-              -{getDiscountPercentage(offer.price, offer.sale_price ?? 0)}%
-            </Text>
-          </MotiView>
-        </View>
-
-        <View className="p-5 pt-28 gap-3 flex-1 justify-between">
-          <View>
-            <Text
-              className="text-lg font-bold mb-2"
-              style={{ color: theme.text }}
-              numberOfLines={2}
-            >
-              {offer.title}
-            </Text>
-
-            <View className="gap-1.5">
-              <View className="flex-row items-center gap-2">
-                <View
-                  className="p-1 rounded-lg"
-                  style={{ backgroundColor: theme.primary + '20' }}
-                >
-                  <ChefHat color={theme.primary} size={12} />
-                </View>
-                <Text
-                  className="text-xs font-inter-medium flex-1"
-                  style={{ color: theme.textSecondary }}
-                  numberOfLines={1}
-                >
-                  {'restaurant_name'}
-                </Text>
-              </View>
-              <View className="flex-row items-center gap-2">
-                <View
-                  className="p-1 rounded-lg"
-                  style={{ backgroundColor: theme.primary + '20' }}
-                >
-                  <User color={theme.primary} size={12} />
-                </View>
-                <Text
-                  className="text-xs font-inter-medium flex-1"
-                  style={{ color: theme.textSecondary }}
-                  numberOfLines={1}
-                >
-                  {'30'} reviews
-                </Text>
-              </View>
-            </View>
-          </View>
-
           <View
-            className="flex-row justify-between items-center pt-3 border-t"
-            style={{ borderColor: theme.border }}
+            className="w-44 h-44 rounded-full overflow-hidden shadow-2xl"
+            style={{
+              borderWidth: 4,
+              borderColor: theme.card,
+              backgroundColor: theme.background,
+              shadowColor: theme.shadow,
+              shadowOffset: { width: 0, height: 8 },
+              shadowOpacity: 0.3,
+              shadowRadius: 16,
+            }}
           >
+            <Image
+              source={
+                offer.main_image
+                  ? { uri: handleImageSrc(offer.main_image) }
+                  : images.OFFER_PLACEHOLDER_IMAGE
+              }
+              className="w-full h-full"
+              resizeMode="cover"
+            />
+          </View>
+        </MotiView>
+
+        <MotiView
+          from={{ scale: 0, translateY: -20 }}
+          animate={{ scale: 1, translateY: 0 }}
+          transition={{ type: 'spring', delay: 400, damping: 15 }}
+          className="absolute -top-2 -right-2 px-3 py-1.5 rounded-xl shadow-lg"
+          style={{ backgroundColor: theme.error }}
+        >
+          <Text className="text-white text-xs font-bold">
+            -{getDiscountPercentage(offer.price, offer.sale_price ?? 0)}%
+          </Text>
+        </MotiView>
+      </View>
+
+      {/* Card */}
+      <TouchableOpacity
+        className="rounded-3xl shadow-xl overflow-hidden"
+        style={{
+          height: CARD_HEIGHTS.OFFER_CARD,
+          backgroundColor: theme.card,
+          shadowColor: theme.shadow,
+          shadowOffset: { width: 0, height: 6 },
+          shadowOpacity: 0.2,
+          shadowRadius: 12,
+          elevation: 8,
+        }}
+        onPress={() =>
+          router.push(`/(in_app_screens)/offer-details?id=${offer.id}`)
+        }
+        activeOpacity={0.9}
+      >
+        <LinearGradient
+          colors={[theme.card, theme.backgroundSecondary]}
+          style={{
+            borderRadius: 24,
+            height: CARD_HEIGHTS.OFFER_CARD,
+            width: '100%',
+          }}
+        >
+          <View className="p-5 pt-28 gap-3 flex-1 justify-between">
             <View>
               <Text
-                className="text-xs font-inter-regular line-through"
-                style={{ color: theme.textSecondary }}
+                className="text-lg line-clamp-1 font-bold mb-2"
+                style={{ color: theme.text }}
+                numberOfLines={2}
               >
-                ${formatPrice(offer.price)}
+                {offer.title}
               </Text>
-              <Text
-                className="text-2xl font-bold"
-                style={{ color: theme.success }}
-              >
-                ${formatPrice(offer.sale_price ?? offer.price)}
-              </Text>
+
+              <View className="gap-1.5">
+                <View className="flex-row items-center gap-2">
+                  <View
+                    className="p-1 rounded-lg"
+                    style={{ backgroundColor: theme.primary + '20' }}
+                  >
+                    <ChefHat color={theme.primary} size={12} />
+                  </View>
+                  <Text
+                    className="text-xs font-inter-medium flex-1"
+                    style={{ color: theme.textSecondary }}
+                    numberOfLines={1}
+                  >
+                    {'restaurant_name'}
+                  </Text>
+                </View>
+                <View className="flex-row items-center gap-2">
+                  <View
+                    className="p-1 rounded-lg"
+                    style={{ backgroundColor: theme.primary + '20' }}
+                  >
+                    <User color={theme.primary} size={12} />
+                  </View>
+                  <Text
+                    className="text-xs font-inter-medium flex-1"
+                    style={{ color: theme.textSecondary }}
+                    numberOfLines={1}
+                  >
+                    {'30'} reviews
+                  </Text>
+                </View>
+              </View>
             </View>
+
             <View
-              className="flex-row items-center gap-1.5 px-3 py-2 rounded-xl"
-              style={{ backgroundColor: theme.warning + '25' }}
+              className="flex-row justify-between items-center pt-3 border-t"
+              style={{ borderColor: theme.border }}
             >
-              <Star color={theme.warning} size={14} fill={theme.warning} />
-              <Text className="text-sm font-bold" style={{ color: theme.text }}>
-                {'5'}
-              </Text>
+              <View>
+                <Text
+                  className="text-xs font-inter-regular line-through"
+                  style={{ color: theme.textSecondary }}
+                >
+                  ${formatPrice(offer.price)}
+                </Text>
+                <Text
+                  className="text-2xl font-bold"
+                  style={{ color: theme.success }}
+                >
+                  ${formatPrice(offer.sale_price ?? offer.price)}
+                </Text>
+              </View>
+              <View
+                className="flex-row items-center gap-1.5 px-3 py-2 rounded-xl"
+                style={{ backgroundColor: theme.warning + '25' }}
+              >
+                <Star color={theme.warning} size={14} fill={theme.warning} />
+                <Text
+                  className="text-sm font-bold"
+                  style={{ color: theme.text }}
+                >
+                  {'5'}
+                </Text>
+              </View>
             </View>
           </View>
-        </View>
-      </LinearGradient>
-    </TouchableOpacity>
+        </LinearGradient>
+      </TouchableOpacity>
+    </View>
   </MotiView>
 );
 
@@ -723,6 +754,7 @@ export default function HomeScreen(): JSX.Element {
       await loadCachedData();
       initNetworkListener();
       await refreshData();
+      console.log('categories:', categories);
     };
     init();
   }, []);
@@ -744,7 +776,7 @@ export default function HomeScreen(): JSX.Element {
   );
 
   const nearYouOffers = useMemo(
-    () => filteredOffers.filter((offer) => offer.is_Near),
+    () => filteredOffers.filter((offer) => offer.title !== ''),
     [filteredOffers]
   );
 
@@ -935,7 +967,14 @@ export default function HomeScreen(): JSX.Element {
             >
               <LinearGradient
                 colors={[theme.primary + '30', theme.primary + '10']}
-                className="w-14 h-14 items-center justify-center rounded-2xl"
+                className="items-center justify-center"
+                style={{
+                  borderRadius: 16,
+                  width: 56,
+                  height: 56,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
               >
                 <MapPinned color={theme.primary} size={28} />
               </LinearGradient>
@@ -1085,6 +1124,7 @@ export default function HomeScreen(): JSX.Element {
 
         <ScrollView
           className="flex-1"
+          style={{ backgroundColor: theme.background }}
           showsVerticalScrollIndicator={false}
           refreshControl={
             <RefreshControl
@@ -1105,8 +1145,15 @@ export default function HomeScreen(): JSX.Element {
               >
                 <View className="flex-row items-center gap-3">
                   <LinearGradient
-                    colors={[theme.primary, theme.primary + '80']}
-                    className="p-2 rounded-xl"
+                    colors={[theme.primary + '70', theme.primary + '90']}
+                    className="p-2"
+                    style={{
+                      borderRadius: 12,
+                      width: 40,
+                      height: 40,
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                    }}
                   >
                     <Sparkles color="#fff" size={20} />
                   </LinearGradient>
@@ -1158,8 +1205,14 @@ export default function HomeScreen(): JSX.Element {
               >
                 <View className="flex-row items-center gap-3">
                   <LinearGradient
-                    colors={[theme.primary, theme.primary + '80']}
-                    className="p-2 rounded-xl"
+                    colors={[theme.primary + '70', theme.primary + '90']}
+                    style={{
+                      borderRadius: 12,
+                      width: 40,
+                      height: 40,
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                    }}
                   >
                     <UtensilsCrossed color="#fff" size={20} />
                   </LinearGradient>
@@ -1195,7 +1248,7 @@ export default function HomeScreen(): JSX.Element {
 
           {/* Popular Near You Section */}
           {(isLoading || nearYouOffers.length > 0) && (
-            <View className="mb-8">
+            <View className="mb-3">
               <MotiView
                 from={{ opacity: 0, translateX: -20 }}
                 animate={{ opacity: 1, translateX: 0 }}
@@ -1204,8 +1257,14 @@ export default function HomeScreen(): JSX.Element {
               >
                 <View className="flex-row items-center gap-3">
                   <LinearGradient
-                    colors={[theme.primary, theme.primary + '80']}
-                    className="p-2 rounded-xl"
+                    colors={[theme.primary + '70', theme.primary + '90']}
+                    style={{
+                      borderRadius: 12,
+                      width: 40,
+                      height: 40,
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                    }}
                   >
                     <MapPinHouse color="#fff" size={20} />
                   </LinearGradient>
@@ -1243,7 +1302,10 @@ export default function HomeScreen(): JSX.Element {
                       onAddToCart={handleAddToCart}
                     />
                   )}
-                  contentContainerStyle={{ paddingHorizontal: 24 }}
+                  contentContainerStyle={{
+                    paddingHorizontal: 24,
+                    paddingBottom: 20,
+                  }}
                   horizontal
                   showsHorizontalScrollIndicator={false}
                 />
@@ -1262,8 +1324,14 @@ export default function HomeScreen(): JSX.Element {
               >
                 <View className="flex-row items-center gap-3">
                   <LinearGradient
-                    colors={[theme.primary, theme.primary + '80']}
-                    className="p-2 rounded-xl"
+                    colors={[theme.primary + '70', theme.primary + '90']}
+                    style={{
+                      borderRadius: 12,
+                      width: 40,
+                      height: 40,
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                    }}
                   >
                     <TrendingUp color="#fff" size={20} />
                   </LinearGradient>

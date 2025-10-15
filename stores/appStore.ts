@@ -129,18 +129,41 @@ export const useAppStore = create<AppState>()((set, get) => ({
       ];
 
       const data = await AsyncStorage.multiGet(keys);
-      const dataMap = Object.fromEntries(data);
 
-      const cachedOffers = dataMap[STORAGE_KEYS.OFFERS]?.[1];
-      const cachedCategories = dataMap[STORAGE_KEYS.CATEGORIES]?.[1];
-      const lastSyncStr = dataMap[STORAGE_KEYS.LAST_SYNC]?.[1];
-      const pendingActionsStr = dataMap[STORAGE_KEYS.PENDING_ACTIONS]?.[1];
+      // Convert to a proper map
+      const dataMap = new Map(data);
 
-      if (cachedOffers) set({ offers: JSON.parse(cachedOffers) });
-      if (cachedCategories) set({ categories: JSON.parse(cachedCategories) });
+      const cachedOffers = dataMap.get(STORAGE_KEYS.OFFERS);
+      const cachedCategories = dataMap.get(STORAGE_KEYS.CATEGORIES);
+      const lastSyncStr = dataMap.get(STORAGE_KEYS.LAST_SYNC);
+      const pendingActionsStr = dataMap.get(STORAGE_KEYS.PENDING_ACTIONS);
+
+      // Parse with error handling for each item
+      if (cachedOffers) {
+        try {
+          set({ offers: JSON.parse(cachedOffers) });
+        } catch (e) {
+          console.error('Error parsing cached offers:', e);
+        }
+      }
+
+      if (cachedCategories) {
+        try {
+          set({ categories: JSON.parse(cachedCategories) });
+        } catch (e) {
+          console.error('Error parsing cached categories:', e);
+        }
+      }
+
       if (lastSyncStr) set({ lastSync: Number(lastSyncStr) });
-      if (pendingActionsStr)
-        set({ pendingActions: JSON.parse(pendingActionsStr) });
+
+      if (pendingActionsStr) {
+        try {
+          set({ pendingActions: JSON.parse(pendingActionsStr) });
+        } catch (e) {
+          console.error('Error parsing pending actions:', e);
+        }
+      }
 
       return !!(cachedOffers && cachedCategories);
     } catch (error) {
@@ -148,7 +171,6 @@ export const useAppStore = create<AppState>()((set, get) => ({
       return false;
     }
   },
-
   // Check if cache is still valid
   isCacheValid: () => {
     const { lastSync } = get();

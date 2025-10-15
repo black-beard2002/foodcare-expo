@@ -11,7 +11,7 @@ interface OrderSuccessModalProps {
   onClose: () => void;
   orderNumber: string;
   customerInfo: {
-    name: string;
+    name?: string;
     phone: string;
     pickupTime?: string;
     specialInstructions?: string;
@@ -98,7 +98,11 @@ export default function OrderSuccessModal({
             className="rounded-2xl p-4 mb-4 gap-2.5"
             style={{ backgroundColor: theme.backgroundSecondary }}
           >
-            <InfoRow label="Name" value={customerInfo.name} theme={theme} />
+            <InfoRow
+              label="Name"
+              value={customerInfo.name ?? ''}
+              theme={theme}
+            />
             <InfoRow label="Phone" value={customerInfo.phone} theme={theme} />
 
             {customerInfo.pickupTime && (

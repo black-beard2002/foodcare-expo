@@ -10,9 +10,9 @@ import {
 } from 'react-native';
 import { router } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Phone, Apple, Sparkles } from 'lucide-react-native';
+import { Phone, Apple, Sparkles, LogIn } from 'lucide-react-native';
 import { useTheme } from '@/hooks/useTheme';
-import { images } from '@/constants';
+import * as images from '@/constants/images';
 import { BlurView } from 'expo-blur';
 import MaskedView from '@react-native-masked-view/masked-view';
 import Svg, { Path } from 'react-native-svg';
@@ -223,7 +223,7 @@ export default function AuthScreen() {
                   }}
                 >
                   <Image
-                    source={images.logo}
+                    source={images.APP_LOGO}
                     className="w-24 h-24"
                     resizeMode="contain"
                   />
@@ -235,15 +235,13 @@ export default function AuthScreen() {
           {/* Title */}
           <View className="items-center mb-4">
             <Text
-              className="text-4xl font-bold text-center leading-[44px]"
+              className="text-5xl font-bold text-center leading-[44px]"
               style={{ color: isDark ? '#FFFFFF' : '#0F172A' }}
             >
-              Welcome to{'\n'}
+              Welcome To{'\n'}
             </Text>
             <MaskedView
-              maskElement={
-                <Text className="text-4xl font-bold">FoodDeals</Text>
-              }
+              maskElement={<Text className="text-4xl font-bold">FoodCare</Text>}
             >
               <LinearGradient
                 colors={accentGradient}
@@ -251,7 +249,7 @@ export default function AuthScreen() {
                 end={{ x: 1, y: 0 }}
                 style={{ height: 48 }}
               >
-                <Text className="text-4xl font-bold opacity-0">FoodDeals</Text>
+                <Text className="text-4xl font-bold opacity-0">FoodCare</Text>
               </LinearGradient>
             </MaskedView>
           </View>
@@ -270,7 +268,7 @@ export default function AuthScreen() {
 
         {/* Buttons */}
         <View className="gap-3.5">
-          {/* Phone Button */}
+          {/* signup Button */}
           <Animated.View
             style={{
               opacity: button1OpacityAnim,
@@ -307,6 +305,47 @@ export default function AuthScreen() {
                 </View>
                 <Text className="text-white text-lg font-semibold text-center flex-1">
                   Signup with Phone
+                </Text>
+              </LinearGradient>
+            </TouchableOpacity>
+          </Animated.View>
+          {/* Phone Button */}
+          <Animated.View
+            style={{
+              opacity: button1OpacityAnim,
+              transform: [{ translateY: button1SlideAnim }],
+            }}
+          >
+            <TouchableOpacity
+              activeOpacity={0.8}
+              onPress={() => router.push('/auth/phone-login')}
+              className="rounded-2xl overflow-hidden shadow-lg"
+              style={{
+                shadowColor: isDark ? '#6366F1' : '#4F46E5',
+                shadowOpacity: 0.3,
+                shadowRadius: 12,
+                elevation: 8,
+              }}
+            >
+              <LinearGradient
+                colors={accentGradient}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  paddingHorizontal: 24,
+                  paddingVertical: 16,
+                  gap: 12,
+                  borderRadius: 16,
+                }}
+              >
+                <View className="w-10 h-10 rounded-xl items-center justify-center bg-white/20">
+                  <LogIn color="#FFFFFF" size={22} strokeWidth={2.5} />
+                </View>
+                <Text className="text-white text-lg font-semibold text-center flex-1">
+                  Sign in
                 </Text>
               </LinearGradient>
             </TouchableOpacity>
@@ -356,76 +395,6 @@ export default function AuthScreen() {
               </BlurView>
             </TouchableOpacity>
           </Animated.View> */}
-
-          {/* Apple Button */}
-          {/* <Animated.View
-            style={{
-              opacity: button3OpacityAnim,
-              transform: [{ translateY: button3SlideAnim }],
-            }}
-          >
-            <TouchableOpacity
-              activeOpacity={0.8}
-              className="rounded-2xl overflow-hidden"
-            >
-              <BlurView
-                intensity={isDark ? 40 : 90}
-                tint={isDark ? 'dark' : 'light'}
-                style={{
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  paddingHorizontal: 24,
-                  paddingVertical: 16,
-                  gap: 12,
-                  borderRadius: 16,
-                  backgroundColor: isDark ? '#FFFFFF15' : '#FFFFFF90',
-                  borderWidth: 1,
-                  borderColor: isDark ? '#FFFFFF20' : '#E2E8F0',
-                }}
-              >
-                <View
-                  className="w-10 h-10 rounded-xl items-center justify-center"
-                  style={{
-                    backgroundColor: isDark ? '#FFFFFF15' : '#FFFFFF',
-                  }}
-                >
-                  <Apple
-                    color={isDark ? '#FFFFFF' : '#1F2937'}
-                    size={22}
-                    strokeWidth={2.5}
-                  />
-                </View>
-                <Text
-                  className="text-lg font-semibold text-center flex-1"
-                  style={{ color: isDark ? '#FFFFFF' : '#1F2937' }}
-                >
-                  Continue with Apple
-                </Text>
-              </BlurView>
-            </TouchableOpacity>
-          </Animated.View> */}
-
-          {/* Skip Button */}
-          <Animated.View
-            style={{
-              opacity: button4OpacityAnim,
-              transform: [{ translateY: button4SlideAnim }],
-            }}
-          >
-            <TouchableOpacity
-              className="items-center justify-center py-4 mt-2"
-              onPress={() => router.replace('/(tabs)')}
-              activeOpacity={0.7}
-            >
-              <Text
-                className="text-sm font-medium"
-                style={{ color: isDark ? '#94A3B8' : '#64748B' }}
-              >
-                Skip for now
-              </Text>
-            </TouchableOpacity>
-          </Animated.View>
         </View>
 
         {/* Footer */}

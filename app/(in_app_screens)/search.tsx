@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
+import * as images from '../../constants/images';
 import {
   ArrowLeft,
   Search,
@@ -23,6 +24,7 @@ import { useAppStore } from '@/stores/appStore';
 import { useRecentlyViewedStore } from '@/stores/recentlyViewedStore';
 import { useSearchHistoryStore } from '@/stores/searchHistoryStore';
 import { SearchHistory } from '@/types/appTypes';
+import { handleImageSrc } from '@/utils/helpers';
 
 export default function SearchScreen() {
   const { theme } = useTheme();
@@ -59,20 +61,19 @@ export default function SearchScreen() {
           .filter(
             (recent: any) =>
               recent.title.toLowerCase().includes(lowerQuery) ||
-              recent.description.toLowerCase().includes(lowerQuery) ||
-              recent.restaurant.name.toLowerCase().includes(lowerQuery)
+              recent.description.toLowerCase().includes(lowerQuery)
           )
           .map((recent: any) => ({ ...recent, type: 'recent' }));
 
-        const restaurantResults = restaurants
-          .filter(
-            (restaurant: any) =>
-              restaurant.name.toLowerCase().includes(lowerQuery) ||
-              restaurant.cuisine.toLowerCase().includes(lowerQuery)
-          )
-          .map((restaurant: any) => ({ ...restaurant, type: 'restaurant' }));
+        // const restaurantResults = restaurants
+        //   .filter(
+        //     (restaurant: any) =>
+        //       restaurant.name.toLowerCase().includes(lowerQuery) ||
+        //       restaurant.cuisine.toLowerCase().includes(lowerQuery)
+        //   )
+        //   .map((restaurant: any) => ({ ...restaurant, type: 'restaurant' }));
 
-        setSearchResults([...recentResults, ...restaurantResults]);
+        setSearchResults([...recentResults]);
         setIsSearching(false);
       }, 300);
     },
@@ -130,7 +131,14 @@ export default function SearchScreen() {
             router.push(`/(in_app_screens)/offer-details?id=${item.id}`)
           }
         >
-          <Image source={item.image_url} className="w-[120px] h-full" />
+          <Image
+            source={
+              item.main_image
+                ? { uri: handleImageSrc(item.main_image) }
+                : images.OFFER_PLACEHOLDER_IMAGE
+            }
+            className="w-[120px] h-full rounded-r-lg"
+          />
           <View className="flex-1 p-3 justify-between">
             <Text
               className="text-base font-semibold mb-1"
@@ -143,7 +151,7 @@ export default function SearchScreen() {
               className="text-sm mb-2"
               style={{ color: theme.textSecondary }}
             >
-              {item.restaurant.name}
+              {'restaurant_name'}
             </Text>
             <View className="flex-row justify-between items-center">
               <View className="flex-row items-center gap-1">
@@ -159,7 +167,7 @@ export default function SearchScreen() {
                 className="text-base font-bold"
                 style={{ color: theme.primary }}
               >
-                ${item.discounted_price.toFixed(2)}
+                ${item.sale_price.toFixed(2)}
               </Text>
             </View>
           </View>
@@ -339,7 +347,11 @@ export default function SearchScreen() {
                     }
                   >
                     <Image
-                      source={recent.offer.image_url}
+                      source={
+                        recent.offer.main_image
+                          ? { uri: handleImageSrc(recent.offer.main_image) }
+                          : images.OFFER_PLACEHOLDER_IMAGE
+                      }
                       className="w-14 h-14 rounded-full"
                     />
                     <View>
@@ -355,7 +367,7 @@ export default function SearchScreen() {
                           className="text-xs"
                           style={{ color: theme.textSecondary }}
                         >
-                          {recent.offer.restaurant.name}
+                          {'restaurant_name'}
                         </Text>
                       </View>
                     </View>

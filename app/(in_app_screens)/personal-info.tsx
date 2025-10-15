@@ -257,6 +257,12 @@ export default function PersonalInfoScreen() {
                   <View className="w-24 h-24 rounded-full overflow-hidden shadow-lg">
                     <LinearGradient
                       colors={[theme.primary, `${theme.primary}CC`]}
+                      style={{
+                        width: '100%',
+                        height: '100%',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                      }}
                       className="w-full h-full justify-center items-center"
                     >
                       <User color="#fff" size={40} strokeWidth={2} />

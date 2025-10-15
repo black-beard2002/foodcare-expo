@@ -6,8 +6,12 @@ import { useTheme } from '@/hooks/useTheme';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Sparkles } from 'lucide-react-native';
 import { Offer } from '@/types/appTypes';
-import { formatPrice, getDiscountPercentage } from '@/utils/helpers';
-
+import {
+  formatPrice,
+  getDiscountPercentage,
+  handleImageSrc,
+} from '@/utils/helpers';
+import * as images from '../../constants/images';
 export default function CategoriesScreen() {
   const { theme } = useTheme();
   const { categoryId } = useLocalSearchParams<{ categoryId: string }>();
@@ -63,8 +67,12 @@ export default function CategoriesScreen() {
       activeOpacity={0.7}
     >
       <Image
-        source={category.image_url}
-        resizeMode="contain"
+        source={
+          category.main_image
+            ? { uri: handleImageSrc(category.main_image) }
+            : images.CATEGORY_PLACEHOLDER_IMAGE
+        }
+        resizeMode="cover"
         className="w-full h-16 rounded-lg mb-2"
       />
       <View className="flex-1 justify-center">
@@ -104,7 +112,11 @@ export default function CategoriesScreen() {
     >
       <View className="flex-1 rounded-xl">
         <Image
-          source={{ uri: offer.main_image ?? '' }}
+          source={
+            offer.main_image
+              ? { uri: handleImageSrc(offer.main_image) }
+              : images.OFFER_PLACEHOLDER_IMAGE
+          }
           className="w-full h-28"
         />
         <View className="absolute top-2 right-2 bg-[#FF6B35] px-1.5 py-1 rounded">
@@ -113,7 +125,9 @@ export default function CategoriesScreen() {
           </Text>
         </View>
         <View
-          className="absolute top-2 left-2 px-1.5 py-1.5 rounded-full"
+          className={`absolute top-2 left-2 px-1.5 py-1.5 rounded-full ${
+            !offer.is_featured && 'opacity-0'
+          }`}
           style={{ backgroundColor: theme.primary + 'CC' }}
         >
           <Sparkles color={theme.text} size={16} />
