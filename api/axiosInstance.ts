@@ -57,7 +57,6 @@ export const createAxiosInstance = (baseURL: string): AxiosInstance => {
         try {
           const refreshToken = await AsyncStorage.getItem('refresh_token');
           if (!refreshToken) throw new Error('No refresh token found');
-
           console.log('🔄 Attempting to refresh token...');
 
           // 🔄 Call refresh-token API

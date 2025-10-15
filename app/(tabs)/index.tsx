@@ -19,6 +19,7 @@ import {
   Animated,
 } from 'react-native';
 import { router } from 'expo-router';
+import * as images from '../../constants/images';
 import {
   Star,
   Search,
@@ -59,7 +60,7 @@ import {
   getDiscountPercentage,
   handleImageSrc,
 } from '@/utils/helpers';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Easing } from 'react-native-reanimated';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 const HERO_CARD_WIDTH = SCREEN_WIDTH - 40;
@@ -144,7 +145,8 @@ const NetworkStatusBanner = ({
         left: 0,
         right: 0,
         zIndex: 100,
-        paddingVertical: 12,
+        paddingTop: 25,
+        paddingBottom: 5,
         paddingHorizontal: 20,
         backgroundColor: isOffline ? theme.error : theme.success,
         flexDirection: 'row',
@@ -217,7 +219,7 @@ const EnhancedFeaturedCard = ({
         activeOpacity={0.95}
       >
         <ImageBackground
-          source={{ uri: item.main_image ?? '' }}
+          source={{ uri: handleImageSrc(item.main_image ?? '') }}
           className="w-full h-full justify-end"
           imageStyle={{ borderRadius: 24 }}
           resizeMode="cover"
@@ -329,11 +331,12 @@ const EnhancedCategoryChip = ({
         <View className="flex-row items-center gap-3 h-full px-5">
           <View className="w-12 h-12 rounded-2xl overflow-hidden shadow-md">
             <Image
-              source={{
-                uri: handleImageSrc(item.image_url),
-              }}
-              className="w-12 h-12"
-              style={{ width: 50, height: 50 }}
+              source={
+                item.main_image
+                  ? { uri: handleImageSrc(item.main_image) }
+                  : images.CATEGORY_PLACEHOLDER_IMAGE
+              }
+              className="w-full h-full"
               resizeMode="contain"
             />
           </View>
@@ -399,7 +402,11 @@ const EnhancedNearYouCard = ({
       >
         <View style={{ position: 'relative' }}>
           <Image
-            source={{ uri: offer.main_image ?? '' }}
+            source={
+              offer.main_image
+                ? { uri: handleImageSrc(offer.main_image) }
+                : images.OFFER_PLACEHOLDER_IMAGE
+            }
             style={{ width: 300, height: 180 }}
             resizeMode="cover"
           />
@@ -536,11 +543,12 @@ const EnhancedOfferCard = ({
   theme: ColorTheme;
 }) => (
   <MotiView
-    from={{ opacity: 0, scale: 0.8, rotateY: '90deg' }}
-    animate={{ opacity: 1, scale: 1, rotateY: '0deg' }}
+    from={{ opacity: 0, translateY: 50 }}
+    animate={{ opacity: 1, translateY: 0 }}
     transition={{
-      type: 'spring',
-      damping: 15,
+      type: 'timing',
+      duration: 600,
+      easing: Easing.out(Easing.cubic),
     }}
   >
     <TouchableOpacity
@@ -573,9 +581,15 @@ const EnhancedOfferCard = ({
           style={{ elevation: 10 }}
         >
           <MotiView
-            from={{ scale: 0, rotate: '-180deg' }}
-            animate={{ scale: 1, rotate: '0deg' }}
-            transition={{ type: 'spring', damping: 12 }}
+            from={{ rotateY: '180deg', opacity: 0 }}
+            animate={{ rotateY: '0deg', opacity: 1 }}
+            transition={{
+              type: 'spring',
+              damping: 20,
+              stiffness: 80,
+              mass: 1,
+              delay: 200,
+            }}
           >
             <View
               className="w-44 h-44 rounded-full overflow-hidden shadow-2xl"
@@ -590,7 +604,11 @@ const EnhancedOfferCard = ({
               }}
             >
               <Image
-                source={{ uri: offer.main_image ?? '' }}
+                source={
+                  offer.main_image
+                    ? { uri: handleImageSrc(offer.main_image) }
+                    : images.OFFER_PLACEHOLDER_IMAGE
+                }
                 className="w-full h-full"
                 resizeMode="cover"
               />
@@ -600,7 +618,7 @@ const EnhancedOfferCard = ({
           <MotiView
             from={{ scale: 0, translateY: -20 }}
             animate={{ scale: 1, translateY: 0 }}
-            transition={{ type: 'spring', delay: 200 }}
+            transition={{ type: 'spring', delay: 400, damping: 15 }}
             className="absolute -top-2 -right-2 px-3 py-1.5 rounded-xl shadow-lg"
             style={{ backgroundColor: theme.error }}
           >
@@ -723,6 +741,7 @@ export default function HomeScreen(): JSX.Element {
       await loadCachedData();
       initNetworkListener();
       await refreshData();
+      console.log('categories:', categories);
     };
     init();
   }, []);
@@ -935,7 +954,8 @@ export default function HomeScreen(): JSX.Element {
             >
               <LinearGradient
                 colors={[theme.primary + '30', theme.primary + '10']}
-                className="w-14 h-14 items-center justify-center rounded-2xl"
+                className="items-center justify-center"
+                style={{ borderRadius: 16, width: 56, height: 56 }}
               >
                 <MapPinned color={theme.primary} size={28} />
               </LinearGradient>
@@ -1106,7 +1126,14 @@ export default function HomeScreen(): JSX.Element {
                 <View className="flex-row items-center gap-3">
                   <LinearGradient
                     colors={[theme.primary, theme.primary + '80']}
-                    className="p-2 rounded-xl"
+                    className="p-2"
+                    style={{
+                      borderRadius: 12,
+                      width: 40,
+                      height: 40,
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                    }}
                   >
                     <Sparkles color="#fff" size={20} />
                   </LinearGradient>
@@ -1159,7 +1186,13 @@ export default function HomeScreen(): JSX.Element {
                 <View className="flex-row items-center gap-3">
                   <LinearGradient
                     colors={[theme.primary, theme.primary + '80']}
-                    className="p-2 rounded-xl"
+                    style={{
+                      borderRadius: 12,
+                      width: 40,
+                      height: 40,
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                    }}
                   >
                     <UtensilsCrossed color="#fff" size={20} />
                   </LinearGradient>
@@ -1205,7 +1238,13 @@ export default function HomeScreen(): JSX.Element {
                 <View className="flex-row items-center gap-3">
                   <LinearGradient
                     colors={[theme.primary, theme.primary + '80']}
-                    className="p-2 rounded-xl"
+                    style={{
+                      borderRadius: 12,
+                      width: 40,
+                      height: 40,
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                    }}
                   >
                     <MapPinHouse color="#fff" size={20} />
                   </LinearGradient>
@@ -1263,7 +1302,13 @@ export default function HomeScreen(): JSX.Element {
                 <View className="flex-row items-center gap-3">
                   <LinearGradient
                     colors={[theme.primary, theme.primary + '80']}
-                    className="p-2 rounded-xl"
+                    style={{
+                      borderRadius: 12,
+                      width: 40,
+                      height: 40,
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                    }}
                   >
                     <TrendingUp color="#fff" size={20} />
                   </LinearGradient>

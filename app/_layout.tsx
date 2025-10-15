@@ -17,9 +17,6 @@ import { useTheme } from '@/hooks/useTheme';
 import { useFavoritesStore } from '@/stores/favoritesStore';
 import { useRecentlyViewedStore } from '@/stores/recentlyViewedStore';
 import { useNotificationsStore } from '@/stores/notificationsStore';
-import { usePromoCodesStore } from '@/stores/promoCodesStore';
-import { useLoyaltyStore } from '@/stores/loyaltyStore';
-import { useReviewsStore } from '@/stores/reviewsStore';
 import { useBudgetStore } from '@/stores/budgetStore';
 import { useSearchHistoryStore } from '@/stores/searchHistoryStore';
 import { useAuthStore } from '@/stores/authStore';
@@ -63,9 +60,6 @@ export default function RootLayout() {
             useRecentlyViewedStore.getState().loadRecentlyViewed?.(),
             useSearchHistoryStore.getState().loadSearchHistory?.(),
             useNotificationsStore.getState().loadNotifications?.(),
-            usePromoCodesStore.getState().loadPromoCodes?.(),
-            useLoyaltyStore.getState().loadLoyaltyData?.(),
-            useReviewsStore.getState().loadReviews?.(),
             useBudgetStore.getState().loadBudgetData?.(),
           ].filter(Boolean)
         );

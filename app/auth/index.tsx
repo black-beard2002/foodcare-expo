@@ -12,7 +12,7 @@ import { router } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Phone, Apple, Sparkles } from 'lucide-react-native';
 import { useTheme } from '@/hooks/useTheme';
-import { images } from '@/constants';
+import * as images from '@/constants/images';
 import { BlurView } from 'expo-blur';
 import MaskedView from '@react-native-masked-view/masked-view';
 import Svg, { Path } from 'react-native-svg';
@@ -223,7 +223,7 @@ export default function AuthScreen() {
                   }}
                 >
                   <Image
-                    source={images.logo}
+                    source={images.APP_LOGO}
                     className="w-24 h-24"
                     resizeMode="contain"
                   />
@@ -235,15 +235,13 @@ export default function AuthScreen() {
           {/* Title */}
           <View className="items-center mb-4">
             <Text
-              className="text-4xl font-bold text-center leading-[44px]"
+              className="text-5xl font-bold text-center leading-[44px]"
               style={{ color: isDark ? '#FFFFFF' : '#0F172A' }}
             >
-              Welcome to{'\n'}
+              Welcome To{'\n'}
             </Text>
             <MaskedView
-              maskElement={
-                <Text className="text-4xl font-bold">FoodDeals</Text>
-              }
+              maskElement={<Text className="text-4xl font-bold">FoodCare</Text>}
             >
               <LinearGradient
                 colors={accentGradient}
@@ -251,7 +249,7 @@ export default function AuthScreen() {
                 end={{ x: 1, y: 0 }}
                 style={{ height: 48 }}
               >
-                <Text className="text-4xl font-bold opacity-0">FoodDeals</Text>
+                <Text className="text-4xl font-bold opacity-0">FoodCare</Text>
               </LinearGradient>
             </MaskedView>
           </View>
