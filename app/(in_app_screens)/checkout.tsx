@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import {
   View,
   Text,
-  StyleSheet,
   ScrollView,
   TouchableOpacity,
   TextInput,
@@ -18,14 +17,16 @@ import {
   ShoppingBag,
   DollarSign,
   Percent,
+  CheckCircle2,
+  Package,
 } from 'lucide-react-native';
 import { useAppStore } from '@/stores/appStore';
+import * as images from '@/constants/images';
 import { useOrderStore } from '@/stores/orderStore';
 import { useTheme } from '@/hooks/useTheme';
 import { useAlert } from '@/providers/AlertProvider';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import OrderSuccessModal from '@/components/OrderSuccessModal';
-import { spacing, borderRadius, fontSize, shadows } from '@/constants/theme';
 import { useBudgetStore } from '@/stores/budgetStore';
 import { useAuthStore } from '@/stores/authStore';
 import {
@@ -34,6 +35,7 @@ import {
   TransactionStatus,
   TransactionType,
 } from '@/types/appTypes';
+import { handleImageSrc } from '@/utils/helpers';
 
 export default function CheckoutScreen() {
   const { theme } = useTheme();
@@ -44,8 +46,8 @@ export default function CheckoutScreen() {
   const { createOrder, isLoading } = useOrderStore();
 
   const [customerInfo, setCustomerInfo] = useState({
-    name: '',
-    phone: '',
+    name: user?.first_name?.concat(` ${user.last_name}`),
+    phone: user?.phone_number,
     pickupTime: '',
     specialInstructions: '',
   });
@@ -53,7 +55,7 @@ export default function CheckoutScreen() {
   const [orderNumber, setOrderNumber] = useState('');
 
   const handleReserveOrder = async () => {
-    if (!customerInfo.name.trim() || !customerInfo.phone.trim()) {
+    if (!customerInfo.name?.trim() || !customerInfo.phone?.trim()) {
       showAlert(
         'Missing Information',
         'Please fill in your name and phone number.',
@@ -67,7 +69,7 @@ export default function CheckoutScreen() {
       status: 'PENDING' as TransactionStatus,
       currency: 'USD',
       total_price: getCartTotal(),
-      total_items: cart.length,
+      total_items: cart?.length,
       payment_status: 'PENDING' as PaymentStatus,
       payment_method: 'CASH' as PaymentMethod,
       client_data: {
@@ -110,108 +112,140 @@ export default function CheckoutScreen() {
   const deliveryFee = 2.99;
   const subtotal = getCartTotal();
   const total = subtotal + deliveryFee;
+  const totalSavings = cart.reduce(
+    (sum, item) =>
+      sum + (item.offer.price - (item.offer.sale_price ?? 0)) * item.quantity,
+    0
+  );
 
   const isReserveDisabled =
-    !customerInfo.name.trim() || !customerInfo.phone.trim() || isLoading;
+    !customerInfo.name?.trim() || !customerInfo.phone?.trim() || isLoading;
 
   return (
     <SafeAreaView
-      style={[styles.container, { backgroundColor: theme.background }]}
+      className="flex-1"
+      style={{ backgroundColor: theme.background }}
     >
       {/* Header */}
-      <View style={[styles.header, { borderBottomColor: theme.border }]}>
-        <TouchableOpacity
-          onPress={() => router.back()}
-          style={styles.backButton}
-        >
+      <View
+        className="flex-row justify-between items-center px-6 py-4 border-b"
+        style={{ borderBottomColor: theme.border }}
+      >
+        <TouchableOpacity onPress={() => router.back()} className="p-2 -ml-2">
           <ArrowLeft color={theme.text} size={24} />
         </TouchableOpacity>
-        <Text style={[styles.title, { color: theme.text }]}>Checkout</Text>
-        <View style={styles.placeholder} />
+        <Text className="text-2xl font-bold" style={{ color: theme.text }}>
+          Checkout
+        </Text>
+        <View className="w-10" />
       </View>
 
       <ScrollView
-        style={styles.content}
+        className="flex-1"
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.scrollContent}
+        contentContainerStyle={{ paddingHorizontal: 24 }}
       >
         {/* Order Summary Section */}
-        <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <ShoppingBag color={theme.primary} size={20} />
-            <Text style={[styles.sectionTitle, { color: theme.text }]}>
+        <View className="mt-6">
+          <View className="flex-row items-center gap-2 mb-4">
+            <View
+              className="w-10 h-10 rounded-xl justify-center items-center"
+              style={{ backgroundColor: `${theme.primary}20` }}
+            >
+              <ShoppingBag color={theme.primary} size={20} />
+            </View>
+            <Text
+              className="text-lg font-bold flex-1"
+              style={{ color: theme.text }}
+            >
               Order Summary
             </Text>
             <View
-              style={[
-                styles.itemCount,
-                { backgroundColor: theme.primaryDark + '30' },
-              ]}
+              className="px-3 py-1 rounded-lg"
+              style={{ backgroundColor: `${theme.primary}15` }}
             >
-              <Text style={[styles.itemCountText, { color: theme.text }]}>
-                {cart.length}
+              <Text
+                className="text-xs font-bold"
+                style={{ color: theme.primary }}
+              >
+                {cart.length} {cart.length === 1 ? 'item' : 'items'}
               </Text>
             </View>
           </View>
 
-          <View style={styles.orderItems}>
+          <View className="gap-3">
             {cart.map((item) => (
               <View
                 key={item.id}
-                style={[
-                  styles.orderItem,
-                  {
-                    backgroundColor: theme.card,
-                    borderColor: theme.border,
-                  },
-                  shadows.sm,
-                ]}
+                className="flex-row p-4 rounded-2xl border shadow-sm"
+                style={{
+                  backgroundColor: theme.card,
+                  borderColor: theme.border,
+                }}
               >
-                <Image
-                  source={{
-                    uri: item.offer.main_image,
-                  }}
-                  style={styles.itemImage}
-                />
-                <View style={styles.itemInfo}>
+                <View className="relative">
+                  <Image
+                    source={
+                      item.offer.main_image
+                        ? { uri: handleImageSrc(item.offer.main_image) }
+                        : images.OFFER_PLACEHOLDER_IMAGE
+                    }
+                    className="w-[70px] h-[70px] rounded-xl"
+                  />
+                  {item.offer.sale_price &&
+                    item.offer.sale_price < item.offer.price && (
+                      <View
+                        className="absolute -top-1 -right-1 px-1.5 py-0.5 rounded-md"
+                        style={{ backgroundColor: theme.success }}
+                      >
+                        <Text className="text-white text-[10px] font-bold">
+                          SALE
+                        </Text>
+                      </View>
+                    )}
+                </View>
+
+                <View className="flex-1 ml-4 justify-between">
                   <Text
-                    style={[styles.itemName, { color: theme.text }]}
+                    className="text-base font-semibold leading-5 mb-2"
+                    style={{ color: theme.text }}
                     numberOfLines={2}
                   >
                     {item.offer.title}
                   </Text>
-                  <View style={styles.itemMetaRow}>
+
+                  <View className="flex-row justify-between items-center">
                     <View
-                      style={[
-                        styles.quantityBadge,
-                        { backgroundColor: theme.backgroundSecondary },
-                      ]}
+                      className="px-2 py-1 rounded-lg"
+                      style={{ backgroundColor: theme.backgroundSecondary }}
                     >
                       <Text
-                        style={[
-                          styles.itemQuantity,
-                          { color: theme.textSecondary },
-                        ]}
+                        className="text-xs font-medium"
+                        style={{ color: theme.textSecondary }}
                       >
                         Qty: {item.quantity}
                       </Text>
                     </View>
-                    <View style={styles.itemPriceContainer}>
+
+                    <View className="items-end">
+                      {item.offer.sale_price &&
+                        item.offer.sale_price < item.offer.price && (
+                          <Text
+                            className="text-xs line-through"
+                            style={{ color: theme.textTertiary }}
+                          >
+                            ${item.offer.price.toFixed(2)}
+                          </Text>
+                        )}
                       <Text
-                        style={[
-                          styles.itemOriginalPrice,
-                          { color: theme.textTertiary },
-                        ]}
-                      >
-                        ${item.offer.price.toFixed(2)}
-                      </Text>
-                      <Text
-                        style={[styles.itemPrice, { color: theme.primary }]}
+                        className="text-lg font-bold"
+                        style={{ color: theme.primary }}
                       >
                         $
-                        {(item.offer.sale_price ?? 0 * item.quantity).toFixed(
-                          2
-                        )}
+                        {(
+                          (item.offer.sale_price ?? item.offer.price) *
+                          item.quantity
+                        ).toFixed(2)}
                       </Text>
                     </View>
                   </View>
@@ -222,32 +256,36 @@ export default function CheckoutScreen() {
         </View>
 
         {/* Customer Info Section */}
-        <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <User color={theme.info} size={20} />
-            <Text style={[styles.sectionTitle, { color: theme.text }]}>
+        <View className="mt-6">
+          <View className="flex-row items-center gap-2 mb-4">
+            <View
+              className="w-10 h-10 rounded-xl justify-center items-center"
+              style={{ backgroundColor: `${theme.info}20` }}
+            >
+              <User color={theme.info} size={20} />
+            </View>
+            <Text className="text-lg font-bold" style={{ color: theme.text }}>
               Customer Information
             </Text>
           </View>
 
-          <View style={styles.inputGroup}>
+          <View className="gap-3">
             <View
-              style={[
-                styles.inputWrapper,
-                { backgroundColor: theme.card, borderColor: theme.border },
-                shadows.sm,
-              ]}
+              className="flex-row items-center rounded-2xl border px-4 py-3 gap-3 shadow-sm"
+              style={{
+                backgroundColor: theme.card,
+                borderColor: theme.border,
+              }}
             >
               <View
-                style={[
-                  styles.inputIcon,
-                  { backgroundColor: theme.primaryLight + '20' },
-                ]}
+                className="w-11 h-11 rounded-xl justify-center items-center"
+                style={{ backgroundColor: `${theme.primary}15` }}
               >
-                <User color={theme.primaryDark} size={20} />
+                <User color={theme.primary} size={20} />
               </View>
               <TextInput
-                style={[styles.input, { color: theme.text }]}
+                className="flex-1 text-base py-2"
+                style={{ color: theme.text, fontFamily: 'Inter-Regular' }}
                 placeholder="Full Name *"
                 placeholderTextColor={theme.inputPlaceholder}
                 value={customerInfo.name}
@@ -258,22 +296,21 @@ export default function CheckoutScreen() {
             </View>
 
             <View
-              style={[
-                styles.inputWrapper,
-                { backgroundColor: theme.card, borderColor: theme.border },
-                shadows.sm,
-              ]}
+              className="flex-row items-center rounded-2xl border px-4 py-3 gap-3 shadow-sm"
+              style={{
+                backgroundColor: theme.card,
+                borderColor: theme.border,
+              }}
             >
               <View
-                style={[
-                  styles.inputIcon,
-                  { backgroundColor: theme.primaryLight + '20' },
-                ]}
+                className="w-11 h-11 rounded-xl justify-center items-center"
+                style={{ backgroundColor: `${theme.primary}15` }}
               >
-                <Phone color={theme.primaryDark} size={20} />
+                <Phone color={theme.primary} size={20} />
               </View>
               <TextInput
-                style={[styles.input, { color: theme.text }]}
+                className="flex-1 text-base py-2"
+                style={{ color: theme.text, fontFamily: 'Inter-Regular' }}
                 placeholder="Phone Number *"
                 placeholderTextColor={theme.inputPlaceholder}
                 value={customerInfo.phone}
@@ -285,19 +322,21 @@ export default function CheckoutScreen() {
             </View>
 
             <View
-              style={[
-                styles.inputWrapper,
-                { backgroundColor: theme.card, borderColor: theme.border },
-                shadows.sm,
-              ]}
+              className="flex-row items-center rounded-2xl border px-4 py-3 gap-3 shadow-sm"
+              style={{
+                backgroundColor: theme.card,
+                borderColor: theme.border,
+              }}
             >
               <View
-                style={[styles.inputIcon, { backgroundColor: theme.infoLight }]}
+                className="w-11 h-11 rounded-xl justify-center items-center"
+                style={{ backgroundColor: `${theme.info}15` }}
               >
                 <Clock color={theme.info} size={20} />
               </View>
               <TextInput
-                style={[styles.input, { color: theme.text }]}
+                className="flex-1 text-base py-2"
+                style={{ color: theme.text, fontFamily: 'Inter-Regular' }}
                 placeholder="Preferred Pickup Time (Optional)"
                 placeholderTextColor={theme.inputPlaceholder}
                 value={customerInfo.pickupTime}
@@ -308,22 +347,21 @@ export default function CheckoutScreen() {
             </View>
 
             <View
-              style={[
-                styles.textAreaWrapper,
-                { backgroundColor: theme.card, borderColor: theme.border },
-                shadows.sm,
-              ]}
+              className="flex-row items-start rounded-2xl border px-4 py-4 gap-3 shadow-sm"
+              style={{
+                backgroundColor: theme.card,
+                borderColor: theme.border,
+              }}
             >
               <View
-                style={[
-                  styles.inputIcon,
-                  { backgroundColor: theme.warningLight },
-                ]}
+                className="w-11 h-11 rounded-xl justify-center items-center"
+                style={{ backgroundColor: `${theme.warning}15` }}
               >
                 <MessageSquare color={theme.warning} size={20} />
               </View>
               <TextInput
-                style={[styles.textArea, { color: theme.text }]}
+                className="flex-1 text-base min-h-[80px]"
+                style={{ color: theme.text, fontFamily: 'Inter-Regular' }}
                 placeholder="Special Instructions (Optional)"
                 placeholderTextColor={theme.inputPlaceholder}
                 value={customerInfo.specialInstructions}
@@ -342,112 +380,148 @@ export default function CheckoutScreen() {
         </View>
 
         {/* Price Breakdown Section */}
-        <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <DollarSign color={theme.success} size={20} />
-            <Text style={[styles.sectionTitle, { color: theme.text }]}>
+        <View className="mt-6 mb-6">
+          <View className="flex-row items-center gap-2 mb-4">
+            <View
+              className="w-10 h-10 rounded-xl justify-center items-center"
+              style={{ backgroundColor: `${theme.success}20` }}
+            >
+              <DollarSign color={theme.success} size={20} />
+            </View>
+            <Text className="text-lg font-bold" style={{ color: theme.text }}>
               Price Breakdown
             </Text>
           </View>
 
           <View
-            style={[
-              styles.priceBreakdown,
-              { backgroundColor: theme.card, borderColor: theme.border },
-              shadows.md,
-            ]}
+            className="p-5 rounded-2xl border shadow-md"
+            style={{
+              backgroundColor: theme.card,
+              borderColor: theme.border,
+            }}
           >
-            <View style={styles.priceRow}>
-              <Text style={[styles.priceLabel, { color: theme.textSecondary }]}>
+            <View className="flex-row justify-between items-center mb-3">
+              <Text
+                className="text-base"
+                style={{
+                  color: theme.textSecondary,
+                  fontFamily: 'Inter-Regular',
+                }}
+              >
                 Subtotal
               </Text>
-              <Text style={[styles.priceValue, { color: theme.text }]}>
+              <Text
+                className="text-base font-semibold"
+                style={{ color: theme.text }}
+              >
                 ${subtotal.toFixed(2)}
               </Text>
             </View>
 
-            <View style={styles.priceRow}>
-              <Text style={[styles.priceLabel, { color: theme.textSecondary }]}>
+            <View className="flex-row justify-between items-center mb-3">
+              <Text
+                className="text-base"
+                style={{
+                  color: theme.textSecondary,
+                  fontFamily: 'Inter-Regular',
+                }}
+              >
                 Service Fee
               </Text>
-              <Text style={[styles.priceValue, { color: theme.text }]}>
+              <Text
+                className="text-base font-semibold"
+                style={{ color: theme.text }}
+              >
                 ${deliveryFee.toFixed(2)}
               </Text>
             </View>
 
-            <View
-              style={[
-                styles.savingsRow,
-                { backgroundColor: theme.successLight },
-              ]}
-            >
-              <Percent color={theme.success} size={16} />
-              <Text style={[styles.savingsLabel, { color: theme.success }]}>
-                You're saving
-              </Text>
-              <Text style={[styles.savingsValue, { color: theme.success }]}>
-                $
-                {cart
-                  .reduce(
-                    (sum, item) =>
-                      sum +
-                      (item.offer.price - (item.offer.sale_price ?? 0)) *
-                        item.quantity,
-                    0
-                  )
-                  .toFixed(2)}
-              </Text>
-            </View>
+            {totalSavings > 0 && (
+              <View
+                className="flex-row items-center p-3 rounded-xl gap-2 mb-3"
+                style={{ backgroundColor: `${theme.success}15` }}
+              >
+                <View
+                  className="w-8 h-8 rounded-lg justify-center items-center"
+                  style={{ backgroundColor: theme.success }}
+                >
+                  <Percent color="#FFFFFF" size={14} />
+                </View>
+                <Text
+                  className="text-sm font-semibold flex-1"
+                  style={{ color: theme.success }}
+                >
+                  You're saving
+                </Text>
+                <Text
+                  className="text-lg font-bold"
+                  style={{ color: theme.success }}
+                >
+                  ${totalSavings.toFixed(2)}
+                </Text>
+              </View>
+            )}
 
             <View
-              style={[
-                styles.priceRow,
-                styles.totalRow,
-                { borderTopColor: theme.border },
-              ]}
+              className="border-t pt-4 flex-row justify-between items-center"
+              style={{ borderTopColor: theme.border }}
             >
-              <Text style={[styles.totalLabel, { color: theme.text }]}>
+              <Text className="text-lg font-bold" style={{ color: theme.text }}>
                 Total Amount
               </Text>
-              <Text style={[styles.totalValue, { color: theme.primary }]}>
+              <Text
+                className="text-3xl font-bold"
+                style={{ color: theme.primary }}
+              >
                 ${total.toFixed(2)}
               </Text>
             </View>
           </View>
         </View>
 
-        <View style={{ height: 120 }} />
+        <View className="h-32" />
       </ScrollView>
 
       {/* Footer */}
       <View
-        style={[
-          styles.footer,
-          { backgroundColor: theme.background, borderTopColor: theme.border },
-          shadows.lg,
-        ]}
+        className="px-6 py-4 border-t shadow-2xl"
+        style={{
+          backgroundColor: theme.background,
+          borderTopColor: theme.border,
+        }}
       >
         <TouchableOpacity
-          style={[
-            styles.reserveButton,
-            {
-              backgroundColor: isReserveDisabled
-                ? theme.disabled
-                : theme.primary,
-              opacity: isLoading ? 0.7 : 1,
-            },
-          ]}
+          className="w-full p-4 rounded-2xl items-center shadow-lg"
+          style={{
+            backgroundColor: isReserveDisabled ? theme.disabled : theme.primary,
+            opacity: isLoading ? 0.7 : 1,
+          }}
           onPress={handleReserveOrder}
           disabled={isReserveDisabled}
           activeOpacity={0.8}
         >
-          <Text style={[styles.reserveButtonText, { color: theme.text }]}>
-            {isLoading
-              ? 'Creating Order...'
-              : `Reserve Order • $${total.toFixed(2)}`}
-          </Text>
+          <View className="flex-row items-center gap-2">
+            {isLoading ? (
+              <Package color="#FFFFFF" size={20} />
+            ) : (
+              <CheckCircle2 color="#FFFFFF" size={20} />
+            )}
+            <Text
+              className="text-lg font-bold"
+              style={{
+                color: isReserveDisabled ? theme.textSecondary : '#FFFFFF',
+              }}
+            >
+              {isLoading
+                ? 'Creating Order...'
+                : `Reserve Order • $${total.toFixed(2)}`}
+            </Text>
+          </View>
         </TouchableOpacity>
-        <Text style={[styles.footerNote, { color: theme.textSecondary }]}>
+        <Text
+          className="text-xs text-center mt-2"
+          style={{ color: theme.textSecondary, fontFamily: 'Inter-Regular' }}
+        >
           * Required fields must be filled
         </Text>
       </View>
@@ -462,218 +536,3 @@ export default function CheckoutScreen() {
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.md,
-    borderBottomWidth: 1,
-  },
-  backButton: {
-    padding: spacing.sm,
-  },
-  title: {
-    fontSize: fontSize['2xl'],
-    fontFamily: 'Inter-Bold',
-  },
-  placeholder: {
-    width: 40,
-  },
-  content: {
-    flex: 1,
-  },
-  scrollContent: {
-    paddingHorizontal: spacing.lg,
-  },
-  section: {
-    marginTop: spacing.lg,
-  },
-  sectionHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm,
-    marginBottom: spacing.md,
-  },
-  sectionTitle: {
-    fontSize: fontSize.lg,
-    fontFamily: 'Inter-Bold',
-    flex: 1,
-  },
-  itemCount: {
-    paddingHorizontal: spacing.sm,
-    paddingVertical: 4,
-    borderRadius: borderRadius.sm,
-  },
-  itemCountText: {
-    fontSize: fontSize.xs,
-    fontFamily: 'Inter-Bold',
-  },
-  orderItems: {
-    gap: spacing.md,
-  },
-  orderItem: {
-    flexDirection: 'row',
-    padding: spacing.md,
-    borderRadius: borderRadius.xl,
-    borderWidth: 1,
-    gap: spacing.md,
-  },
-  itemImage: {
-    width: 70,
-    height: 70,
-    borderRadius: borderRadius.lg,
-  },
-  itemInfo: {
-    flex: 1,
-    justifyContent: 'space-between',
-  },
-  itemName: {
-    fontSize: fontSize.base,
-    fontFamily: 'Inter-SemiBold',
-    marginBottom: spacing.sm,
-    lineHeight: 20,
-  },
-  itemMetaRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  quantityBadge: {
-    paddingHorizontal: spacing.sm,
-    paddingVertical: 4,
-    borderRadius: borderRadius.sm,
-  },
-  itemQuantity: {
-    fontSize: fontSize.xs,
-    fontFamily: 'Inter-Medium',
-  },
-  itemPriceContainer: {
-    alignItems: 'flex-end',
-    gap: 2,
-  },
-  itemOriginalPrice: {
-    fontSize: fontSize.xs,
-    fontFamily: 'Inter-Regular',
-    textDecorationLine: 'line-through',
-  },
-  itemPrice: {
-    fontSize: fontSize.lg,
-    fontFamily: 'Inter-Bold',
-  },
-  inputGroup: {
-    gap: spacing.md,
-  },
-  inputWrapper: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderRadius: borderRadius.xl,
-    borderWidth: 1,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    gap: spacing.md,
-  },
-  textAreaWrapper: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    borderRadius: borderRadius.xl,
-    borderWidth: 1,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.md,
-    gap: spacing.md,
-  },
-  inputIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: borderRadius.lg,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  input: {
-    flex: 1,
-    fontSize: fontSize.base,
-    fontFamily: 'Inter-Regular',
-    paddingVertical: spacing.sm,
-  },
-  textArea: {
-    flex: 1,
-    fontSize: fontSize.base,
-    fontFamily: 'Inter-Regular',
-    minHeight: 80,
-  },
-  priceBreakdown: {
-    padding: spacing.lg,
-    borderRadius: borderRadius.xl,
-    borderWidth: 1,
-  },
-  priceRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: spacing.md,
-  },
-  priceLabel: {
-    fontSize: fontSize.base,
-    fontFamily: 'Inter-Regular',
-  },
-  priceValue: {
-    fontSize: fontSize.base,
-    fontFamily: 'Inter-SemiBold',
-  },
-  savingsRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: spacing.md,
-    borderRadius: borderRadius.lg,
-    gap: spacing.sm,
-    marginBottom: spacing.md,
-  },
-  savingsLabel: {
-    fontSize: fontSize.sm,
-    fontFamily: 'Inter-SemiBold',
-    flex: 1,
-  },
-  savingsValue: {
-    fontSize: fontSize.lg,
-    fontFamily: 'Inter-Bold',
-  },
-  totalRow: {
-    borderTopWidth: 1,
-    paddingTop: spacing.md,
-    marginBottom: 0,
-  },
-  totalLabel: {
-    fontSize: fontSize.lg,
-    fontFamily: 'Inter-Bold',
-  },
-  totalValue: {
-    fontSize: fontSize['2xl'],
-    fontFamily: 'Inter-Bold',
-  },
-  footer: {
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.md,
-    borderTopWidth: 1,
-  },
-  reserveButton: {
-    width: '100%',
-    padding: spacing.md,
-    borderRadius: borderRadius.xl,
-    alignItems: 'center',
-    marginBottom: spacing.sm,
-  },
-  reserveButtonText: {
-    fontSize: fontSize.lg,
-    fontFamily: 'Inter-Bold',
-  },
-  footerNote: {
-    fontSize: fontSize.xs,
-    fontFamily: 'Inter-Regular',
-    textAlign: 'center',
-  },
-});

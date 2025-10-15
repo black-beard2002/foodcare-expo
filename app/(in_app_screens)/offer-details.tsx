@@ -22,9 +22,11 @@ import {
   Flame,
   Beef,
   Wheat,
+  ShoppingCart,
+  HeartPulse,
 } from 'lucide-react-native';
 import { useAppStore } from '@/stores/appStore';
-import { CustomProperty, Offer } from '@/types/appTypes';
+import { Offer } from '@/types/appTypes';
 import { useTheme } from '@/hooks/useTheme';
 import { useFavoritesStore } from '@/stores/favoritesStore';
 import { useRecentlyViewedStore } from '@/stores/recentlyViewedStore';
@@ -127,7 +129,14 @@ export default function OfferDetailsScreen() {
     }
   };
 
-  const handleAddToCart = () => addToCart(offer);
+  const handleAddToCart = () => {
+    addToCart(offer);
+    showAlert(
+      'Added to cart',
+      `${offer.title} is added to your cart`,
+      'success'
+    );
+  };
 
   return (
     <SafeAreaView
@@ -153,7 +162,7 @@ export default function OfferDetailsScreen() {
             source={
               offer.main_image
                 ? { uri: handleImageSrc(offer.main_image) }
-                : images.CATEGORY_PLACEHOLDER_IMAGE
+                : images.OFFER_PLACEHOLDER_IMAGE
             }
             className="w-full h-96"
             resizeMode="cover"
@@ -413,68 +422,79 @@ export default function OfferDetailsScreen() {
           )}
 
           {/* Nutrition Facts */}
-          {offer.custom_properties && offer.custom_properties.length > 0 && (
-            <View className="mb-6">
-              <Text
-                className="text-lg font-inter-bold mb-3"
-                style={{ color: theme.text }}
-              >
-                Nutrition Facts
-              </Text>
-              <View
-                className="rounded-2xl p-5 border"
-                style={{
-                  backgroundColor: theme.card,
-                  borderColor: theme.border,
-                }}
-              >
-                <View className="flex-row flex-wrap gap-3">
-                  {offer.custom_properties.map(
-                    (property: CustomProperty, index: number) => {
-                      const [key, value] = Object.entries(property)[0];
-                      const Icon = getNutritionIcon(key);
+          {offer.custom_properties &&
+            Object.keys(offer.custom_properties || {}).length > 0 && (
+              <View className="mb-6">
+                <View className="flex-row gap-1 items-center mb-3">
+                  <HeartPulse size={30} color={theme.primary} />
+                  <Text
+                    className="text-3xl font-inter-bold"
+                    style={{ color: theme.text }}
+                  >
+                    Nutrition Facts
+                  </Text>
+                  <Text
+                    className="text-base font-inter-bold"
+                    style={{ color: theme.text }}
+                  >
+                    ({Object.keys(offer.custom_properties || {}).length})
+                  </Text>
+                </View>
 
-                      return (
-                        <View
-                          key={index}
-                          className="flex-1 min-w-[45%] rounded-xl p-4 border"
-                          style={{
-                            backgroundColor: theme.background,
-                            borderColor: theme.border,
-                          }}
-                        >
-                          <View className="flex-row items-center gap-2 mb-2">
-                            {Icon && (
-                              <View
-                                className="w-8 h-8 rounded-full items-center justify-center"
-                                style={{
-                                  backgroundColor: `${theme.primary}15`,
-                                }}
+                <View
+                  className="rounded-2xl p-5 border"
+                  style={{
+                    backgroundColor: theme.card,
+                    borderColor: theme.border,
+                  }}
+                >
+                  <View className="flex-row flex-wrap gap-3">
+                    {Object.entries(offer.custom_properties).map(
+                      ([key, value], index) => {
+                        const Icon = getNutritionIcon(key);
+
+                        return (
+                          <View
+                            key={index}
+                            className="flex-1 min-w-[30%] rounded-xl p-4 border"
+                            style={{
+                              backgroundColor: theme.background,
+                              borderColor: theme.border,
+                            }}
+                          >
+                            <View className="flex-row items-center gap-2 mb-2">
+                              {Icon && (
+                                <View
+                                  className="w-8 h-8 rounded-full items-center justify-center"
+                                  style={{
+                                    backgroundColor: `${theme.primary}15`,
+                                  }}
+                                >
+                                  <Icon color={theme.primary} size={16} />
+                                </View>
+                              )}
+                              <Text
+                                className="text-xs font-inter-medium flex-1"
+                                style={{ color: theme.textSecondary }}
                               >
-                                <Icon color={theme.primary} size={16} />
-                              </View>
-                            )}
+                                {getNutritionDisplayName(key)}
+                              </Text>
+                            </View>
+
                             <Text
-                              className="text-xs font-inter-medium flex-1"
-                              style={{ color: theme.textSecondary }}
+                              className="text-xl font-inter-bold"
+                              style={{ color: theme.text }}
                             >
-                              {getNutritionDisplayName(key)}
+                              {formatNutritionValue(value)}
                             </Text>
                           </View>
-                          <Text
-                            className="text-xl font-inter-bold"
-                            style={{ color: theme.text }}
-                          >
-                            {formatNutritionValue(value)}
-                          </Text>
-                        </View>
-                      );
-                    }
-                  )}
+                        );
+                      }
+                    )}
+                  </View>
                 </View>
               </View>
-            </View>
-          )}
+            )}
         </View>
       </ScrollView>
 
@@ -488,40 +508,27 @@ export default function OfferDetailsScreen() {
           borderColor: theme.border,
         }}
       >
-        <View className="flex-row justify-between items-center px-6 py-4">
-          {offer.sale_price && (
-            <View>
-              <Text
-                className="text-sm font-inter-medium mb-1"
-                style={{ color: theme.textSecondary }}
-              >
-                Total Price
-              </Text>
-              <View className="flex-row items-baseline gap-2">
-                <Text
-                  className="text-2xl font-inter-bold"
-                  style={{ color: theme.primary }}
-                >
-                  ${formatPrice(offer.sale_price)}
-                </Text>
-                <Text
-                  className="text-sm font-inter-medium"
-                  style={{ color: theme.success }}
-                >
-                  Save ${(offer.price - offer.sale_price).toFixed(2)}
-                </Text>
-              </View>
-            </View>
-          )}
+        <View className="flex-row gap-3 items-center px-6 py-4">
           <TouchableOpacity
             onPress={handleAddToCart}
-            className="flex-row items-center px-6 py-4 rounded-2xl gap-2 shadow-lg"
+            className="flex-row flex-1 items-center px-6 py-4 rounded-2xl gap-2 shadow-lg"
             style={{ backgroundColor: theme.primary }}
             activeOpacity={0.8}
           >
             <PlusCircle color="#fff" size={22} />
             <Text className="text-white text-base font-inter-bold">
               Add to Cart
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={() => router.push('/(tabs)/cart')}
+            className="flex-row items-center px-6 py-4 rounded-2xl gap-2 shadow-lg"
+            style={{ backgroundColor: '#1055C9' }}
+            activeOpacity={0.8}
+          >
+            <ShoppingCart color="#fff" size={22} />
+            <Text className="text-white text-base font-inter-bold">
+              Go to Cart
             </Text>
           </TouchableOpacity>
         </View>

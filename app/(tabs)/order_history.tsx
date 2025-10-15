@@ -23,7 +23,12 @@ import {
 } from 'lucide-react-native';
 import { useTheme } from '@/hooks/useTheme';
 import { useAlert } from '@/providers/AlertProvider';
-import { CartItem, Order } from '@/types/appTypes';
+import {
+  CartItem,
+  OrderItem,
+  TransactionBase,
+  TransactionStatus,
+} from '@/types/appTypes';
 import OrderCancelModal from '@/components/OrderCancelModal';
 import { formatDateTime } from '@/utils/formatters';
 import { MotiView } from 'moti';
@@ -36,7 +41,7 @@ export default function OrderHistoryScreen() {
   const { width: SCREEN_WIDTH } = Dimensions.get('window');
   const colorMode = isDark ? 'dark' : 'light';
   const HERO_CARD_WIDTH = SCREEN_WIDTH - 40;
-  const [selectedOrder, setSelectedOrder] = useState<Order | null>();
+  const [selectedOrder, setSelectedOrder] = useState<TransactionBase | null>();
   const { orders, removeOrder, clearOrders, fetchOrders, isLoading } =
     useOrderStore();
   const { showAlert } = useAlert();
@@ -46,15 +51,18 @@ export default function OrderHistoryScreen() {
   }, []);
 
   const [searchQuery, setSearchQuery] = useState('');
-  const [statusFilter, setStatusFilter] = useState<
-    'all' | 'pending' | 'completed' | 'cancelled'
-  >('all');
+  const [statusFilter, setStatusFilter] = useState<TransactionStatus | 'all'>(
+    'all'
+  );
+
 
   const filteredOrders = useMemo(() => {
     return orders.filter((order) => {
       const matchesSearch =
         order.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        order.customerName.toLowerCase().includes(searchQuery.toLowerCase());
+        order.client_data?.first_name
+          .toLowerCase()
+          .includes(searchQuery.toLowerCase());
 
       const matchesStatus =
         statusFilter === 'all' ? true : order.status === statusFilter;
@@ -101,7 +109,7 @@ export default function OrderHistoryScreen() {
     </MotiView>
   );
 
-  const renderOrder = (order: Order) => (
+  const renderOrder = (order: TransactionBase) => (
     <View
       className="rounded-2xl border bg-card p-4 shadow-sm mb-4 md:p-6 lg:mb-6"
       style={{
@@ -133,7 +141,9 @@ export default function OrderHistoryScreen() {
               className="text-sm font-inter-semibold mt-0.5 md:text-base"
               style={{ color: theme.text }}
             >
-              {order.customerName}
+              {order.client_data?.first_name.concat(
+                ` ${order.client_data.last_name}`
+              )}
             </Text>
           </View>
         </View>
@@ -175,21 +185,9 @@ export default function OrderHistoryScreen() {
             className="text-xs font-inter-medium md:text-sm"
             style={{ color: theme.textSecondary }}
           >
-            {order.customerPhone}
+            {order.client_data?.phone_number}
           </Text>
         </View>
-
-        {order.pickupTime && (
-          <View className="flex-row items-center gap-1.5 px-2 py-1 rounded-lg bg-info/10 md:px-3 md:py-1.5">
-            <Clock color={theme.info} size={12} className="md:w-3.5 md:h-3.5" />
-            <Text
-              className="text-xs font-inter-medium md:text-sm"
-              style={{ color: theme.textSecondary }}
-            >
-              {order.pickupTime}
-            </Text>
-          </View>
-        )}
 
         <View className="flex-row items-center gap-1.5 px-2 py-1 rounded-lg bg-primary/10 md:px-3 md:py-1.5">
           <CalendarClock
@@ -201,7 +199,7 @@ export default function OrderHistoryScreen() {
             className="text-xs font-inter-medium md:text-sm"
             style={{ color: theme.textSecondary }}
           >
-            {formatDateTime(order.createdAt)}
+            {formatDateTime(order.created_at ?? '')}
           </Text>
         </View>
       </View>
@@ -212,7 +210,7 @@ export default function OrderHistoryScreen() {
           className="w-full py-2 rounded-xl items-center justify-center md:py-3"
           style={{
             backgroundColor:
-              order.status === 'pending' || order.status === 'cancelled'
+              order.status === 'PENDING' || order.status === 'CANCELLED'
                 ? theme.warning + '20'
                 : theme.success,
           }}
@@ -236,14 +234,14 @@ export default function OrderHistoryScreen() {
             className="text-sm font-inter-semibold flex-1 md:text-base"
             style={{ color: theme.text }}
           >
-            Items ({order.offers.length})
+            Items ({order.items?.length})
           </Text>
         </View>
 
         <View className="gap-1.5 md:gap-2">
-          {order.offers.slice(0, 3).map((item: CartItem) => (
+          {order.items?.slice(0, 3).map((item: OrderItem) => (
             <View
-              key={item.id}
+              key={item.item.id}
               className="flex-row justify-between items-center py-1.5 px-2 rounded-lg border md:py-2 md:px-3"
               style={{ borderColor: theme.border }}
             >
@@ -253,51 +251,31 @@ export default function OrderHistoryScreen() {
                   style={{ color: theme.text }}
                   numberOfLines={1}
                 >
-                  {item.offer.title}
+                  {item.item.title}
                 </Text>
                 <Text
                   className="text-xs font-inter-regular md:text-sm"
                   style={{ color: theme.textSecondary }}
                 >
                   Qty: {item.quantity || 1} • $
-                  {formatPrice(item.offer.sale_price ?? item.offer.price)}
+                  {formatPrice(item.item.sale_price ?? item.item.price)}
                 </Text>
               </View>
             </View>
           ))}
 
-          {order.offers.length > 3 && (
+          {order.items?.length > 3 && (
             <View className="py-1.5 px-2 rounded-lg bg-primary/5 md:py-2 md:px-3">
               <Text
                 className="text-xs font-inter-medium text-center md:text-sm"
                 style={{ color: theme.primary }}
               >
-                +{order.offers.length - 3} more items
+                +{order.items.length - 3} more items
               </Text>
             </View>
           )}
         </View>
       </View>
-
-      {/* Special Instructions (if any) */}
-      {order.specialInstructions && (
-        <View className="mb-3 p-2 rounded-lg bg-warning/5 border border-warning/20 md:p-3 md:mb-4">
-          <View className="flex-row items-start gap-2">
-            <MessageSquare
-              color={theme.warning}
-              size={14}
-              className="mt-0.5 md:w-4 md:h-4"
-            />
-            <Text
-              className="text-xs font-inter-regular flex-1 md:text-sm"
-              style={{ color: theme.textSecondary }}
-              numberOfLines={2}
-            >
-              {order.specialInstructions}
-            </Text>
-          </View>
-        </View>
-      )}
 
       {/* Total Amount - Compact */}
       <View
@@ -314,7 +292,7 @@ export default function OrderHistoryScreen() {
           className="text-lg font-inter-bold md:text-xl"
           style={{ color: theme.text }}
         >
-          ${order.total.toFixed(2)}
+          ${order.total_price}
         </Text>
       </View>
     </View>
@@ -412,11 +390,7 @@ export default function OrderHistoryScreen() {
               (status, index) => (
                 <TouchableOpacity
                   key={status + index}
-                  onPress={() =>
-                    setStatusFilter(
-                      status as 'all' | 'pending' | 'completed' | 'cancelled'
-                    )
-                  }
+                  onPress={() => setStatusFilter(status as TransactionStatus)}
                   className="px-4 py-1.5 rounded-xl md:px-5 md:py-2"
                   style={{
                     backgroundColor:
@@ -476,7 +450,7 @@ export default function OrderHistoryScreen() {
           </View>
         ) : (
           <View className="px-6 md:px-8 lg:px-12">
-            {filteredOrders.map((order: Order) => (
+            {filteredOrders.map((order: TransactionBase) => (
               <View key={order.id}>{renderOrder(order)}</View>
             ))}
           </View>

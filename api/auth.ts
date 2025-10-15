@@ -238,6 +238,8 @@ class AuthApiImpl implements AuthApi {
         `/user/${userId}/update`,
         userData
       );
+
+      console.log('res', api_response);
       const responseBody = api_response.data;
       console.log('update response:', responseBody);
       if (responseBody.success) {

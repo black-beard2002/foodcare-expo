@@ -87,7 +87,7 @@ export interface Offer {
   start_date?: string;
   end_date?: string;
   item_type?: string;
-  custom_properties?: CustomProperty[];
+  custom_properties?: Record<string, number | string>;
   category_id: string;
   type_id?: string;
   brand_id?: string;
@@ -95,9 +95,7 @@ export interface Offer {
   updated_at?: string;
   created_by?: string;
 }
-export type CustomProperty = {
-  [key: string]: string | number;
-};
+
 export interface CartItem {
   id: string;
   offer: Offer;

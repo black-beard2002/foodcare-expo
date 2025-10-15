@@ -72,7 +72,7 @@ export default function CategoriesScreen() {
             ? { uri: handleImageSrc(category.main_image) }
             : images.CATEGORY_PLACEHOLDER_IMAGE
         }
-        resizeMode="contain"
+        resizeMode="cover"
         className="w-full h-16 rounded-lg mb-2"
       />
       <View className="flex-1 justify-center">
@@ -125,7 +125,9 @@ export default function CategoriesScreen() {
           </Text>
         </View>
         <View
-          className="absolute top-2 left-2 px-1.5 py-1.5 rounded-full"
+          className={`absolute top-2 left-2 px-1.5 py-1.5 rounded-full ${
+            !offer.is_featured && 'opacity-0'
+          }`}
           style={{ backgroundColor: theme.primary + 'CC' }}
         >
           <Sparkles color={theme.text} size={16} />

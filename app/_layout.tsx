@@ -40,14 +40,6 @@ export default function RootLayout() {
     'Inter-Bold': Inter_700Bold,
   });
 
-  // ✅ Setup auth event listeners
-  useEffect(() => {
-    const setupEventListeners = useAuthStore.getState().setupEventListeners;
-    const cleanup = setupEventListeners();
-
-    return cleanup;
-  }, []);
-
   // Load app data
   useEffect(() => {
     const prepareApp = async () => {

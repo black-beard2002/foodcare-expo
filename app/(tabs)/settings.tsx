@@ -35,7 +35,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 
 export default function SettingScreen() {
   const { theme, isDark } = useTheme();
-  const { user, signOut } = useAuthStore();
+  const { user, logout } = useAuthStore();
   const {
     biometricEnabled,
     setBiometricEnabled,
@@ -188,7 +188,7 @@ export default function SettingScreen() {
   };
 
   const handleSignOut = () => {
-    signOut();
+    logout();
     router.replace('/auth');
   };
 

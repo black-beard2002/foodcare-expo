@@ -103,8 +103,8 @@ const AnimatedBadge = ({ count, color }: { count: number; color: string }) => {
       style={{
         transform: [{ scale: scaleAnim }],
         position: 'absolute',
-        top: 8,
-        right: 8,
+        top: -3,
+        right: -3,
         backgroundColor: color,
         borderRadius: 10,
         minWidth: 20,
@@ -411,7 +411,7 @@ const EnhancedNearYouCard = ({
             resizeMode="cover"
           />
           <LinearGradient
-            colors={['transparent', 'rgba(0,0,0,0.3)']}
+            colors={['transparent', theme.primary + '70']}
             style={{
               position: 'absolute',
               top: 0,
@@ -423,16 +423,24 @@ const EnhancedNearYouCard = ({
               padding: 12,
             }}
           >
-            <MotiView
-              from={{ scale: 0, rotate: '-45deg' }}
-              animate={{ scale: 1, rotate: '0deg' }}
-              transition={{ type: 'spring' }}
-              className="bg-gradient-to-r from-red-500 to-pink-600 px-3 py-2 rounded-2xl shadow-lg"
+            <LinearGradient
+              colors={['#ef4444', '#db277780']}
+              style={{
+                paddingHorizontal: 12,
+                borderRadius: 10,
+                paddingVertical: 8,
+              }}
             >
-              <Text className="text-white text-sm font-bold">
-                -{getDiscountPercentage(offer.price, offer.sale_price ?? 0)}%
-              </Text>
-            </MotiView>
+              <MotiView
+                from={{ scale: 0, rotate: '-45deg' }}
+                animate={{ scale: 1, rotate: '0deg' }}
+                transition={{ type: 'spring' }}
+              >
+                <Text className="text-white text-sm font-bold">
+                  -{getDiscountPercentage(offer.price, offer.sale_price ?? 0)}%
+                </Text>
+              </MotiView>
+            </LinearGradient>
           </LinearGradient>
         </View>
 
@@ -506,12 +514,14 @@ const EnhancedNearYouCard = ({
                 Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
                 onAddToCart(offer);
               }}
-              className="flex-row items-center gap-2 px-6 py-3.5 rounded-2xl shadow-lg"
-              style={{ backgroundColor: theme.warning }}
+              className="flex-row flex-1 max-w-40 items-center gap-2 px-6 py-3.5 rounded-2xl shadow-lg"
+              style={{ backgroundColor: theme.warning, elevation: 5 }}
               activeOpacity={0.8}
             >
               <ShoppingCart color="#fff" size={18} />
-              <Text className="text-base font-bold text-white">Add</Text>
+              <Text className="text-base font-bold text-white w-full">
+                Add To Cart
+              </Text>
             </TouchableOpacity>
             <View className="items-end">
               <Text
@@ -631,7 +641,7 @@ const EnhancedOfferCard = ({
         <View className="p-5 pt-28 gap-3 flex-1 justify-between">
           <View>
             <Text
-              className="text-lg font-bold mb-2"
+              className="text-lg line-clamp-1 font-bold mb-2"
               style={{ color: theme.text }}
               numberOfLines={2}
             >
@@ -763,7 +773,7 @@ export default function HomeScreen(): JSX.Element {
   );
 
   const nearYouOffers = useMemo(
-    () => filteredOffers.filter((offer) => offer.is_Near),
+    () => filteredOffers.filter((offer) => offer.title !== ''),
     [filteredOffers]
   );
 
@@ -1125,7 +1135,7 @@ export default function HomeScreen(): JSX.Element {
               >
                 <View className="flex-row items-center gap-3">
                   <LinearGradient
-                    colors={[theme.primary, theme.primary + '80']}
+                    colors={[theme.primary + '70', theme.primary + '90']}
                     className="p-2"
                     style={{
                       borderRadius: 12,
@@ -1185,7 +1195,7 @@ export default function HomeScreen(): JSX.Element {
               >
                 <View className="flex-row items-center gap-3">
                   <LinearGradient
-                    colors={[theme.primary, theme.primary + '80']}
+                    colors={[theme.primary + '70', theme.primary + '90']}
                     style={{
                       borderRadius: 12,
                       width: 40,
@@ -1228,7 +1238,7 @@ export default function HomeScreen(): JSX.Element {
 
           {/* Popular Near You Section */}
           {(isLoading || nearYouOffers.length > 0) && (
-            <View className="mb-8">
+            <View className="mb-3">
               <MotiView
                 from={{ opacity: 0, translateX: -20 }}
                 animate={{ opacity: 1, translateX: 0 }}
@@ -1237,7 +1247,7 @@ export default function HomeScreen(): JSX.Element {
               >
                 <View className="flex-row items-center gap-3">
                   <LinearGradient
-                    colors={[theme.primary, theme.primary + '80']}
+                    colors={[theme.primary + '70', theme.primary + '90']}
                     style={{
                       borderRadius: 12,
                       width: 40,
@@ -1282,7 +1292,10 @@ export default function HomeScreen(): JSX.Element {
                       onAddToCart={handleAddToCart}
                     />
                   )}
-                  contentContainerStyle={{ paddingHorizontal: 24 }}
+                  contentContainerStyle={{
+                    paddingHorizontal: 24,
+                    paddingBottom: 20,
+                  }}
                   horizontal
                   showsHorizontalScrollIndicator={false}
                 />
@@ -1301,7 +1314,7 @@ export default function HomeScreen(): JSX.Element {
               >
                 <View className="flex-row items-center gap-3">
                   <LinearGradient
-                    colors={[theme.primary, theme.primary + '80']}
+                    colors={[theme.primary + '70', theme.primary + '90']}
                     style={{
                       borderRadius: 12,
                       width: 40,
