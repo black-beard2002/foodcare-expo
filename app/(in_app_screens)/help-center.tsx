@@ -129,7 +129,7 @@ export default function HelpCenterScreen() {
           from={{ opacity: 0, translateY: 20 }}
           animate={{ opacity: 1, translateY: 0 }}
           transition={{ type: 'timing', duration: 400 }}
-          className="my-6 rounded-3xl p-6 border shadow-sm"
+          className="my-6 rounded-3xl p-6 border"
           style={{
             backgroundColor: `${theme.primary}10`,
             borderColor: `${theme.primary}30`,
@@ -298,58 +298,6 @@ export default function HelpCenterScreen() {
                 />
               )}
             </View>
-          ))}
-        </View>
-
-        {/* Resources */}
-        <Text
-          className="text-sm font-semibold mb-3 uppercase tracking-wider px-1"
-          style={{ color: theme.textSecondary }}
-        >
-          Resources
-        </Text>
-        <View
-          className="rounded-2xl overflow-hidden border shadow-sm mb-8"
-          style={{ backgroundColor: theme.card, borderColor: theme.border }}
-        >
-          {resources.map((resource, index) => (
-            <TouchableOpacity
-              key={index}
-              className={`flex-row justify-between items-center p-5 ${
-                index < resources.length - 1 ? 'border-b' : ''
-              }`}
-              style={
-                index < resources.length - 1
-                  ? { borderBottomColor: theme.border }
-                  : {}
-              }
-              onPress={resource.action}
-              activeOpacity={0.7}
-            >
-              <View className="flex-row items-center flex-1 gap-3">
-                <View
-                  className="w-10 h-10 rounded-xl justify-center items-center"
-                  style={{ backgroundColor: `${resource.color}15` }}
-                >
-                  <resource.icon
-                    color={resource.color}
-                    size={20}
-                    strokeWidth={2}
-                  />
-                </View>
-                <Text
-                  className="text-base font-semibold flex-1"
-                  style={{ color: theme.text }}
-                >
-                  {resource.title}
-                </Text>
-              </View>
-              <ExternalLink
-                color={theme.textSecondary}
-                size={18}
-                strokeWidth={2}
-              />
-            </TouchableOpacity>
           ))}
         </View>
 

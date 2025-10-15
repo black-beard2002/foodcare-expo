@@ -95,6 +95,7 @@ export default function SettingsScreen() {
           <LinearGradient
             colors={isDark ? ['#1F2937', '#111827'] : ['#F3F4F6', '#E5E7EB']}
             className="p-6"
+            style={{ padding: 24 }}
           >
             <View className="flex-row items-center justify-center mb-4">
               <View

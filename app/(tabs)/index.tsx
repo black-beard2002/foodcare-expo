@@ -390,7 +390,7 @@ const EnhancedNearYouCard = ({
           shadowOffset: { width: 0, height: 6 },
           shadowOpacity: 0.25,
           shadowRadius: 12,
-          elevation: 10,
+          elevation: 20,
         }}
         activeOpacity={0.9}
         onPressIn={handlePressIn}
@@ -471,7 +471,7 @@ const EnhancedNearYouCard = ({
               </View>
             </View>
 
-            <View className="gap-2.5">
+            <View className="gap-2.5 mb-2">
               <View className="flex-row items-center gap-2">
                 <View
                   className="p-1.5 rounded-lg"
@@ -514,8 +514,8 @@ const EnhancedNearYouCard = ({
                 Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
                 onAddToCart(offer);
               }}
-              className="flex-row flex-1 max-w-40 items-center gap-2 px-6 py-3.5 rounded-2xl shadow-lg"
-              style={{ backgroundColor: theme.warning, elevation: 5 }}
+              className="flex-row flex-1 max-w-40 items-center gap-2 px-6 py-3.5 rounded-2xl shadow-md"
+              style={{ backgroundColor: theme.warning, elevation: 20 }}
               activeOpacity={0.8}
             >
               <ShoppingCart color="#fff" size={18} />
@@ -561,158 +561,161 @@ const EnhancedOfferCard = ({
       easing: Easing.out(Easing.cubic),
     }}
   >
-    <TouchableOpacity
-      className="rounded-3xl overflow-visible shadow-xl"
-      style={{
-        height: CARD_HEIGHTS.OFFER_CARD,
-        backgroundColor: theme.card,
-        shadowColor: theme.shadow,
-        shadowOffset: { width: 0, height: 6 },
-        shadowOpacity: 0.2,
-        shadowRadius: 12,
-        elevation: 8,
-      }}
-      onPress={() => {
-        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-        router.push(`/(in_app_screens)/offer-details?id=${offer.id}`);
-      }}
-      activeOpacity={0.9}
-    >
-      <LinearGradient
-        colors={[theme.card, theme.backgroundSecondary]}
-        style={{
-          borderRadius: 24,
-          height: CARD_HEIGHTS.OFFER_CARD,
-          width: '100%',
-        }}
-      >
-        <View
-          className="absolute -top-20 left-0 right-0 items-center z-10"
-          style={{ elevation: 10 }}
+    <View className="mb-6 relative">
+      {/* Floating image + badge */}
+      <View className="absolute -top-20 left-0 right-0 items-center z-10">
+        <MotiView
+          from={{ rotateY: '180deg', opacity: 0 }}
+          animate={{ rotateY: '0deg', opacity: 1 }}
+          transition={{
+            type: 'spring',
+            damping: 20,
+            stiffness: 80,
+            mass: 1,
+            delay: 200,
+          }}
         >
-          <MotiView
-            from={{ rotateY: '180deg', opacity: 0 }}
-            animate={{ rotateY: '0deg', opacity: 1 }}
-            transition={{
-              type: 'spring',
-              damping: 20,
-              stiffness: 80,
-              mass: 1,
-              delay: 200,
+          <View
+            className="w-44 h-44 rounded-full overflow-hidden shadow-2xl"
+            style={{
+              borderWidth: 4,
+              borderColor: theme.card,
+              backgroundColor: theme.background,
+              shadowColor: theme.shadow,
+              shadowOffset: { width: 0, height: 8 },
+              shadowOpacity: 0.3,
+              shadowRadius: 16,
             }}
           >
-            <View
-              className="w-44 h-44 rounded-full overflow-hidden shadow-2xl"
-              style={{
-                borderWidth: 4,
-                borderColor: theme.card,
-                backgroundColor: theme.background,
-                shadowColor: theme.shadow,
-                shadowOffset: { width: 0, height: 8 },
-                shadowOpacity: 0.3,
-                shadowRadius: 16,
-              }}
-            >
-              <Image
-                source={
-                  offer.main_image
-                    ? { uri: handleImageSrc(offer.main_image) }
-                    : images.OFFER_PLACEHOLDER_IMAGE
-                }
-                className="w-full h-full"
-                resizeMode="cover"
-              />
-            </View>
-          </MotiView>
-
-          <MotiView
-            from={{ scale: 0, translateY: -20 }}
-            animate={{ scale: 1, translateY: 0 }}
-            transition={{ type: 'spring', delay: 400, damping: 15 }}
-            className="absolute -top-2 -right-2 px-3 py-1.5 rounded-xl shadow-lg"
-            style={{ backgroundColor: theme.error }}
-          >
-            <Text className="text-white text-xs font-bold">
-              -{getDiscountPercentage(offer.price, offer.sale_price ?? 0)}%
-            </Text>
-          </MotiView>
-        </View>
-
-        <View className="p-5 pt-28 gap-3 flex-1 justify-between">
-          <View>
-            <Text
-              className="text-lg line-clamp-1 font-bold mb-2"
-              style={{ color: theme.text }}
-              numberOfLines={2}
-            >
-              {offer.title}
-            </Text>
-
-            <View className="gap-1.5">
-              <View className="flex-row items-center gap-2">
-                <View
-                  className="p-1 rounded-lg"
-                  style={{ backgroundColor: theme.primary + '20' }}
-                >
-                  <ChefHat color={theme.primary} size={12} />
-                </View>
-                <Text
-                  className="text-xs font-inter-medium flex-1"
-                  style={{ color: theme.textSecondary }}
-                  numberOfLines={1}
-                >
-                  {'restaurant_name'}
-                </Text>
-              </View>
-              <View className="flex-row items-center gap-2">
-                <View
-                  className="p-1 rounded-lg"
-                  style={{ backgroundColor: theme.primary + '20' }}
-                >
-                  <User color={theme.primary} size={12} />
-                </View>
-                <Text
-                  className="text-xs font-inter-medium flex-1"
-                  style={{ color: theme.textSecondary }}
-                  numberOfLines={1}
-                >
-                  {'30'} reviews
-                </Text>
-              </View>
-            </View>
+            <Image
+              source={
+                offer.main_image
+                  ? { uri: handleImageSrc(offer.main_image) }
+                  : images.OFFER_PLACEHOLDER_IMAGE
+              }
+              className="w-full h-full"
+              resizeMode="cover"
+            />
           </View>
+        </MotiView>
 
-          <View
-            className="flex-row justify-between items-center pt-3 border-t"
-            style={{ borderColor: theme.border }}
-          >
+        <MotiView
+          from={{ scale: 0, translateY: -20 }}
+          animate={{ scale: 1, translateY: 0 }}
+          transition={{ type: 'spring', delay: 400, damping: 15 }}
+          className="absolute -top-2 -right-2 px-3 py-1.5 rounded-xl shadow-lg"
+          style={{ backgroundColor: theme.error }}
+        >
+          <Text className="text-white text-xs font-bold">
+            -{getDiscountPercentage(offer.price, offer.sale_price ?? 0)}%
+          </Text>
+        </MotiView>
+      </View>
+
+      {/* Card */}
+      <TouchableOpacity
+        className="rounded-3xl shadow-xl overflow-hidden"
+        style={{
+          height: CARD_HEIGHTS.OFFER_CARD,
+          backgroundColor: theme.card,
+          shadowColor: theme.shadow,
+          shadowOffset: { width: 0, height: 6 },
+          shadowOpacity: 0.2,
+          shadowRadius: 12,
+          elevation: 8,
+        }}
+        onPress={() =>
+          router.push(`/(in_app_screens)/offer-details?id=${offer.id}`)
+        }
+        activeOpacity={0.9}
+      >
+        <LinearGradient
+          colors={[theme.card, theme.backgroundSecondary]}
+          style={{
+            borderRadius: 24,
+            height: CARD_HEIGHTS.OFFER_CARD,
+            width: '100%',
+          }}
+        >
+          <View className="p-5 pt-28 gap-3 flex-1 justify-between">
             <View>
               <Text
-                className="text-xs font-inter-regular line-through"
-                style={{ color: theme.textSecondary }}
+                className="text-lg line-clamp-1 font-bold mb-2"
+                style={{ color: theme.text }}
+                numberOfLines={2}
               >
-                ${formatPrice(offer.price)}
+                {offer.title}
               </Text>
-              <Text
-                className="text-2xl font-bold"
-                style={{ color: theme.success }}
-              >
-                ${formatPrice(offer.sale_price ?? offer.price)}
-              </Text>
+
+              <View className="gap-1.5">
+                <View className="flex-row items-center gap-2">
+                  <View
+                    className="p-1 rounded-lg"
+                    style={{ backgroundColor: theme.primary + '20' }}
+                  >
+                    <ChefHat color={theme.primary} size={12} />
+                  </View>
+                  <Text
+                    className="text-xs font-inter-medium flex-1"
+                    style={{ color: theme.textSecondary }}
+                    numberOfLines={1}
+                  >
+                    {'restaurant_name'}
+                  </Text>
+                </View>
+                <View className="flex-row items-center gap-2">
+                  <View
+                    className="p-1 rounded-lg"
+                    style={{ backgroundColor: theme.primary + '20' }}
+                  >
+                    <User color={theme.primary} size={12} />
+                  </View>
+                  <Text
+                    className="text-xs font-inter-medium flex-1"
+                    style={{ color: theme.textSecondary }}
+                    numberOfLines={1}
+                  >
+                    {'30'} reviews
+                  </Text>
+                </View>
+              </View>
             </View>
+
             <View
-              className="flex-row items-center gap-1.5 px-3 py-2 rounded-xl"
-              style={{ backgroundColor: theme.warning + '25' }}
+              className="flex-row justify-between items-center pt-3 border-t"
+              style={{ borderColor: theme.border }}
             >
-              <Star color={theme.warning} size={14} fill={theme.warning} />
-              <Text className="text-sm font-bold" style={{ color: theme.text }}>
-                {'5'}
-              </Text>
+              <View>
+                <Text
+                  className="text-xs font-inter-regular line-through"
+                  style={{ color: theme.textSecondary }}
+                >
+                  ${formatPrice(offer.price)}
+                </Text>
+                <Text
+                  className="text-2xl font-bold"
+                  style={{ color: theme.success }}
+                >
+                  ${formatPrice(offer.sale_price ?? offer.price)}
+                </Text>
+              </View>
+              <View
+                className="flex-row items-center gap-1.5 px-3 py-2 rounded-xl"
+                style={{ backgroundColor: theme.warning + '25' }}
+              >
+                <Star color={theme.warning} size={14} fill={theme.warning} />
+                <Text
+                  className="text-sm font-bold"
+                  style={{ color: theme.text }}
+                >
+                  {'5'}
+                </Text>
+              </View>
             </View>
           </View>
-        </View>
-      </LinearGradient>
-    </TouchableOpacity>
+        </LinearGradient>
+      </TouchableOpacity>
+    </View>
   </MotiView>
 );
 
@@ -965,7 +968,13 @@ export default function HomeScreen(): JSX.Element {
               <LinearGradient
                 colors={[theme.primary + '30', theme.primary + '10']}
                 className="items-center justify-center"
-                style={{ borderRadius: 16, width: 56, height: 56 }}
+                style={{
+                  borderRadius: 16,
+                  width: 56,
+                  height: 56,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
               >
                 <MapPinned color={theme.primary} size={28} />
               </LinearGradient>
@@ -1115,6 +1124,7 @@ export default function HomeScreen(): JSX.Element {
 
         <ScrollView
           className="flex-1"
+          style={{ backgroundColor: theme.background }}
           showsVerticalScrollIndicator={false}
           refreshControl={
             <RefreshControl

@@ -295,6 +295,7 @@ export default function CartScreen() {
         contentContainerStyle={{
           paddingHorizontal: 24,
           paddingBottom: 240,
+          paddingTop: 15,
           gap: 16,
         }}
         showsVerticalScrollIndicator={false}
