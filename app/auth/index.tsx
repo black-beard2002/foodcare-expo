@@ -241,7 +241,7 @@ export default function AuthScreen() {
               Welcome To{'\n'}
             </Text>
             <MaskedView
-              maskElement={<Text className="text-4xl font-bold">FoodCare</Text>}
+              maskElement={<Text className="text-4xl font-bold">FoodForLess</Text>}
             >
               <LinearGradient
                 colors={accentGradient}
@@ -249,7 +249,7 @@ export default function AuthScreen() {
                 end={{ x: 1, y: 0 }}
                 style={{ height: 48 }}
               >
-                <Text className="text-4xl font-bold opacity-0">FoodCare</Text>
+                <Text className="text-4xl font-bold opacity-0">FoodForLess</Text>
               </LinearGradient>
             </MaskedView>
           </View>

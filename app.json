@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "FoodCare",
-    "slug": "FoodCare",
+    "name": "FoodForLess",
+    "slug": "FoodForLess",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/logo-only.png",
@@ -44,7 +44,7 @@
       }
     },
     "android": {
-      "package": "com.foodcare"
+      "package": "com.foodforless"
     }
   }
 }

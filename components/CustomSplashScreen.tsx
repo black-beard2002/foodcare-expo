@@ -122,7 +122,7 @@ export default function CustomSplashScreen() {
 
         {/* App name */}
         <Text className="text-white text-3xl font-bold tracking-wide mb-2">
-          FoodCare
+          FoodForLess
         </Text>
         <Text className="text-white/80 text-sm tracking-widest">
           ORDER. EAT. ENJOY.
