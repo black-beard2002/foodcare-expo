@@ -46,8 +46,8 @@ export default function CheckoutScreen() {
   const { createOrder, isLoading } = useOrderStore();
 
   const [customerInfo, setCustomerInfo] = useState({
-    name: user?.first_name?.concat(` ${user.last_name}`),
-    phone: user?.phone_number,
+    name: user?.first_name?.concat(` ${user.last_name??''}`),
+    phone: user?.phone_number ?? '',
     pickupTime: '',
     specialInstructions: '',
   });
@@ -63,6 +63,12 @@ export default function CheckoutScreen() {
       );
       return;
     }
+    const items=cart.map((cart_item)=>({
+      item:cart_item.offer,
+      quantity:cart_item.quantity,
+      total:(cart_item.offer.sale_price??cart_item.offer.price)*cart_item.quantity
+    }));
+    const provider_id = items[0].item.provider_id;
 
     const orderData = {
       transaction_type: 'ORDER' as TransactionType,
@@ -70,6 +76,7 @@ export default function CheckoutScreen() {
       currency: 'USD',
       total_price: getCartTotal(),
       total_items: cart?.length,
+      items,
       payment_status: 'PENDING' as PaymentStatus,
       payment_method: 'CASH' as PaymentMethod,
       client_data: {
@@ -80,6 +87,7 @@ export default function CheckoutScreen() {
         address: user?.address ?? '',
       },
       created_by: user?.id,
+      provider_id
     };
 
     const result = await createOrder(orderData);

@@ -75,9 +75,11 @@ class OrdersApiImpl implements OrdersApi {
   ): Promise<ApiResponse<TransactionBase>> {
     try {
       const response_api = await this.transaction_api.post(
-        '/transaction/add',
+        '/transaction/order',
         orderData
       );
+      console.log("response_api ===== " + response_api);
+      
       const responseBody = response_api.data;
       if (responseBody.success) {
         return {

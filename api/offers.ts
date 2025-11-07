@@ -20,7 +20,6 @@ class OffersApiImpl implements OffersApi {
         },
       });
       const responseBody = response_api.data;
-      console.log('offers:', responseBody.data);
       if (responseBody.success) {
         return {
           success: true,

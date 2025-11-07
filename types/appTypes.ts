@@ -92,6 +92,7 @@ export interface Offer {
   type_id?: string;
   brand_id?: string;
   created_at?: string;
+  provider_id?:string;
   updated_at?: string;
   created_by?: string;
 }
@@ -313,10 +314,13 @@ export type TransactionBase = {
   payment_status?: PaymentStatus;
   payment_method?: PaymentMethod;
   expiry?: string;
+  qr_code_url?:string;
+  confirmation_code?:string;
   date_trx?: string;
   delivered_at?: string;
   client_data?: OrderClientData;
   created_at?: string;
   updated_at?: string;
+  provider_id?:string;
   created_by?: string;
 };
