@@ -9,9 +9,9 @@ export interface OrdersApi {
   createOrder: (
     order: Omit<TransactionBase, 'id' | 'createdAt'>
   ) => Promise<ApiResponse<TransactionBase>>;
-  updateOrderStatus: (
+  updateOrder: (
     id: string,
-    status: OrderStatus
+    data: Partial<TransactionBase>
   ) => Promise<ApiResponse<TransactionBase>>;
   cancelOrder: (id: string) => Promise<ApiResponse<TransactionBase>>;
 }
@@ -78,8 +78,7 @@ class OrdersApiImpl implements OrdersApi {
         '/transaction/order',
         orderData
       );
-      console.log("response_api ===== " + response_api);
-      
+      console.log('createOrder response_api:', response_api);
       const responseBody = response_api.data;
       if (responseBody.success) {
         return {
@@ -101,16 +100,14 @@ class OrdersApiImpl implements OrdersApi {
     }
   }
 
-  async updateOrderStatus(
+  async updateOrder(
     id: string,
-    status: OrderStatus
+    data: Partial<TransactionBase>
   ): Promise<ApiResponse<TransactionBase>> {
     try {
       const response_api = await this.transaction_api.put(
         `/transaction/${id}/update`,
-        {
-          status,
-        }
+        data
       );
       const responseBody = response_api.data;
       if (responseBody.success) {
@@ -119,7 +116,7 @@ class OrdersApiImpl implements OrdersApi {
         return {
           success: true,
           data: updatedOrder,
-          message: `TransactionBase status updated to ${status}`,
+          message: responseBody.message,
         };
       } else {
         return {

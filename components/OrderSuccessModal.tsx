@@ -9,7 +9,7 @@ import { router } from 'expo-router';
 interface OrderSuccessModalProps {
   visible: boolean;
   onClose: () => void;
-  orderNumber: string;
+  confirmation_code: string;
   customerInfo: {
     name?: string;
     phone: string;
@@ -21,17 +21,17 @@ interface OrderSuccessModalProps {
 export default function OrderSuccessModal({
   visible,
   onClose,
-  orderNumber,
+  confirmation_code,
   customerInfo,
 }: OrderSuccessModalProps) {
   const { theme } = useTheme();
   const { showAlert } = useAlert();
 
   const handleCopyOrderNumber = async () => {
-    await Clipboard.setStringAsync(orderNumber);
+    await Clipboard.setStringAsync(confirmation_code);
     showAlert(
       'Copied!',
-      `Order ID ${orderNumber} copied to clipboard.`,
+      `code ${confirmation_code} copied to clipboard.`,
       'success'
     );
   };
@@ -77,7 +77,7 @@ export default function OrderSuccessModal({
             Your order has been successfully placed
           </Text>
 
-          {/* Order Number */}
+          {/* Confirmation Code */}
           <TouchableOpacity
             className="flex-row items-center justify-center gap-2 py-3 px-4 rounded-xl mb-4"
             style={{ backgroundColor: theme.card }}
@@ -88,7 +88,7 @@ export default function OrderSuccessModal({
               className="text-lg font-bold tracking-wider"
               style={{ color: theme.primary }}
             >
-              {orderNumber}
+              {confirmation_code}
             </Text>
             <Copy size={18} color={theme.primary} />
           </TouchableOpacity>

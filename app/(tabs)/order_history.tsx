@@ -9,22 +9,20 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useOrderStore } from '@/stores/orderStore';
+import { useCameraPermissions } from 'expo-camera';
 import {
   CheckCircle,
-  Clock,
-  User,
   Phone,
-  MessageSquare,
   Trash2,
   Package,
   CircleSlash2,
   CalendarClock,
   Search,
+  ScanQrCode,
 } from 'lucide-react-native';
 import { useTheme } from '@/hooks/useTheme';
 import { useAlert } from '@/providers/AlertProvider';
 import {
-  CartItem,
   OrderItem,
   TransactionBase,
   TransactionStatus,
@@ -34,9 +32,11 @@ import { formatDateTime } from '@/utils/formatters';
 import { MotiView } from 'moti';
 import { Skeleton } from 'moti/skeleton';
 import { formatPrice } from '@/utils/helpers';
+import { router } from 'expo-router';
 
 export default function OrderHistoryScreen() {
   const { theme, isDark } = useTheme();
+  const [permission, requestPermission] = useCameraPermissions();
   const [confirmCancelModal, setConfirmCancelModal] = useState(false);
   const { width: SCREEN_WIDTH } = Dimensions.get('window');
   const colorMode = isDark ? 'dark' : 'light';
@@ -54,7 +54,6 @@ export default function OrderHistoryScreen() {
   const [statusFilter, setStatusFilter] = useState<TransactionStatus | 'all'>(
     'all'
   );
-
 
   const filteredOrders = useMemo(() => {
     return orders.filter((order) => {
@@ -89,6 +88,16 @@ export default function OrderHistoryScreen() {
   function handleConfirmCancel() {
     setConfirmCancelModal(false);
     setSelectedOrder(null);
+  }
+
+  function handleQrScan() {
+    requestPermission();
+    const isPermissionGranted = Boolean(permission?.granted);
+    if (!isPermissionGranted) {
+      requestPermission();
+    } else {
+      router.replace('/(in_app_screens)/qrScan');
+    }
   }
 
   const HeroSkeleton = () => (
@@ -170,6 +179,20 @@ export default function OrderHistoryScreen() {
               className="md:w-4 md:h-4"
             />
           </TouchableOpacity>
+          <TouchableOpacity
+            onPress={() => {
+              setSelectedOrder(order);
+              handleQrScan();
+            }}
+            className="w-8 h-8 rounded-lg items-center justify-center md:w-9 md:h-9"
+            style={{ backgroundColor: theme.successLight }}
+          >
+            <ScanQrCode
+              color={theme.success}
+              size={14}
+              className="md:w-4 md:h-4"
+            />
+          </TouchableOpacity>
         </View>
       </View>
 
@@ -224,6 +247,15 @@ export default function OrderHistoryScreen() {
             {order.status}
           </Text>
         </View>
+        <View className="mt-2 items-center justify-center flex flex-row gap-2">
+          <Text style={{ color: theme.text }}>code:</Text>
+          <Text
+            className="text-xs font-inter-medium mt-0.5 md:text-sm"
+            style={{ color: theme.textSecondary }}
+          >
+            {order.confirmation_code}
+          </Text>
+        </View>
       </View>
 
       {/* Order Items - Compact */}
@@ -238,11 +270,11 @@ export default function OrderHistoryScreen() {
           </Text>
         </View>
 
-        <View className="gap-1.5 md:gap-2">
+        <View className="gap-1.5 flex flex-row items-center flex-wrap md:gap-2">
           {order.items?.slice(0, 3).map((item: OrderItem) => (
             <View
               key={item.item.id}
-              className="flex-row justify-between items-center py-1.5 px-2 rounded-lg border md:py-2 md:px-3"
+              className="max-w-32 py-1.5 px-2 rounded-lg border md:py-2 md:px-3"
               style={{ borderColor: theme.border }}
             >
               <View className="flex-1">
@@ -258,13 +290,13 @@ export default function OrderHistoryScreen() {
                   style={{ color: theme.textSecondary }}
                 >
                   Qty: {item.quantity || 1} • $
-                  {formatPrice(item.item.sale_price ?? item.item.price)}
+                  {formatPrice(item.item.sale_price ?? item.item.price ?? 0)}
                 </Text>
               </View>
             </View>
           ))}
 
-          {order.items?.length > 3 && (
+          {order.items && order.items?.length > 3 && (
             <View className="py-1.5 px-2 rounded-lg bg-primary/5 md:py-2 md:px-3">
               <Text
                 className="text-xs font-inter-medium text-center md:text-sm"

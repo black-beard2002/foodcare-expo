@@ -10,15 +10,21 @@ interface OrderStore {
   // Actions
   addOrder: (order: Omit<TransactionBase, 'createdAt'>) => void;
   removeOrder: (orderId: string) => void;
+  updateOrder: (
+    orderId: string,
+    updatedFields: Partial<TransactionBase>
+  ) => Promise<{ success: boolean; message: string }>;
   clearOrders: () => void;
   setLoading: (loading: boolean) => void;
   setError: (error: string | null) => void;
 
   // API Actions
   fetchOrders: (userId?: string) => Promise<void>;
-  createOrder: (
-    order: Omit<TransactionBase, 'id' | 'createdAt'>
-  ) => Promise<{ success: boolean; orderId?: string; error?: string }>;
+  createOrder: (order: Omit<TransactionBase, 'id' | 'createdAt'>) => Promise<{
+    success: boolean;
+    confirmation_code?: string;
+    error?: string;
+  }>;
   cancelOrder: (
     orderId: string
   ) => Promise<{ success: boolean; error?: string }>;
@@ -44,7 +50,38 @@ export const useOrderStore = create<OrderStore>((set, get) => ({
     set((state) => ({
       orders: state.orders.filter((o) => o.id !== orderId),
     })),
+  updateOrder: async (orderId, updatedFields) => {
+    set({ isLoading: true, error: null });
+    try {
+      const response = await ordersApi.updateOrder(orderId, updatedFields);
 
+      if (!response.success) {
+        set({
+          error: response.error || 'Failed to update order',
+          isLoading: false,
+        });
+        return {
+          success: false,
+          message: response.error || 'Failed to confirm order',
+        };
+      }
+      set((state) => ({
+        orders: state.orders.map((o) =>
+          o.id === orderId ? { ...o, ...updatedFields } : o
+        ),
+      }));
+      set({ isLoading: false });
+      return {
+        success: true,
+        message: 'Order confirmed successfully',
+      };
+    } catch (error) {
+      return {
+        success: false,
+        message: 'Failed to confirm order',
+      };
+    }
+  },
   clearOrders: () => set({ orders: [] }),
 
   setLoading: (loading) => set({ isLoading: loading }),
@@ -71,11 +108,15 @@ export const useOrderStore = create<OrderStore>((set, get) => ({
     set({ isLoading: true, error: null });
     try {
       const response = await ordersApi.createOrder(orderData);
+      console.log('Create Order Response:', response);
       if (response.success && response.data) {
         const { addOrder } = get();
         addOrder(response.data);
         set({ isLoading: false });
-        return { success: true, orderId: response.data.id };
+        return {
+          success: true,
+          confirmation_code: response.data.confirmation_code,
+        };
       } else {
         set({
           error: response.error || 'Failed to create order',

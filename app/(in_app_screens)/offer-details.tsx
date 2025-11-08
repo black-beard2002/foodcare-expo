@@ -98,6 +98,7 @@ export default function OfferDetailsScreen() {
 
   useEffect(() => {
     const foundOffer = offers.find((o) => o.id === id);
+    console.log('Found Offer:', foundOffer);
     if (foundOffer) addToRecentlyViewed(foundOffer);
     setOffer(foundOffer || null);
   }, [id]);
@@ -109,6 +110,12 @@ export default function OfferDetailsScreen() {
     offer && typeof offer.custom_properties?.ingredients === 'string'
       ? offer.custom_properties.ingredients
       : offer && String(offer.custom_properties?.ingredients);
+
+  // nutrition facts of type Record<string, string | number>
+  const nutrition_facts =
+    offer && typeof offer.custom_properties?.nutrition_facts === 'object'
+      ? Object.entries(offer.custom_properties?.nutrition_facts)
+      : [];
 
   if (!offer) {
     return (
@@ -477,7 +484,7 @@ export default function OfferDetailsScreen() {
               </View>
             )}
           {/* Nutrition Facts */}
-          {offer.custom_properties &&
+          {nutrition_facts.length > 0 &&
             Object.keys(offer.custom_properties || {}).length > 0 && (
               <View className="mb-6">
                 <View className="flex-row gap-1 items-center mb-3">
@@ -492,7 +499,7 @@ export default function OfferDetailsScreen() {
                     className="text-base font-inter-bold"
                     style={{ color: theme.text }}
                   >
-                    ({Object.keys(offer.custom_properties || {}).length})
+                    ({nutrition_facts.length})
                   </Text>
                 </View>
 
@@ -503,10 +510,9 @@ export default function OfferDetailsScreen() {
                     borderColor: theme.border,
                   }}
                 >
-                  <View className="flex-row flex-wrap gap-3">
-                    {Object.entries(offer.custom_properties)
-                      .filter(([key, value]) => key !== 'ingredients')
-                      .map(([key, value], index) => {
+                  {nutrition_facts && (
+                    <View className="flex-row flex-wrap gap-3">
+                      {nutrition_facts.map(([key, value], index) => {
                         const Icon = getNutritionIcon(key);
 
                         return (
@@ -541,12 +547,13 @@ export default function OfferDetailsScreen() {
                               className="text-xl font-inter-bold"
                               style={{ color: theme.text }}
                             >
-                              {formatNutritionValue(value)}
+                              {formatNutritionValue(value as string)}
                             </Text>
                           </View>
                         );
                       })}
-                  </View>
+                    </View>
+                  )}
                 </View>
               </View>
             )}
@@ -578,7 +585,7 @@ export default function OfferDetailsScreen() {
           <TouchableOpacity
             onPress={() => router.push('/(tabs)/cart')}
             className="flex-row items-center px-6 py-4 rounded-2xl gap-2 shadow-lg"
-            style={{ backgroundColor: '#1055C9' }}
+            style={{ backgroundColor: theme.secondary }}
             activeOpacity={0.8}
           >
             <ShoppingCart color="#fff" size={22} />

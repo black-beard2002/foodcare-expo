@@ -324,21 +324,6 @@ export default function CartScreen() {
             </Text>
           </View>
 
-          <View className="flex-row justify-between items-center mb-3">
-            <Text
-              className="text-[15px]"
-              style={{ color: theme.textSecondary }}
-            >
-              Delivery Fee
-            </Text>
-            <Text
-              className="text-[15px] font-medium"
-              style={{ color: theme.text }}
-            >
-              ${deliveryFee.toFixed(2)}
-            </Text>
-          </View>
-
           <View
             className="h-[1px] my-3"
             style={{ backgroundColor: theme.border }}

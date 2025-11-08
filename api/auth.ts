@@ -255,6 +255,7 @@ class AuthApiImpl implements AuthApi {
         };
       }
     } catch (error) {
+      console.log('user update error:', error);
       return {
         success: false,
         error: 'Failed to update profile',

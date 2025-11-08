@@ -17,6 +17,7 @@ class OffersApiImpl implements OffersApi {
       const response_api = await this.catalog_api.get('/item/get-all', {
         params: {
           item_type: 'OFFER',
+          status: 'visible',
         },
       });
       const responseBody = response_api.data;

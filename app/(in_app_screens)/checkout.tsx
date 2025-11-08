@@ -44,15 +44,15 @@ export default function CheckoutScreen() {
   const { addExpense } = useBudgetStore();
   const { user } = useAuthStore();
   const { createOrder, isLoading } = useOrderStore();
-
+  console.log('user', user);
   const [customerInfo, setCustomerInfo] = useState({
-    name: user?.first_name?.concat(` ${user.last_name??''}`),
+    name: user?.first_name?.concat(` ${user.last_name}`),
     phone: user?.phone_number ?? '',
     pickupTime: '',
     specialInstructions: '',
   });
   const [showOrderModal, setShowOrderModal] = useState(false);
-  const [orderNumber, setOrderNumber] = useState('');
+  const [confirmation_code, setConfirmationCode] = useState('');
 
   const handleReserveOrder = async () => {
     if (!customerInfo.name?.trim() || !customerInfo.phone?.trim()) {
@@ -63,13 +63,14 @@ export default function CheckoutScreen() {
       );
       return;
     }
-    const items=cart.map((cart_item)=>({
-      item:cart_item.offer,
-      quantity:cart_item.quantity,
-      total:(cart_item.offer.sale_price??cart_item.offer.price)*cart_item.quantity
+    const items = cart.map((cart_item) => ({
+      item: cart_item.offer,
+      quantity: cart_item.quantity,
+      total:
+        (cart_item.offer.sale_price ?? cart_item.offer.price) *
+        cart_item.quantity,
     }));
-    const provider_id = items[0].item.provider_id;
-
+    
     const orderData = {
       transaction_type: 'ORDER' as TransactionType,
       status: 'PENDING' as TransactionStatus,
@@ -87,13 +88,14 @@ export default function CheckoutScreen() {
         address: user?.address ?? '',
       },
       created_by: user?.id,
-      provider_id
+      provider_id: items[0]?.item.provider_id || '',
+      tenant_id: items[0]?.item.tenant_id || '',
     };
 
     const result = await createOrder(orderData);
 
-    if (result.success && result.orderId) {
-      setOrderNumber(result.orderId);
+    if (result.success && result.confirmation_code) {
+      setConfirmationCode(result.confirmation_code);
       setShowOrderModal(true);
       // Update budget store with the new expense according to each cart item category
       cart.forEach(async (item) => {
@@ -105,7 +107,7 @@ export default function CheckoutScreen() {
       clearCart();
       showAlert(
         'Order Created!',
-        `Your order ${result.orderId} has been placed successfully.`,
+        `Your order has been placed successfully.`,
         'success'
       );
     } else {
@@ -538,7 +540,7 @@ export default function CheckoutScreen() {
       <OrderSuccessModal
         visible={showOrderModal}
         onClose={() => setShowOrderModal(false)}
-        orderNumber={orderNumber}
+        confirmation_code={confirmation_code}
         customerInfo={customerInfo}
       />
     </SafeAreaView>

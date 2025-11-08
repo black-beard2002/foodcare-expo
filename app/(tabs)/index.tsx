@@ -753,7 +753,7 @@ export default function HomeScreen(): JSX.Element {
     const init = async () => {
       await loadCachedData();
       initNetworkListener();
-      await refreshData();
+      await refreshData(true);
       console.log('categories:', categories);
     };
     init();

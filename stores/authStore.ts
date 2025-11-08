@@ -194,12 +194,12 @@ export const useAuthStore = create<AuthState>()(
       updateProfile: async (userData: Partial<User>) => {
         const { user, setError } = get();
         if (!user) return { success: false, error: 'No user logged in' };
-
         set({ isLoading: true, error: null });
         try {
           let response = await authApi.updateProfile(user.id!, userData);
 
           set({ isLoading: false });
+          console.log('user response', response);
           if (response.success && response.data) {
             set({ user: response.data, error: null });
             await AsyncStorage.setItem('user', JSON.stringify(response.data));

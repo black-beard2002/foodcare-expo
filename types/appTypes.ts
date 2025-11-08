@@ -91,8 +91,9 @@ export interface Offer {
   category_id: string;
   type_id?: string;
   brand_id?: string;
+  provider_id?: string;
   created_at?: string;
-  provider_id?:string;
+  tenant_id?:string;
   updated_at?: string;
   created_by?: string;
 }
@@ -313,14 +314,15 @@ export type TransactionBase = {
   total_items: number;
   payment_status?: PaymentStatus;
   payment_method?: PaymentMethod;
+  confirmation_code?: string;
+  qr_code_url?: string;
   expiry?: string;
-  qr_code_url?:string;
-  confirmation_code?:string;
   date_trx?: string;
   delivered_at?: string;
+  provider_id?: string;
   client_data?: OrderClientData;
   created_at?: string;
   updated_at?: string;
-  provider_id?:string;
+  tenant_id?:string;
   created_by?: string;
 };
