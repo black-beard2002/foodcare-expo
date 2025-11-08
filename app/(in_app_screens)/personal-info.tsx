@@ -57,12 +57,14 @@ export default function PersonalInfoScreen() {
 
   const handleSave = async () => {
     try {
-      await updateProfile(formData);
+      const res = await updateProfile(formData);
       setIsEditing(false);
-      showAlert('Success', 'Profile updated successfully', 'success');
-    } catch (error) {
-      showAlert('Error', 'Failed to update profile', 'error');
-    }
+      if (res.success) {
+        showAlert('Success', 'Profile updated successfully', 'success');
+      } else {
+        showAlert('Error', 'Failed to update profile', 'error');
+      }
+    } catch (error) {}
   };
 
   const handleCancel = () => {

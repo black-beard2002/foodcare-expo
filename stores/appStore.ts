@@ -206,7 +206,6 @@ export const useAppStore = create<AppState>()((set, get) => ({
     set({ isLoading: true, error: null });
 
     try {
-      const token = useAuthStore.getState().access_token;
       const response = await categoriesApi.getCategories();
 
       if (response.success && response.data) {
@@ -244,7 +243,7 @@ export const useAppStore = create<AppState>()((set, get) => ({
 
     try {
       const response = await offersApi.getOffers();
-
+      console.log('Fetched offers from network', response);
       if (response.success && response.data) {
         set({
           offers: response.data,
@@ -270,7 +269,7 @@ export const useAppStore = create<AppState>()((set, get) => ({
   refreshData: async (forceRefresh = false) => {
     const { fetchCategories, fetchOffers, syncPendingActions, isOffline } =
       get();
-
+    console.log('Refreshing data...');
     // Sync pending actions first if coming back online
     if (!isOffline) {
       await syncPendingActions();

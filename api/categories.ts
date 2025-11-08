@@ -16,7 +16,7 @@ class CategoriesApiImpl implements CategoriesApi {
         '/configuration/category/get-all'
       );
       const responseBody = api_response.data;
-      console.log('categories:', responseBody.data);
+
       if (responseBody.success) {
         return {
           success: true,
