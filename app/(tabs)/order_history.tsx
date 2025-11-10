@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   View,
   Text,
@@ -6,6 +6,7 @@ import {
   ScrollView,
   TextInput,
   Dimensions,
+  RefreshControl,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useOrderStore } from '@/stores/orderStore';
@@ -32,6 +33,7 @@ import { formatDateTime } from '@/utils/formatters';
 import { MotiView } from 'moti';
 import { Skeleton } from 'moti/skeleton';
 import { formatPrice } from '@/utils/helpers';
+import * as Haptics from 'expo-haptics';
 import { router } from 'expo-router';
 
 export default function OrderHistoryScreen() {
@@ -40,6 +42,7 @@ export default function OrderHistoryScreen() {
   const [confirmCancelModal, setConfirmCancelModal] = useState(false);
   const { width: SCREEN_WIDTH } = Dimensions.get('window');
   const colorMode = isDark ? 'dark' : 'light';
+  const [refreshing, setRefreshing] = useState(false);
   const HERO_CARD_WIDTH = SCREEN_WIDTH - 40;
   const [selectedOrder, setSelectedOrder] = useState<TransactionBase | null>();
   const { orders, removeOrder, clearOrders, fetchOrders, isLoading } =
@@ -99,6 +102,12 @@ export default function OrderHistoryScreen() {
       router.replace('/(in_app_screens)/qrScan');
     }
   }
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    await fetchOrders();
+    setRefreshing(false);
+  }, []);
 
   const HeroSkeleton = () => (
     <MotiView className="px-6 mb-6 items-center md:px-8">
@@ -393,6 +402,14 @@ export default function OrderHistoryScreen() {
         className="flex-1"
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: 24 }}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor={theme.primary}
+            colors={[theme.primary]}
+          />
+        }
       >
         {/* 🔍 Search + Filter Section */}
         <View className="px-6 mb-4 md:px-8 md:mb-6">

@@ -56,16 +56,6 @@ export default function QrScan() {
           }
           router.replace('/(tabs)/order_history');
         }
-
-        Alert.alert('QR Code Scanned', `Data: ${data}`, [
-          {
-            text: 'Scan Again',
-            onPress: () => setScanned(false),
-          },
-          { text: 'OK', style: 'cancel' },
-        ]);
-
-        console.log('Scanned QR Code:', data);
       } catch (err) {
         console.error('Invalid QR Code:', err);
       }

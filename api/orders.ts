@@ -2,9 +2,10 @@ import { TRANSACTION_API } from '@/constants/api_constants';
 import { TransactionBase, TransactionStatus } from '@/types/appTypes';
 import { ApiResponse } from '@/types/apiTypes';
 import { createAxiosInstance } from './axiosInstance';
+import { useAuthStore } from '@/stores/authStore';
 
 export interface OrdersApi {
-  getOrders: (userId?: string) => Promise<ApiResponse<TransactionBase[]>>;
+  getOrders: () => Promise<ApiResponse<TransactionBase[]>>;
   getOrderById: (id: string) => Promise<ApiResponse<TransactionBase>>;
   createOrder: (
     order: Omit<TransactionBase, 'id' | 'createdAt'>
@@ -21,11 +22,12 @@ export type OrderStatus = TransactionStatus;
 class OrdersApiImpl implements OrdersApi {
   transaction_api = createAxiosInstance(TRANSACTION_API ?? '');
 
-  async getOrders(userId?: string): Promise<ApiResponse<TransactionBase[]>> {
+  async getOrders(): Promise<ApiResponse<TransactionBase[]>> {
+    const { user } = useAuthStore.getState();
     try {
       const response_api = await this.transaction_api.get(
         '/transaction/get-all',
-        { params: { user_id: userId, transaction_type: 'ORDER' } }
+        { params: { user_id: user?.id, transaction_type: 'ORDER' } }
       );
       const responseBody = response_api.data;
       if (responseBody.success) {
