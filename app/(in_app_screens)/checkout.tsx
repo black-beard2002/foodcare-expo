@@ -70,9 +70,10 @@ export default function CheckoutScreen() {
         (cart_item.offer.sale_price ?? cart_item.offer.price) *
         cart_item.quantity,
     }));
-    
+
     const orderData = {
       transaction_type: 'ORDER' as TransactionType,
+      user_id: user?.id,
       status: 'PENDING' as TransactionStatus,
       currency: 'USD',
       total_price: getCartTotal(),
