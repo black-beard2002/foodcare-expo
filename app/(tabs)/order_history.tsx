@@ -35,6 +35,7 @@ import { Skeleton } from 'moti/skeleton';
 import { formatPrice } from '@/utils/helpers';
 import * as Haptics from 'expo-haptics';
 import { router } from 'expo-router';
+import { useAuthStore } from '@/stores/authStore';
 
 export default function OrderHistoryScreen() {
   const { theme, isDark } = useTheme();
@@ -43,9 +44,10 @@ export default function OrderHistoryScreen() {
   const { width: SCREEN_WIDTH } = Dimensions.get('window');
   const colorMode = isDark ? 'dark' : 'light';
   const [refreshing, setRefreshing] = useState(false);
+  const { user } = useAuthStore();
   const HERO_CARD_WIDTH = SCREEN_WIDTH - 40;
   const [selectedOrder, setSelectedOrder] = useState<TransactionBase | null>();
-  const { orders, removeOrder, clearOrders, fetchOrders, isLoading } =
+  const { orders, updateOrder, clearOrders, fetchOrders, isLoading } =
     useOrderStore();
   const { showAlert } = useAlert();
 
@@ -73,12 +75,12 @@ export default function OrderHistoryScreen() {
     });
   }, [orders, searchQuery, statusFilter]);
 
-  function handleOrderRemove(order_id: string) {
-    removeOrder(order_id);
-    showAlert('Removed', `Order ${order_id} removed from history`, 'info');
-  }
-
-  function handleOrderCancel() {
+  async function handleOrderCancel() {
+    const res = await updateOrder(selectedOrder?.id ?? '', {
+      status: 'CANCELLED',
+      transaction_type: 'ORDER',
+      user_id: user?.id!,
+    });
     setConfirmCancelModal(false);
     setSelectedOrder(null);
     showAlert(
@@ -127,12 +129,46 @@ export default function OrderHistoryScreen() {
     </MotiView>
   );
 
+  const getOrderStatusIcon = (status: TransactionStatus) => {
+    switch (status) {
+      case 'PENDING':
+        return (
+          <CalendarClock
+            color={theme.warning}
+            size={16}
+            className="md:w-5 md:h-5"
+          />
+        );
+      case 'COMPLETED':
+        return (
+          <CheckCircle
+            color={theme.success}
+            size={16}
+            className="md:w-5 md:h-5"
+          />
+        );
+      case 'CANCELLED':
+        return (
+          <CircleSlash2
+            color={theme.error}
+            size={16}
+            className="md:w-5 md:h-5"
+          />
+        );
+      default:
+        return null;
+    }
+  };
+
   const renderOrder = (order: TransactionBase) => (
     <View
       className="rounded-2xl border bg-card p-4 shadow-sm mb-4 md:p-6 lg:mb-6"
       style={{
         backgroundColor: theme.card,
-        borderColor: theme.border,
+        borderColor:
+          order.status === 'PENDING' || order.status === 'CANCELLED'
+            ? theme.warning
+            : theme.success,
       }}
     >
       {/* Order Header - Compact */}
@@ -142,11 +178,7 @@ export default function OrderHistoryScreen() {
             className="w-8 h-8 rounded-full items-center justify-center md:w-10 md:h-10"
             style={{ backgroundColor: theme.successLight }}
           >
-            <CheckCircle
-              color={theme.success}
-              size={16}
-              className="md:w-5 md:h-5"
-            />
+            {getOrderStatusIcon(order.status ?? 'PENDING')}
           </View>
           <View>
             <Text
@@ -165,44 +197,38 @@ export default function OrderHistoryScreen() {
             </Text>
           </View>
         </View>
-
-        <View className="flex-row gap-2">
-          <TouchableOpacity
-            onPress={() => handleOrderRemove(order.id)}
-            className="w-8 h-8 rounded-lg items-center justify-center md:w-9 md:h-9"
-            style={{ backgroundColor: theme.errorLight }}
-          >
-            <Trash2 color={theme.error} size={14} className="md:w-4 md:h-4" />
-          </TouchableOpacity>
-          <TouchableOpacity
-            onPress={() => {
-              setSelectedOrder(order);
-              setConfirmCancelModal(true);
-            }}
-            className="w-8 h-8 rounded-lg items-center justify-center md:w-9 md:h-9"
-            style={{ backgroundColor: theme.warningLight }}
-          >
-            <CircleSlash2
-              color={theme.warning}
-              size={14}
-              className="md:w-4 md:h-4"
-            />
-          </TouchableOpacity>
-          <TouchableOpacity
-            onPress={() => {
-              setSelectedOrder(order);
-              handleQrScan();
-            }}
-            className="w-8 h-8 rounded-lg items-center justify-center md:w-9 md:h-9"
-            style={{ backgroundColor: theme.successLight }}
-          >
-            <ScanQrCode
-              color={theme.success}
-              size={14}
-              className="md:w-4 md:h-4"
-            />
-          </TouchableOpacity>
-        </View>
+        {order.status === 'PENDING' && (
+          <View className="flex-row gap-2">
+            <TouchableOpacity
+              onPress={() => {
+                setSelectedOrder(order);
+                setConfirmCancelModal(true);
+              }}
+              className="w-8 h-8 rounded-lg items-center justify-center md:w-9 md:h-9"
+              style={{ backgroundColor: theme.warningLight }}
+            >
+              <CircleSlash2
+                color={theme.warning}
+                size={14}
+                className="md:w-4 md:h-4"
+              />
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => {
+                setSelectedOrder(order);
+                handleQrScan();
+              }}
+              className="w-8 h-8 rounded-lg items-center justify-center md:w-9 md:h-9"
+              style={{ backgroundColor: theme.successLight }}
+            >
+              <ScanQrCode
+                color={theme.success}
+                size={14}
+                className="md:w-4 md:h-4"
+              />
+            </TouchableOpacity>
+          </View>
+        )}
       </View>
 
       {/* Compact Info Grid */}
@@ -241,10 +267,7 @@ export default function OrderHistoryScreen() {
         <View
           className="w-full py-2 rounded-xl items-center justify-center md:py-3"
           style={{
-            backgroundColor:
-              order.status === 'PENDING' || order.status === 'CANCELLED'
-                ? theme.warning + '20'
-                : theme.success,
+            backgroundColor: theme.background,
           }}
         >
           <Text
@@ -252,15 +275,6 @@ export default function OrderHistoryScreen() {
             style={{
               color: theme.text,
             }}
-          >
-            {order.status}
-          </Text>
-        </View>
-        <View className="mt-2 items-center justify-center flex flex-row gap-2">
-          <Text style={{ color: theme.text }}>code:</Text>
-          <Text
-            className="text-xs font-inter-medium mt-0.5 md:text-sm"
-            style={{ color: theme.textSecondary }}
           >
             {order.confirmation_code}
           </Text>

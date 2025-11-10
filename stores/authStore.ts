@@ -39,6 +39,7 @@ interface AuthState {
     userData: Partial<User>
   ) => Promise<{ success: boolean; error?: string }>;
   signOut: () => Promise<void>;
+  getUser: () => Promise<{ success: boolean; error?: string }>;
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -188,6 +189,31 @@ export const useAuthStore = create<AuthState>()(
         } catch {
           set({ isLoading: false, error: 'Network error occurred' });
           return { success: false, message: 'Network error occurred' };
+        }
+      },
+
+      getUser: async () => {
+        const { access_token, setError, user } = get();
+        if (!access_token) {
+          setError('No access token available');
+          return { success: false, error: 'No access token available' };
+        }
+        set({ isLoading: true, error: null });
+        try {
+          let response = await authApi.getUser(user?.id!);
+
+          set({ isLoading: false });
+          if (response.success && response.data) {
+            set({ user: response.data, error: null });
+            await AsyncStorage.setItem('user', JSON.stringify(response.data));
+            return { success: true };
+          } else {
+            setError(response.error ?? response.message ?? 'Fetch failed');
+            return { success: false, error: response.error };
+          }
+        } catch {
+          set({ isLoading: false, error: 'Network error occurred' });
+          return { success: false, error: 'Network error occurred' };
         }
       },
 

@@ -26,9 +26,6 @@ interface OrderStore {
     confirmation_code?: string;
     error?: string;
   }>;
-  cancelOrder: (
-    orderId: string
-  ) => Promise<{ success: boolean; error?: string }>;
 }
 
 export const useOrderStore = create<OrderStore>((set, get) => ({
@@ -122,28 +119,6 @@ export const useOrderStore = create<OrderStore>((set, get) => ({
       } else {
         set({
           error: response.error || 'Failed to create order',
-          isLoading: false,
-        });
-        return { success: false, error: response.error };
-      }
-    } catch (error) {
-      set({ error: 'Network error occurred', isLoading: false });
-      return { success: false, error: 'Network error occurred' };
-    }
-  },
-
-  cancelOrder: async (orderId: string) => {
-    set({ isLoading: true, error: null });
-    try {
-      const response = await ordersApi.cancelOrder(orderId);
-      if (response.success) {
-        const { removeOrder } = get();
-        removeOrder(orderId);
-        set({ isLoading: false });
-        return { success: true };
-      } else {
-        set({
-          error: response.error || 'Failed to cancel order',
           isLoading: false,
         });
         return { success: false, error: response.error };

@@ -13,7 +13,6 @@ export interface OrdersApi {
     id: string,
     data: Partial<TransactionBase>
   ) => Promise<ApiResponse<TransactionBase>>;
-  cancelOrder: (id: string) => Promise<ApiResponse<TransactionBase>>;
 }
 
 export type OrderStatus = TransactionStatus;
@@ -129,34 +128,6 @@ class OrdersApiImpl implements OrdersApi {
       return {
         success: false,
         error: 'Failed to update order status',
-      };
-    }
-  }
-
-  async cancelOrder(id: string): Promise<ApiResponse<TransactionBase>> {
-    try {
-      const response_api = await this.transaction_api.put('/orders' + id, {
-        status: 'CANCELLED',
-      });
-      const responseBody = response_api.data;
-      if (responseBody.success) {
-        const updatedOrder = responseBody.data as TransactionBase;
-
-        return {
-          success: true,
-          data: updatedOrder,
-          message: `TransactionBase is cancelled successfully`,
-        };
-      } else {
-        return {
-          success: false,
-          error: responseBody.error || 'Failed to update order status',
-        };
-      }
-    } catch (error) {
-      return {
-        success: false,
-        error: 'Failed to cancel order',
       };
     }
   }

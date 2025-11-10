@@ -541,7 +541,6 @@ export default function CheckoutScreen() {
       <OrderSuccessModal
         visible={showOrderModal}
         onClose={() => setShowOrderModal(false)}
-        confirmation_code={confirmation_code}
         customerInfo={customerInfo}
       />
     </SafeAreaView>

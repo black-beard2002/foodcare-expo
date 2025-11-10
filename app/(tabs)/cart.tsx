@@ -141,7 +141,7 @@ const CartItemComponent = ({
           </View>
 
           <View
-            className="flex-row items-center rounded-xl border p-1"
+            className="flex-row items-center rounded-xl border "
             style={{
               backgroundColor: `${theme.primary}10`,
               borderColor: `${theme.primary}30`,
@@ -149,7 +149,7 @@ const CartItemComponent = ({
           >
             <TouchableOpacity
               onPress={() => updateCartItem(item.id, item.quantity - 1)}
-              className="w-8 h-8 justify-center items-center"
+              className="w-9 h-9 justify-center items-center"
               activeOpacity={0.7}
             >
               <Minus color={theme.primary} size={16} strokeWidth={2.5} />
@@ -166,7 +166,7 @@ const CartItemComponent = ({
 
             <TouchableOpacity
               onPress={() => updateCartItem(item.id, item.quantity + 1)}
-              className="w-8 h-8 justify-center items-center"
+              className="w-9 h-9 justify-center items-center"
               activeOpacity={0.7}
             >
               <Plus color={theme.primary} size={16} strokeWidth={2.5} />
