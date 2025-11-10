@@ -20,10 +20,13 @@ import { useTheme } from '@/hooks/useTheme';
 import { LinearGradient } from 'expo-linear-gradient';
 
 export default function OnboardingStep1() {
-  const [fullName, setFullName] = useState('');
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
   const [dateOfBirth, setDateOfBirth] = useState<Date | null>(null);
   const [showDatePicker, setShowDatePicker] = useState(false);
-  const [focusedField, setFocusedField] = useState<'name' | 'dob' | null>(null);
+  const [focusedField, setFocusedField] = useState<
+    'lname' | 'fname' | 'dob' | null
+  >(null);
   const { isLoading, user, setUser } = useAuthStore();
   const { showAlert } = useAlert();
   const { theme, isDark } = useTheme();
@@ -72,10 +75,11 @@ export default function OnboardingStep1() {
 
   const isFormValid = useMemo(
     () =>
-      fullName.trim().length >= 2 &&
+      firstName.trim().length >= 2 &&
+      lastName.trim().length >= 2 &&
       dateOfBirth !== null &&
       validateAge(dateOfBirth),
-    [fullName, dateOfBirth, validateAge]
+    [firstName, lastName, dateOfBirth, validateAge]
   );
 
   const handleContinue = useCallback(async () => {
@@ -104,13 +108,13 @@ export default function OnboardingStep1() {
 
     setUser({
       ...user,
-      first_name: fullName.split(' ')[0],
-      last_name: fullName.split(' ')[1],
+      first_name: firstName,
+      last_name: lastName,
       birthdate: isoDate,
     });
 
     router.push('/auth/onboarding-step-2');
-  }, [fullName, dateOfBirth, isFormValid, user, showAlert]);
+  }, [firstName, lastName, dateOfBirth, isFormValid, user, showAlert]);
 
   const gradientColors: [ColorValue, ColorValue, ColorValue] = isDark
     ? ['rgba(15,23,42,1)', 'rgba(30,41,59,1)', 'rgba(15,23,42,1)']
@@ -216,62 +220,121 @@ export default function OnboardingStep1() {
 
             {/* Form Section */}
             <View className="flex-1 justify-center space-y-5">
-              {/* Full Name Input */}
-              <View className="mb-5">
-                <Text
-                  className="text-sm font-semibold mb-3 tracking-wide"
-                  style={{ color: theme.text }}
-                >
-                  FULL NAME
-                </Text>
-                <View
-                  className="flex-row items-center px-5 py-4 rounded-2xl border-2 shadow-sm"
-                  style={{
-                    backgroundColor: isDark ? 'rgba(30,41,59,0.5)' : '#ffffff',
-                    borderColor:
-                      focusedField === 'name'
-                        ? theme.primary
-                        : fullName
-                        ? isDark
-                          ? 'rgba(59,130,246,0.3)'
-                          : 'rgba(99,102,241,0.3)'
-                        : isDark
-                        ? 'rgba(255,255,255,0.1)'
-                        : 'rgba(0,0,0,0.05)',
-                    shadowOffset: { width: 0, height: 4 },
-                    shadowOpacity: 0.1,
-                    shadowRadius: 8,
-                  }}
-                >
+              <View className="flex flex-row items-center mb-5 justify-center gap-2">
+                {/* First Name Input */}
+                <View className="flex-1">
+                  <Text
+                    className="text-sm font-semibold mb-3 tracking-wide"
+                    style={{ color: theme.text }}
+                  >
+                    FIRST NAME
+                  </Text>
                   <View
-                    className="w-10 h-10 rounded-xl items-center justify-center mr-3"
+                    className="flex-row items-center px-5 py-4 rounded-2xl border-2 shadow-sm"
                     style={{
                       backgroundColor: isDark
-                        ? 'rgba(59,130,246,0.15)'
-                        : 'rgba(99,102,241,0.1)',
+                        ? 'rgba(30,41,59,0.5)'
+                        : '#ffffff',
+                      borderColor:
+                        focusedField === 'fname'
+                          ? theme.primary
+                          : firstName
+                          ? isDark
+                            ? 'rgba(59,130,246,0.3)'
+                            : 'rgba(99,102,241,0.3)'
+                          : isDark
+                          ? 'rgba(255,255,255,0.1)'
+                          : 'rgba(0,0,0,0.05)',
+                      shadowOffset: { width: 0, height: 4 },
+                      shadowOpacity: 0.1,
+                      shadowRadius: 8,
                     }}
                   >
-                    <User color={theme.primary} size={20} strokeWidth={2.5} />
+                    <View
+                      className="w-10 h-10 rounded-xl items-center justify-center mr-3"
+                      style={{
+                        backgroundColor: isDark
+                          ? 'rgba(59,130,246,0.15)'
+                          : 'rgba(99,102,241,0.1)',
+                      }}
+                    >
+                      <User color={theme.primary} size={20} strokeWidth={2.5} />
+                    </View>
+                    <TextInput
+                      value={firstName}
+                      onChangeText={setFirstName}
+                      onFocus={() => setFocusedField('fname')}
+                      onBlur={() => setFocusedField(null)}
+                      placeholder="John"
+                      placeholderTextColor={
+                        isDark ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.3)'
+                      }
+                      autoCapitalize="words"
+                      autoCorrect={false}
+                      editable={!isLoading}
+                      className="flex-1 text-base font-medium"
+                      style={{ color: theme.text }}
+                      returnKeyType="next"
+                    />
                   </View>
-                  <TextInput
-                    value={fullName}
-                    onChangeText={setFullName}
-                    onFocus={() => setFocusedField('name')}
-                    onBlur={() => setFocusedField(null)}
-                    placeholder="John Doe"
-                    placeholderTextColor={
-                      isDark ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.3)'
-                    }
-                    autoCapitalize="words"
-                    autoCorrect={false}
-                    editable={!isLoading}
-                    className="flex-1 text-base font-medium"
+                </View>
+                <View className="flex-1">
+                  <Text
+                    className="text-sm font-semibold mb-3 tracking-wide"
                     style={{ color: theme.text }}
-                    returnKeyType="next"
-                  />
+                  >
+                    LAST NAME
+                  </Text>
+                  <View
+                    className="flex-row items-center px-5 py-4 rounded-2xl border-2 shadow-sm"
+                    style={{
+                      backgroundColor: isDark
+                        ? 'rgba(30,41,59,0.5)'
+                        : '#ffffff',
+                      borderColor:
+                        focusedField === 'lname'
+                          ? theme.primary
+                          : lastName
+                          ? isDark
+                            ? 'rgba(59,130,246,0.3)'
+                            : 'rgba(99,102,241,0.3)'
+                          : isDark
+                          ? 'rgba(255,255,255,0.1)'
+                          : 'rgba(0,0,0,0.05)',
+                      shadowOffset: { width: 0, height: 4 },
+                      shadowOpacity: 0.1,
+                      shadowRadius: 8,
+                    }}
+                  >
+                    <View
+                      className="w-10 h-10 rounded-xl items-center justify-center mr-3"
+                      style={{
+                        backgroundColor: isDark
+                          ? 'rgba(59,130,246,0.15)'
+                          : 'rgba(99,102,241,0.1)',
+                      }}
+                    >
+                      <User color={theme.primary} size={20} strokeWidth={2.5} />
+                    </View>
+                    <TextInput
+                      value={lastName}
+                      onChangeText={setLastName}
+                      onFocus={() => setFocusedField('lname')}
+                      onBlur={() => setFocusedField(null)}
+                      placeholder="Doe"
+                      placeholderTextColor={
+                        isDark ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.3)'
+                      }
+                      autoCapitalize="words"
+                      autoCorrect={false}
+                      editable={!isLoading}
+                      className="flex-1 text-base font-medium"
+                      style={{ color: theme.text }}
+                      returnKeyType="next"
+                    />
+                  </View>
                 </View>
               </View>
-
               {/* Date of Birth Input */}
               <View className="mb-8">
                 <Text

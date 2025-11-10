@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { TransactionBase } from '@/types/appTypes';
 import { ordersApi } from '@/api/orders';
+import { useAuthStore } from './authStore';
 
 interface OrderStore {
   orders: TransactionBase[];
@@ -19,7 +20,7 @@ interface OrderStore {
   setError: (error: string | null) => void;
 
   // API Actions
-  fetchOrders: (userId?: string) => Promise<void>;
+  fetchOrders: () => Promise<void>;
   createOrder: (order: Omit<TransactionBase, 'id' | 'createdAt'>) => Promise<{
     success: boolean;
     confirmation_code?: string;
@@ -87,10 +88,11 @@ export const useOrderStore = create<OrderStore>((set, get) => ({
   setLoading: (loading) => set({ isLoading: loading }),
   setError: (error) => set({ error }),
 
-  fetchOrders: async (userId?: string) => {
+  fetchOrders: async () => {
     set({ isLoading: true, error: null });
     try {
-      const response = await ordersApi.getOrders(userId);
+      const { user } = useAuthStore.getState();
+      const response = await ordersApi.getOrders(user?.id);
       if (response.success && response.data) {
         set({ orders: response.data, isLoading: false });
       } else {
