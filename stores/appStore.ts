@@ -53,6 +53,9 @@ interface AppState {
   fetchCategories: (forceRefresh?: boolean) => Promise<void>;
   fetchOffers: (forceRefresh?: boolean) => Promise<void>;
   refreshData: (forceRefresh?: boolean) => Promise<void>;
+  fetchCategory: (
+    id: string
+  ) => Promise<{ success: boolean; data?: Category; message?: string }>;
 
   // Optimistic Cart Actions with offline queue
   addToCart: (offer: Offer, quantity?: number) => Promise<void>;
@@ -190,6 +193,29 @@ export const useAppStore = create<AppState>()((set, get) => ({
       set({ lastSync: null });
     } catch (error) {
       console.error('Error clearing cache:', error);
+    }
+  },
+  fetchCategory: async (id: string) => {
+    try {
+      const response = await categoriesApi.getCategoryById(id);
+
+      if (response.success && response.data) {
+        return { success: true, data: response.data };
+      } else {
+        return {
+          success: false,
+          message: response.error || 'Failed to fetch category',
+        };
+      }
+    } catch (error) {
+      console.log('Failed to fetch category');
+
+      set({
+        error: 'Failed to fetch category',
+        isLoading: false,
+        isOffline: true,
+      });
+      return { success: false, message: 'Network error' };
     }
   },
 

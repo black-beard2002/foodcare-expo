@@ -87,13 +87,13 @@ export interface Offer {
   start_date?: string;
   end_date?: string;
   item_type?: string;
-  custom_properties?: Record<string, number | string>;
+  custom_properties?: Record<string, number | string | string[] | number[] | object>;
   category_id: string;
   type_id?: string;
   brand_id?: string;
   provider_id?: string;
   created_at?: string;
-  tenant_id?:string;
+  tenant_id?: string;
   updated_at?: string;
   created_by?: string;
 }
@@ -323,6 +323,6 @@ export type TransactionBase = {
   client_data?: OrderClientData;
   created_at?: string;
   updated_at?: string;
-  tenant_id?:string;
+  tenant_id?: string;
   created_by?: string;
 };

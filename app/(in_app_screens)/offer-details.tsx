@@ -432,129 +432,123 @@ export default function OfferDetailsScreen() {
               </View>
             </View>
           )}
-          {/* Ingredients */}
-          {}
-          {ingredients &&
-            Object.keys(offer.custom_properties || {}).length > 0 && (
+          {/* Dynamic Custom Properties */}
+          {offer.custom_properties &&
+            Object.keys(offer.custom_properties).length > 0 && (
               <View className="mb-6">
-                {/* Section Header */}
-                <View className="flex-row gap-2 items-center mb-3">
-                  <Leaf size={30} color={theme.success} />
-                  <Text
-                    className="text-3xl font-inter-bold"
-                    style={{ color: theme.text }}
-                  >
-                    Ingredients
-                  </Text>
-                  <Text
-                    className="text-base font-inter-bold"
-                    style={{ color: theme.textSecondary }}
-                  >
-                    ({ingredients.split(',').length})
-                  </Text>
-                </View>
+                {Object.entries(offer.custom_properties).map(
+                  ([sectionKey, sectionValue], sectionIndex) => {
+                    if (
+                      sectionValue === null ||
+                      sectionValue === undefined ||
+                      (typeof sectionValue === 'object' &&
+                        Object.keys(sectionValue).length === 0)
+                    ) {
+                      return null;
+                    }
 
-                {/* Ingredient Chips */}
-                <View
-                  className="rounded-2xl p-5 border flex-row flex-wrap gap-2"
-                  style={{
-                    backgroundColor: theme.card,
-                    borderColor: theme.border,
-                  }}
-                >
-                  {ingredients &&
-                    ingredients.split(',').map((ingredient: string, index) => (
-                      <View
-                        key={index}
-                        className="px-4 py-2 rounded-full border"
-                        style={{
-                          backgroundColor: theme.background,
-                          borderColor: theme.border,
-                        }}
-                      >
-                        <Text
-                          className="text-sm font-inter-medium"
-                          style={{ color: theme.text }}
-                        >
-                          {ingredient.trim()}
-                        </Text>
-                      </View>
-                    ))}
-                </View>
-              </View>
-            )}
-          {/* Nutrition Facts */}
-          {nutrition_facts.length > 0 &&
-            Object.keys(offer.custom_properties || {}).length > 0 && (
-              <View className="mb-6">
-                <View className="flex-row gap-1 items-center mb-3">
-                  <HeartPulse size={30} color={theme.primary} />
-                  <Text
-                    className="text-3xl font-inter-bold"
-                    style={{ color: theme.text }}
-                  >
-                    Nutrition Facts
-                  </Text>
-                  <Text
-                    className="text-base font-inter-bold"
-                    style={{ color: theme.text }}
-                  >
-                    ({nutrition_facts.length})
-                  </Text>
-                </View>
+                    const sectionTitle =
+                      sectionKey.charAt(0).toUpperCase() +
+                      sectionKey.slice(1).replace(/_/g, ' ');
 
-                <View
-                  className="rounded-2xl p-5 border"
-                  style={{
-                    backgroundColor: theme.card,
-                    borderColor: theme.border,
-                  }}
-                >
-                  {nutrition_facts && (
-                    <View className="flex-row flex-wrap gap-3">
-                      {nutrition_facts.map(([key, value], index) => {
-                        const Icon = getNutritionIcon(key);
-
+                    // Helper to render individual values
+                    const renderValue = (
+                      value: any,
+                      key?: string,
+                      idx?: number
+                    ) => {
+                      if (Array.isArray(value)) {
                         return (
                           <View
-                            key={index}
-                            className="flex-1 min-w-[30%] rounded-xl p-4 border"
-                            style={{
-                              backgroundColor: theme.background,
-                              borderColor: theme.border,
-                            }}
+                            key={idx}
+                            className="flex-row flex-wrap gap-2 mt-2"
                           >
-                            <View className="flex-row items-center gap-2 mb-2">
-                              {Icon && (
-                                <View
-                                  className="w-8 h-8 rounded-full items-center justify-center"
-                                  style={{
-                                    backgroundColor: `${theme.primary}15`,
-                                  }}
-                                >
-                                  <Icon color={theme.primary} size={16} />
-                                </View>
-                              )}
-                              <Text
-                                className="text-xs font-inter-medium flex-1"
-                                style={{ color: theme.textSecondary }}
+                            {value.map((v, i) => (
+                              <View
+                                key={i}
+                                className="px-4 py-2 rounded-full border"
+                                style={{
+                                  backgroundColor: theme.background,
+                                  borderColor: theme.border,
+                                }}
                               >
-                                {getNutritionDisplayName(key)}
-                              </Text>
-                            </View>
-
-                            <Text
-                              className="text-xl font-inter-bold"
-                              style={{ color: theme.text }}
-                            >
-                              {formatNutritionValue(value as string)}
-                            </Text>
+                                <Text
+                                  className="text-sm font-inter-medium"
+                                  style={{ color: theme.text }}
+                                >
+                                  {String(v)}
+                                </Text>
+                              </View>
+                            ))}
                           </View>
                         );
-                      })}
-                    </View>
-                  )}
-                </View>
+                      } else if (typeof value === 'object' && value !== null) {
+                        return (
+                          <View key={idx} className="mt-2">
+                            {Object.entries(value).map(
+                              ([subKey, subValue], subIndex) => (
+                                <View
+                                  key={subIndex}
+                                  className="flex-row justify-between border-b py-2"
+                                  style={{ borderColor: `${theme.border}80` }}
+                                >
+                                  <Text
+                                    className="text-sm font-inter-medium"
+                                    style={{ color: theme.textSecondary }}
+                                  >
+                                    {subKey.charAt(0).toUpperCase() +
+                                      subKey.slice(1).replace(/_/g, ' ')}
+                                  </Text>
+                                  <Text
+                                    className="text-sm font-inter-bold"
+                                    style={{ color: theme.text }}
+                                  >
+                                    {String(subValue)}
+                                  </Text>
+                                </View>
+                              )
+                            )}
+                          </View>
+                        );
+                      } else {
+                        return (
+                          <Text
+                            key={idx}
+                            className="text-base font-inter-regular mt-1"
+                            style={{ color: theme.text }}
+                          >
+                            {String(value)}
+                          </Text>
+                        );
+                      }
+                    };
+
+                    return (
+                      <View key={sectionIndex} className="mb-6">
+                        {/* Section Header */}
+                        <View className="flex-row gap-2 items-center mb-3">
+                          <Text
+                            className="text-2xl font-inter-bold"
+                            style={{ color: theme.text }}
+                          >
+                            {sectionTitle}
+                          </Text>
+                        </View>
+
+                        {/* Section Content */}
+                        <View
+                          className="rounded-2xl p-5 border"
+                          style={{
+                            backgroundColor: theme.card,
+                            borderColor: theme.border,
+                          }}
+                        >
+                          {renderValue(sectionValue)}
+                        </View>
+                      </View>
+                    );
+                  }
+                )}
               </View>
             )}
         </View>

@@ -39,7 +39,7 @@ import { handleImageSrc } from '@/utils/helpers';
 
 export default function CheckoutScreen() {
   const { theme } = useTheme();
-  const { cart, getCartTotal, clearCart } = useAppStore();
+  const { cart, getCartTotal, clearCart, categories } = useAppStore();
   const { showAlert } = useAlert();
   const { addExpense } = useBudgetStore();
   const { user } = useAuthStore();
@@ -101,7 +101,8 @@ export default function CheckoutScreen() {
       // Update budget store with the new expense according to each cart item category
       cart.forEach(async (item) => {
         await addExpense(
-          item.offer.category_id,
+          categories.find((cat) => cat.id === item.offer.category_id)?.name ||
+            'Uncategorized',
           item.offer.sale_price ?? item.offer.price * item.quantity
         );
       });

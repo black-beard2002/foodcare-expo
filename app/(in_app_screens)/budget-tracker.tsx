@@ -15,7 +15,6 @@ import {
   Wallet,
   TrendingUp,
   AlertTriangle,
-  DollarSign,
   PieChart,
   HandCoins,
   Trash2,
@@ -23,9 +22,11 @@ import {
 import { useTheme } from '@/hooks/useTheme';
 import { useBudgetStore } from '@/stores/budgetStore';
 import { useAlert } from '@/providers/AlertProvider';
+import { useAppStore } from '@/stores/appStore';
+import { Skeleton } from 'moti/skeleton';
 
 export default function BudgetTrackerScreen() {
-  const { theme } = useTheme();
+  const { theme, isDark } = useTheme();
   const {
     budgetData,
     loadBudgetData,
@@ -304,6 +305,7 @@ export default function BudgetTrackerScreen() {
                             >
                               {category.category}
                             </Text>
+
                             <Text
                               className="font-bold"
                               style={{ color: theme.primary }}

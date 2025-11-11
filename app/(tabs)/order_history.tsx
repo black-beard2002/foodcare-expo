@@ -66,7 +66,10 @@ export default function OrderHistoryScreen() {
         order.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
         order.client_data?.first_name
           .toLowerCase()
-          .includes(searchQuery.toLowerCase());
+          .includes(searchQuery.toLowerCase()) ||
+        order.items?.find((item) =>
+          item.item.title?.toLowerCase().includes(searchQuery.toLowerCase())
+        );
 
       const matchesStatus =
         statusFilter === 'all' ? true : order.status === statusFilter;
@@ -440,7 +443,7 @@ export default function OrderHistoryScreen() {
             <TextInput
               className="flex-1 text-base font-inter-regular md:text-lg"
               style={{ color: theme.text }}
-              placeholder="Search by ID or customer name..."
+              placeholder="Search by order ID,customer name, or order item..."
               placeholderTextColor={theme.textTertiary}
               value={searchQuery}
               onChangeText={setSearchQuery}
@@ -513,7 +516,7 @@ export default function OrderHistoryScreen() {
           </View>
         ) : (
           <View className="px-6 md:px-8 lg:px-12">
-            {filteredOrders.map((order: TransactionBase) => (
+            {filteredOrders.reverse().map((order: TransactionBase) => (
               <View key={order.id}>{renderOrder(order)}</View>
             ))}
           </View>
