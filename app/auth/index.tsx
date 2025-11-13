@@ -13,23 +13,25 @@ import { Phone } from 'lucide-react-native';
 
 import { router } from 'expo-router';
 
+import { useTheme } from '@/hooks/useTheme';
+
 export default function AuthScreen() {
   // Animations
   const titleAnim = useRef(new Animated.Value(0)).current;
   const subtitleAnim = useRef(new Animated.Value(0)).current;
   const buttonSlideAnim = useRef(new Animated.Value(50)).current;
   const buttonOpacityAnim = useRef(new Animated.Value(0)).current;
-
+  const { theme } = useTheme();
   useEffect(() => {
     Animated.sequence([
       Animated.timing(titleAnim, {
         toValue: 1,
-        duration: 700,
+        duration: 400,
         useNativeDriver: true,
       }),
       Animated.timing(subtitleAnim, {
         toValue: 1,
-        duration: 700,
+        duration: 500,
         delay: 100,
         useNativeDriver: true,
       }),
@@ -37,13 +39,13 @@ export default function AuthScreen() {
         Animated.timing(buttonOpacityAnim, {
           toValue: 1,
           duration: 600,
-          delay: 300,
+          delay: 100,
           useNativeDriver: true,
         }),
         Animated.timing(buttonSlideAnim, {
           toValue: 0,
           duration: 600,
-          delay: 300,
+          delay: 100,
           useNativeDriver: true,
         }),
       ]),
@@ -112,7 +114,7 @@ export default function AuthScreen() {
           }}
         >
           <TouchableOpacity
-            style={[styles.button, { backgroundColor: '#4d4d4d' }]}
+            style={[styles.button, { backgroundColor: theme.primary }]}
             onPress={() => router.push('/auth/phone-login')}
             activeOpacity={0.8}
           >

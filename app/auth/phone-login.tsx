@@ -7,16 +7,15 @@ import {
   KeyboardAvoidingView,
   Platform,
   Alert,
+  Image,
   Vibration,
-  ColorValue,
 } from 'react-native';
 import { router } from 'expo-router';
-import { ArrowLeft, Phone, Shield, Check } from 'lucide-react-native';
+import { ArrowLeft, Shield, Check } from 'lucide-react-native';
 import { CountryItem, CountryPicker } from 'react-native-country-codes-picker';
 import { useAuthStore } from '@/stores/authStore';
 import { useAlert } from '@/providers/AlertProvider';
 import { useTheme } from '@/hooks/useTheme';
-import { LinearGradient } from 'expo-linear-gradient';
 import { useSettingsStore } from '@/stores/settingsStore';
 
 export default function PhoneLoginScreen(): JSX.Element {
@@ -26,7 +25,7 @@ export default function PhoneLoginScreen(): JSX.Element {
   const { signInWithPhone, isLoading } = useAuthStore();
   const { setBiometricEnabled, setPinEnabled, setUserPin } = useSettingsStore();
   const { showAlert } = useAlert();
-  const { theme, isDark } = useTheme();
+  const { theme } = useTheme();
   const [country, setCountry] = useState<CountryItem>({
     name: { en: 'Lebanon', ar: 'لبنان' },
     dial_code: '+961',
@@ -99,24 +98,14 @@ export default function PhoneLoginScreen(): JSX.Element {
     }
   };
 
-  const gradientColors: [ColorValue, ColorValue] = isDark
-    ? ['rgba(15,23,42,1)', 'rgba(33,42,54,1)']
-    : ['rgba(250,250,250,1)', 'rgba(226,232,240,1)'];
-
-  const accentGradient: [ColorValue, ColorValue] = isDark
-    ? ['rgba(244,208,63,1)', 'rgba(245,158,11,1)']
-    : ['rgba(244,208,63,1)', 'rgb(247,177,57)'];
-
   return (
-    <LinearGradient
+    <View
       style={{
-        position: 'absolute',
-        left: 0,
-        right: 0,
-        top: 0,
-        bottom: 0,
+        flex: 1,
+        width: '100%',
+        height: '100%',
+        backgroundColor: theme.background,
       }}
-      colors={gradientColors}
     >
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -133,7 +122,7 @@ export default function PhoneLoginScreen(): JSX.Element {
           </TouchableOpacity>
           <View className="flex-1">
             <Text className="text-2xl font-bold" style={{ color: theme.text }}>
-              Phone Verification
+              Phone Registration
             </Text>
             <Text className="text-sm" style={{ color: theme.textSecondary }}>
               We'll send you a verification code
@@ -143,31 +132,11 @@ export default function PhoneLoginScreen(): JSX.Element {
 
         {/* Content */}
         <View className="flex-1 px-5 pt-5">
-          {/* Icon */}
-          <LinearGradient
-            colors={accentGradient}
-            style={{
-              borderRadius: 16,
-              width: 60,
-              height: 60,
-              alignItems: 'center',
-              justifyContent: 'center',
-              marginHorizontal: 'auto',
-              marginBottom: 20,
-            }} // Tailwind 'rounded-xl' = 16
-          >
-            <Phone color={theme.text} size={32} />
-          </LinearGradient>
-
-          {/* Description */}
-          <Text
-            className="text-base text-center leading-6 mb-10 px-5"
-            style={{ color: theme.textSecondary }}
-          >
-            Enter your phone number to receive a verification code for secure
-            access
-          </Text>
-
+          <Image
+            source={require('../../assets/images/backgrounds/phone_input_step.png')}
+            className="w-72 mb-10 h-72 mx-auto"
+            resizeMode="cover"
+          />
           {/* Phone Input */}
           <View className="mb-6">
             <Text
@@ -325,6 +294,7 @@ export default function PhoneLoginScreen(): JSX.Element {
             countryButtonStyles: {
               height: 60,
               borderBottomWidth: 1,
+              backgroundColor: theme.card,
               borderBottomColor: theme.border,
               paddingHorizontal: 20,
             },
@@ -345,6 +315,6 @@ export default function PhoneLoginScreen(): JSX.Element {
           }}
         />
       </KeyboardAvoidingView>
-    </LinearGradient>
+    </View>
   );
 }

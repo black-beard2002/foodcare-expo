@@ -448,7 +448,7 @@ const EnhancedNearYouCard = ({
           style={{
             fontSize: 24,
             fontWeight: 'bold',
-            color: '#FFA500',
+            color: theme.primary,
             marginBottom: 12,
           }}
         >

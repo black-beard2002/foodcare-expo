@@ -14,13 +14,15 @@ import {
   ActivityIndicator,
   NativeSyntheticEvent,
   TextInputKeyPressEventData,
+  KeyboardAvoidingView,
+  Image,
 } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
-import { ArrowLeft, Shield } from 'lucide-react-native';
+import { ArrowLeft } from 'lucide-react-native';
 import { useAuthStore } from '@/stores/authStore';
 import { useAlert } from '@/providers/AlertProvider';
 import { useTheme } from '@/hooks/useTheme';
-import { LinearGradient } from 'expo-linear-gradient';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function OTPVerificationScreen(): JSX.Element {
   const [otp, setOtp] = useState<string[]>(['', '', '', '']);
@@ -155,24 +157,14 @@ export default function OTPVerificationScreen(): JSX.Element {
     [timer, isResending]
   );
 
-  const gradientColors = isDark
-    ? (['rgba(15,23,42,1)', 'rgba(33,42,54,1)'] as const)
-    : (['rgba(250,250,250,1)', 'rgba(226,232,240,1)'] as const);
-
-  const accentGradient = isDark
-    ? (['rgba(244,208,63,1)', 'rgba(245,158,11,1)'] as const)
-    : (['rgba(244,208,63,1)', 'rgb(247,177,57)'] as const);
-
   return (
-    <LinearGradient
-      colors={gradientColors}
+    <SafeAreaView
       style={{
-        position: 'absolute',
-        left: 0,
-        right: 0,
-        top: 0,
-        bottom: 0,
-        paddingTop: 60,
+        flex: 1,
+        width: '100%',
+        paddingTop: 30,
+        backgroundColor: theme.background,
+        height: '100%',
       }}
     >
       {/* Header */}
@@ -185,25 +177,15 @@ export default function OTPVerificationScreen(): JSX.Element {
         </Text>
       </View>
 
-      <View className="flex-1 px-6 items-center">
-        {/* Icon */}
-        <LinearGradient
-          colors={accentGradient}
-          style={{
-            borderRadius: 16,
-            width: 80,
-            height: 80,
-            justifyContent: 'center',
-            alignItems: 'center',
-            marginBottom: 20,
-          }}
-        >
-          <Shield color={theme.text} size={48} />
-        </LinearGradient>
-
+      <KeyboardAvoidingView className="flex-1 px-6 items-center">
         {/* Subtitle */}
+        <Image
+          source={require('../../assets/images/backgrounds/verify_page_background.png')}
+          className="w-72  h-72 mx-auto "
+          resizeMode="cover"
+        />
         <Text
-          className="text-base text-center mb-10 leading-6"
+          className="text-base text-center mb-5 leading-6"
           style={{ color: theme.textSecondary }}
         >
           Enter the 6-digit code sent to your phone number
@@ -296,7 +278,7 @@ export default function OTPVerificationScreen(): JSX.Element {
         >
           Didn't receive the code? Check your SMS or try resending.
         </Text>
-      </View>
-    </LinearGradient>
+      </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 }

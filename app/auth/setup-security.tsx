@@ -356,247 +356,237 @@ export default function SetupSecurityScreen(): JSX.Element {
   }
 
   return (
-    <LinearGradient
-      colors={gradientColors}
-      style={{
-        position: 'absolute',
-        left: 0,
-        right: 0,
-        top: 0,
-        bottom: 0,
-      }}
+    <SafeAreaView
+      className="flex-1 pt-8"
+      style={{ backgroundColor: theme.background }}
     >
-      <SafeAreaView className="flex-1 pt-16">
-        {/* Header */}
-        <View className="flex-row items-center px-6 mb-10 md:px-8 md:mb-12">
-          <TouchableOpacity onPress={() => router.back()} className="mr-4">
-            <ArrowLeft color={theme.text} size={24} />
-          </TouchableOpacity>
-          <Text
-            className="text-2xl font-inter-bold"
-            style={{ color: theme.text }}
-          >
-            Setup Security
-          </Text>
-        </View>
+      {/* Header */}
+      <View className="flex-row items-center px-6 mb-10 md:px-8 md:mb-12">
+        <TouchableOpacity onPress={() => router.back()} className="mr-4">
+          <ArrowLeft color={theme.text} size={24} />
+        </TouchableOpacity>
+        <Text
+          className="text-2xl font-inter-bold"
+          style={{ color: theme.text }}
+        >
+          Setup Security
+        </Text>
+      </View>
 
-        {/* Content */}
-        <View className="flex-1 px-6 items-center md:px-8">
-          <LinearGradient
-            colors={accentGradient}
+      {/* Content */}
+      <View className="flex-1 px-6 items-center md:px-8">
+        <LinearGradient
+          colors={accentGradient}
+          style={{
+            borderRadius: 32,
+            width: 80,
+            height: 80,
+            marginBottom: 10,
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+        >
+          <Lock color={theme.text} size={45} />
+        </LinearGradient>
+
+        <Text
+          className="text-base font-inter-regular text-center leading-6 mb-10 md:text-lg md:mb-12"
+          style={{ color: theme.textSecondary }}
+        >
+          Choose how you'd like to secure your app
+        </Text>
+
+        {/* Options Container */}
+        <View className="w-full gap-4 mb-10 max-w-md md:gap-6 md:mb-12">
+          {/* Biometric Option */}
+          <View
+            className="flex-row items-center justify-between p-5 rounded-2xl border md:p-6"
             style={{
-              borderRadius: 32,
-              width: 80,
-              height: 80,
-              marginBottom: 10,
-              alignItems: 'center',
-              justifyContent: 'center',
+              backgroundColor: theme.card,
+              borderColor: localBiometricEnabled ? theme.primary : theme.border,
+              borderWidth: localBiometricEnabled ? 2 : 1,
             }}
           >
-            <Lock color={theme.text} size={45} />
-          </LinearGradient>
+            <View className="flex-row items-center flex-1">
+              <Fingerprint color={theme.primary} size={32} />
+              <View className="ml-4 flex-1">
+                <Text
+                  className="text-base font-inter-medium mb-1 md:text-lg"
+                  style={{ color: theme.text }}
+                >
+                  {biometricType} Authentication
+                </Text>
+                <Text
+                  className="text-sm font-inter-regular leading-5 md:text-base"
+                  style={{ color: theme.textSecondary }}
+                >
+                  {biometricAvailable
+                    ? `Use ${biometricType.toLowerCase()} to unlock the app quickly and securely`
+                    : 'Not available on this device'}
+                </Text>
+              </View>
+            </View>
+            {isTestingBiometric ? (
+              <ActivityIndicator size="small" color={theme.primary} />
+            ) : (
+              <Switch
+                value={localBiometricEnabled}
+                onValueChange={handleBiometricToggle}
+                trackColor={{ false: theme.border, true: theme.primary }}
+                thumbColor="#FFFFFF"
+                disabled={!biometricAvailable}
+              />
+            )}
+          </View>
 
+          {/* PIN Option */}
+          <View
+            className="flex-row items-center justify-between p-5 rounded-2xl border md:p-6"
+            style={{
+              backgroundColor: theme.card,
+              borderColor: localPinEnabled ? theme.primary : theme.border,
+              borderWidth: localPinEnabled ? 2 : 1,
+            }}
+          >
+            <View className="flex-row items-center flex-1">
+              <Shield color={theme.primary} size={32} />
+              <View className="ml-4 flex-1">
+                <Text
+                  className="text-base font-inter-medium mb-1 md:text-lg"
+                  style={{ color: theme.text }}
+                >
+                  4-Digit PIN Protection
+                </Text>
+                <Text
+                  className="text-sm font-inter-regular leading-5 md:text-base"
+                  style={{ color: theme.textSecondary }}
+                >
+                  Set up a secure 4-digit PIN as a backup or primary security
+                  method
+                </Text>
+              </View>
+            </View>
+            <Switch
+              value={localPinEnabled}
+              onValueChange={handlePinToggle}
+              trackColor={{ false: theme.border, true: theme.primary }}
+              thumbColor="#FFFFFF"
+            />
+          </View>
+        </View>
+
+        {/* Continue Button */}
+        <TouchableOpacity
+          onPress={handleContinue}
+          disabled={isLoading}
+          className="w-full py-4 rounded-xl items-center justify-center"
+          style={{
+            backgroundColor: theme.primary,
+            opacity: isLoading ? 0.7 : 1,
+          }}
+        >
+          {isLoading ? (
+            <ActivityIndicator color="#fff" />
+          ) : (
+            <View className="flex-row items-center">
+              <Text
+                className="text-base font-semibold mr-2"
+                style={{
+                  color: '#fff',
+                }}
+              >
+                Complete Setup
+              </Text>
+              <Sparkles color={'#fff'} size={18} />
+            </View>
+          )}
+        </TouchableOpacity>
+
+        {/* Skip Option */}
+        <TouchableOpacity onPress={handleContinue}>
           <Text
-            className="text-base font-inter-regular text-center leading-6 mb-10 md:text-lg md:mb-12"
+            className="text-sm font-inter-medium md:text-base mt-4"
             style={{ color: theme.textSecondary }}
           >
-            Choose how you'd like to secure your app
+            Skip for now
           </Text>
+        </TouchableOpacity>
+      </View>
 
-          {/* Options Container */}
-          <View className="w-full gap-4 mb-10 max-w-md md:gap-6 md:mb-12">
-            {/* Biometric Option */}
-            <View
-              className="flex-row items-center justify-between p-5 rounded-2xl border md:p-6"
-              style={{
-                backgroundColor: theme.card,
-                borderColor: localBiometricEnabled
-                  ? theme.primary
-                  : theme.border,
-                borderWidth: localBiometricEnabled ? 2 : 1,
-              }}
-            >
-              <View className="flex-row items-center flex-1">
-                <Fingerprint color={theme.primary} size={32} />
-                <View className="ml-4 flex-1">
-                  <Text
-                    className="text-base font-inter-medium mb-1 md:text-lg"
-                    style={{ color: theme.text }}
-                  >
-                    {biometricType} Authentication
-                  </Text>
-                  <Text
-                    className="text-sm font-inter-regular leading-5 md:text-base"
-                    style={{ color: theme.textSecondary }}
-                  >
-                    {biometricAvailable
-                      ? `Use ${biometricType.toLowerCase()} to unlock the app quickly and securely`
-                      : 'Not available on this device'}
-                  </Text>
-                </View>
-              </View>
-              {isTestingBiometric ? (
-                <ActivityIndicator size="small" color={theme.primary} />
-              ) : (
-                <Switch
-                  value={localBiometricEnabled}
-                  onValueChange={handleBiometricToggle}
-                  trackColor={{ false: theme.border, true: theme.primary }}
-                  thumbColor="#FFFFFF"
-                  disabled={!biometricAvailable}
-                />
+      {/* PIN Setup Modal */}
+      <Modal
+        visible={showPinModal}
+        transparent
+        animationType="fade"
+        onRequestClose={closePinModal}
+      >
+        <View
+          className="flex-1 justify-start pt-48 items-center md:pt-56"
+          style={{ backgroundColor: theme.overlay }}
+        >
+          <View
+            className="w-11/12 rounded-2xl p-6 items-center max-w-sm md:w-2/3 md:p-8 lg:max-w-md"
+            style={{ backgroundColor: theme.card }}
+          >
+            {/* Modal Header */}
+            <View className="items-center mb-8">
+              <Text
+                className="text-xl font-inter-bold mb-2 md:text-2xl"
+                style={{ color: theme.text }}
+              >
+                {isConfirmingPin ? 'Confirm Your PIN' : 'Create Your PIN'}
+              </Text>
+              <Text
+                className="text-sm font-inter-regular text-center leading-5 md:text-base"
+                style={{ color: theme.textSecondary }}
+              >
+                {isConfirmingPin
+                  ? 'Enter your PIN again to confirm'
+                  : "Enter a 4-digit PIN you'll remember"}
+              </Text>
+            </View>
+
+            {/* Modal Body */}
+            <View className="items-center mb-8 w-full">
+              {renderPinInput(
+                isConfirmingPin ? confirmPin : pin,
+                isConfirmingPin
               )}
             </View>
 
-            {/* PIN Option */}
-            <View
-              className="flex-row items-center justify-between p-5 rounded-2xl border md:p-6"
-              style={{
-                backgroundColor: theme.card,
-                borderColor: localPinEnabled ? theme.primary : theme.border,
-                borderWidth: localPinEnabled ? 2 : 1,
-              }}
-            >
-              <View className="flex-row items-center flex-1">
-                <Shield color={theme.primary} size={32} />
-                <View className="ml-4 flex-1">
-                  <Text
-                    className="text-base font-inter-medium mb-1 md:text-lg"
-                    style={{ color: theme.text }}
-                  >
-                    4-Digit PIN Protection
-                  </Text>
-                  <Text
-                    className="text-sm font-inter-regular leading-5 md:text-base"
-                    style={{ color: theme.textSecondary }}
-                  >
-                    Set up a secure 4-digit PIN as a backup or primary security
-                    method
-                  </Text>
-                </View>
-              </View>
-              <Switch
-                value={localPinEnabled}
-                onValueChange={handlePinToggle}
-                trackColor={{ false: theme.border, true: theme.primary }}
-                thumbColor="#FFFFFF"
-              />
-            </View>
-          </View>
-
-          {/* Continue Button */}
-          <TouchableOpacity
-            onPress={handleContinue}
-            disabled={isLoading}
-            className="w-full py-4 rounded-xl items-center justify-center"
-            style={{
-              backgroundColor: theme.primary,
-              opacity: isLoading ? 0.7 : 1,
-            }}
-          >
-            {isLoading ? (
-              <ActivityIndicator color="#fff" />
-            ) : (
-              <View className="flex-row items-center">
+            {/* Modal Footer */}
+            <View className="flex-row gap-3 w-full">
+              <TouchableOpacity
+                className="flex-1 p-3 rounded-lg border items-center"
+                style={{ borderColor: theme.border }}
+                onPress={closePinModal}
+              >
                 <Text
-                  className="text-base font-semibold mr-2"
-                  style={{
-                    color: '#fff',
-                  }}
-                >
-                  Complete Setup
-                </Text>
-                <Sparkles color={'#fff'} size={18} />
-              </View>
-            )}
-          </TouchableOpacity>
-
-          {/* Skip Option */}
-          <TouchableOpacity onPress={handleContinue}>
-            <Text
-              className="text-sm font-inter-medium md:text-base mt-4"
-              style={{ color: theme.textSecondary }}
-            >
-              Skip for now
-            </Text>
-          </TouchableOpacity>
-        </View>
-
-        {/* PIN Setup Modal */}
-        <Modal
-          visible={showPinModal}
-          transparent
-          animationType="fade"
-          onRequestClose={closePinModal}
-        >
-          <View
-            className="flex-1 justify-start pt-48 items-center md:pt-56"
-            style={{ backgroundColor: theme.overlay }}
-          >
-            <View
-              className="w-11/12 rounded-2xl p-6 items-center max-w-sm md:w-2/3 md:p-8 lg:max-w-md"
-              style={{ backgroundColor: theme.card }}
-            >
-              {/* Modal Header */}
-              <View className="items-center mb-8">
-                <Text
-                  className="text-xl font-inter-bold mb-2 md:text-2xl"
-                  style={{ color: theme.text }}
-                >
-                  {isConfirmingPin ? 'Confirm Your PIN' : 'Create Your PIN'}
-                </Text>
-                <Text
-                  className="text-sm font-inter-regular text-center leading-5 md:text-base"
+                  className="text-sm font-inter-medium md:text-base"
                   style={{ color: theme.textSecondary }}
                 >
-                  {isConfirmingPin
-                    ? 'Enter your PIN again to confirm'
-                    : "Enter a 4-digit PIN you'll remember"}
+                  Cancel
                 </Text>
-              </View>
+              </TouchableOpacity>
 
-              {/* Modal Body */}
-              <View className="items-center mb-8 w-full">
-                {renderPinInput(
-                  isConfirmingPin ? confirmPin : pin,
-                  isConfirmingPin
-                )}
-              </View>
-
-              {/* Modal Footer */}
-              <View className="flex-row gap-3 w-full">
+              {isConfirmingPin && (
                 <TouchableOpacity
-                  className="flex-1 p-3 rounded-lg border items-center"
-                  style={{ borderColor: theme.border }}
-                  onPress={closePinModal}
+                  className="flex-1 p-3 rounded-lg items-center"
+                  style={{ backgroundColor: theme.card }}
+                  onPress={handleBackToFirstPin}
                 >
                   <Text
                     className="text-sm font-inter-medium md:text-base"
-                    style={{ color: theme.textSecondary }}
+                    style={{ color: theme.text }}
                   >
-                    Cancel
+                    Back
                   </Text>
                 </TouchableOpacity>
-
-                {isConfirmingPin && (
-                  <TouchableOpacity
-                    className="flex-1 p-3 rounded-lg items-center"
-                    style={{ backgroundColor: theme.card }}
-                    onPress={handleBackToFirstPin}
-                  >
-                    <Text
-                      className="text-sm font-inter-medium md:text-base"
-                      style={{ color: theme.text }}
-                    >
-                      Back
-                    </Text>
-                  </TouchableOpacity>
-                )}
-              </View>
+              )}
             </View>
           </View>
-        </Modal>
-      </SafeAreaView>
-    </LinearGradient>
+        </View>
+      </Modal>
+    </SafeAreaView>
   );
 }

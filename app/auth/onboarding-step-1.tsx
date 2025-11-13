@@ -8,6 +8,7 @@ import {
   Platform,
   ActivityIndicator,
   KeyboardAvoidingView,
+  Image,
 } from 'react-native';
 import { router } from 'expo-router';
 import {
@@ -21,7 +22,7 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import { useAuthStore } from '@/stores/authStore';
 import { useAlert } from '@/providers/AlertProvider';
 import { useTheme } from '@/hooks/useTheme';
-import { LinearGradient } from 'expo-linear-gradient';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function OnboardingStep1() {
   const [firstName, setFirstName] = useState('');
@@ -114,14 +115,6 @@ export default function OnboardingStep1() {
     showAlert,
   ]);
 
-  const gradientColors: [string, string, string] = isDark
-    ? ['rgba(15,23,42,1)', 'rgba(30,41,59,1)', 'rgba(15,23,42,1)']
-    : ['#ffffff', '#f8fafc', '#f1f5f9'];
-
-  const accentGradient: [string, string] = isDark
-    ? ['#3b82f6', '#9333ea']
-    : ['#6366f1', '#8b5cf6'];
-
   const getBorderColor = (field: string, value?: string | Date | null) => {
     if (errors[field]) return '#ef4444'; // red border
     if (focusedField === field) return theme.primary;
@@ -130,7 +123,14 @@ export default function OnboardingStep1() {
   };
 
   return (
-    <LinearGradient colors={gradientColors} style={{ flex: 1, paddingTop: 30 }}>
+    <SafeAreaView
+      style={{
+        flex: 1,
+        width: '100%',
+        height: '100%',
+        backgroundColor: theme.background,
+      }}
+    >
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={{ flex: 1 }}
@@ -140,23 +140,22 @@ export default function OnboardingStep1() {
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
-          <View className="flex-1 px-6 pt-20 pb-8">
+          <View className="flex-1 px-6 pb-8">
             {/* Header */}
             <View className="items-center mb-6">
-              <LinearGradient
-                colors={accentGradient}
+              <Image
+                className="w-72 h-72 mx-auto"
+                resizeMode="cover"
                 style={{
-                  borderRadius: 32,
-                  width: 80,
-                  height: 80,
-                  justifyContent: 'center',
-                  alignItems: 'center',
+                  shadowColor: theme.primary,
+                  shadowOffset: { width: 0, height: 10 },
+                  shadowOpacity: 0.3,
+                  shadowRadius: 20,
                 }}
-              >
-                <Sparkles color="#fff" size={40} strokeWidth={2.5} />
-              </LinearGradient>
+                source={require('../../assets/images/backgrounds/user.png')}
+              />
               <Text
-                className="text-3xl font-bold mt-6"
+                className="text-3xl font-bold"
                 style={{ color: theme.text }}
               >
                 Welcome Aboard
@@ -170,7 +169,7 @@ export default function OnboardingStep1() {
             </View>
 
             {/* Form */}
-            <View className="gap-6 mt-8">
+            <View className="gap-6 ">
               {/* First & Last Name */}
               <View className="flex-row gap-3">
                 <View className="flex-1">
@@ -333,12 +332,10 @@ export default function OnboardingStep1() {
                 onPress={handleContinue}
                 disabled={isLoading}
                 activeOpacity={0.8}
+                style={{ backgroundColor: theme.primary }}
                 className="overflow-hidden rounded-2xl shadow-lg mt-8"
               >
-                <LinearGradient
-                  colors={accentGradient}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 0 }}
+                <View
                   style={{
                     flexDirection: 'row',
                     alignItems: 'center',
@@ -364,12 +361,12 @@ export default function OnboardingStep1() {
                       <ArrowRight color="#fff" size={20} />
                     </>
                   )}
-                </LinearGradient>
+                </View>
               </TouchableOpacity>
             </View>
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
-    </LinearGradient>
+    </SafeAreaView>
   );
 }
