@@ -32,9 +32,8 @@ import OrderCancelModal from '@/components/OrderCancelModal';
 import { formatDateTime } from '@/utils/formatters';
 import { MotiView } from 'moti';
 import { Skeleton } from 'moti/skeleton';
-import { formatPrice } from '@/utils/helpers';
 import * as Haptics from 'expo-haptics';
-import { router } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import { useAuthStore } from '@/stores/authStore';
 
 export default function OrderHistoryScreen() {
@@ -164,8 +163,11 @@ export default function OrderHistoryScreen() {
   };
 
   const renderOrder = (order: TransactionBase) => (
-    <View
+    <TouchableOpacity
       className="rounded-2xl border bg-card p-4 shadow-sm mb-4 md:p-6 lg:mb-6"
+      onPress={() =>
+        router.push(`/(in_app_screens)/order-details?id=${order.id}`)
+      }
       style={{
         backgroundColor: theme.card,
         borderColor:
@@ -284,57 +286,6 @@ export default function OrderHistoryScreen() {
         </View>
       </View>
 
-      {/* Order Items - Compact */}
-      <View className="mb-3 md:mb-4">
-        <View className="flex-row items-center gap-2 mb-2 md:mb-3">
-          <Package color={theme.primary} size={16} className="md:w-5 md:h-5" />
-          <Text
-            className="text-sm font-inter-semibold flex-1 md:text-base"
-            style={{ color: theme.text }}
-          >
-            Items ({order.items?.length})
-          </Text>
-        </View>
-
-        <View className="gap-1.5 flex flex-row items-center flex-wrap md:gap-2">
-          {order.items?.slice(0, 3).map((item: OrderItem) => (
-            <View
-              key={item.item.id}
-              className="max-w-32 py-1.5 px-2 rounded-lg border md:py-2 md:px-3"
-              style={{ borderColor: theme.border }}
-            >
-              <View className="flex-1">
-                <Text
-                  className="text-xs font-inter-medium mb-0.5 md:text-sm"
-                  style={{ color: theme.text }}
-                  numberOfLines={1}
-                >
-                  {item.item.title}
-                </Text>
-                <Text
-                  className="text-xs font-inter-regular md:text-sm"
-                  style={{ color: theme.textSecondary }}
-                >
-                  Qty: {item.quantity || 1} • $
-                  {formatPrice(item.item.sale_price ?? item.item.price ?? 0)}
-                </Text>
-              </View>
-            </View>
-          ))}
-
-          {order.items && order.items?.length > 3 && (
-            <View className="py-1.5 px-2 rounded-lg bg-primary/5 md:py-2 md:px-3">
-              <Text
-                className="text-xs font-inter-medium text-center md:text-sm"
-                style={{ color: theme.primary }}
-              >
-                +{order.items.length - 3} more items
-              </Text>
-            </View>
-          )}
-        </View>
-      </View>
-
       {/* Total Amount - Compact */}
       <View
         className="flex-row justify-between items-center py-2 px-3 rounded-xl md:py-3 md:px-4"
@@ -353,7 +304,7 @@ export default function OrderHistoryScreen() {
           ${order.total_price}
         </Text>
       </View>
-    </View>
+    </TouchableOpacity>
   );
 
   if (isLoading) {

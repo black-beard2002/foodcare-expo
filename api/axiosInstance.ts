@@ -102,6 +102,7 @@ export const createAxiosInstance = (baseURL: string): AxiosInstance => {
           originalRequest.headers.Authorization = `Bearer ${newToken}`;
           return instance(originalRequest);
         } catch (err) {
+          console.log('axios error:', err);
           processQueue(err, null);
           await AsyncStorage.multiRemove([
             'access_token',

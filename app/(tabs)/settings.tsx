@@ -311,22 +311,22 @@ export default function SettingScreen() {
     {
       title: 'Rewards & Savings',
       items: [
-        {
-          icon: Tag,
-          label: 'Coupons & Deals',
-          subtitle: 'This section will soon be available!',
-          color: '#F59E0B',
-          disabled: true,
-          action: () => router.push('/(in_app_screens)/coupons'),
-        },
-        {
-          icon: Gift,
-          label: 'Loyalty Rewards',
-          subtitle: 'This section will soon be available!',
-          disabled: true,
-          color: '#10B981',
-          action: () => router.push('/(in_app_screens)/rewards'),
-        },
+        // {
+        //   icon: Tag,
+        //   label: 'Coupons & Deals',
+        //   subtitle: 'This section will soon be available!',
+        //   color: '#F59E0B',
+        //   disabled: true,
+        //   action: () => router.push('/(in_app_screens)/coupons'),
+        // },
+        // {
+        //   icon: Gift,
+        //   label: 'Loyalty Rewards',
+        //   subtitle: 'This section will soon be available!',
+        //   disabled: true,
+        //   color: '#10B981',
+        //   action: () => router.push('/(in_app_screens)/rewards'),
+        // },
         {
           icon: Wallet,
           label: 'Budget Tracker',
@@ -336,27 +336,27 @@ export default function SettingScreen() {
         },
       ],
     },
-    {
-      title: 'Security',
-      items: [
-        {
-          icon: Shield,
-          label: `${biometricType} Authentication`,
-          subtitle: 'Quick secure access',
-          color: '#EF4444',
-          hasSwitch: true,
-          type: 'biometric',
-        },
-        {
-          icon: Shield,
-          label: '4-Digit PIN Protection',
-          subtitle: 'Additional security',
-          color: '#F97316',
-          hasSwitch: true,
-          type: 'pin',
-        },
-      ],
-    },
+    // {
+    //   title: 'Security',
+    //   items: [
+    //     {
+    //       icon: Shield,
+    //       label: `${biometricType} Authentication`,
+    //       subtitle: 'Quick secure access',
+    //       color: '#EF4444',
+    //       hasSwitch: true,
+    //       type: 'biometric',
+    //     },
+    //     {
+    //       icon: Shield,
+    //       label: '4-Digit PIN Protection',
+    //       subtitle: 'Additional security',
+    //       color: '#F97316',
+    //       hasSwitch: true,
+    //       type: 'pin',
+    //     },
+    //   ],
+    // },
     {
       title: 'Support',
       items: [
@@ -467,7 +467,7 @@ export default function SettingScreen() {
 
         {/* Sign Out Button */}
         <TouchableOpacity
-          className="flex-row items-center justify-center p-4 rounded-2xl mb-8 gap-3 shadow-sm"
+          className="flex-row items-center justify-center p-4 rounded-2xl mb-32 gap-3 shadow-sm"
           style={{
             backgroundColor: isDark ? `${theme.error}60` : `${theme.error}`,
             borderWidth: 1,

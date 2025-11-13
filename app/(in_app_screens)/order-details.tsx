@@ -1,0 +1,947 @@
+import React, { useEffect, useState } from 'react';
+import {
+  View,
+  Text,
+  ScrollView,
+  Image,
+  TouchableOpacity,
+  Linking,
+} from 'react-native';
+import { TransactionBase, OrderItem } from '@/types/appTypes';
+import { useTheme } from '@/hooks/useTheme';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { LinearGradient } from 'expo-linear-gradient';
+import { MotiView } from 'moti';
+import {
+  ArrowLeft,
+  Package,
+  MapPin,
+  Phone,
+  Mail,
+  CreditCard,
+  Calendar,
+  Clock,
+  CheckCircle2,
+  XCircle,
+  AlertCircle,
+  Truck,
+  Receipt,
+  Download,
+  Share2,
+  User,
+  ShoppingBag,
+  Eye,
+  LockKeyholeIcon,
+  EyeClosed,
+} from 'lucide-react-native';
+import { router, useLocalSearchParams } from 'expo-router';
+import * as Haptics from 'expo-haptics';
+import { formatPrice, handleImageSrc } from '@/utils/helpers';
+import * as images from '@/constants/images';
+import { useOrderStore } from '@/stores/orderStore';
+
+export default function OrderDetailsScreen() {
+  const { theme } = useTheme();
+  const { id } = useLocalSearchParams<{ id: string }>();
+  const { orders } = useOrderStore();
+  const [codeHidden, setCodeHidden] = useState(true);
+  const [order, setOrder] = useState<TransactionBase | null>(null);
+  useEffect(() => {
+    const foundOrder = orders.find((o) => o.id === id);
+    console.log('Found Offer:', foundOrder);
+
+    setOrder(foundOrder || null);
+  }, [id]);
+  // Status configuration
+  const getStatusConfig = (status?: string) => {
+    switch (status) {
+      case 'COMPLETED':
+        return {
+          color: theme.success,
+          icon: CheckCircle2,
+          bgColor: theme.successLight,
+          label: 'Completed',
+        };
+      case 'PENDING':
+        return {
+          color: theme.warning,
+          icon: Clock,
+          bgColor: theme.warningLight,
+          label: 'Pending',
+        };
+      case 'DELIVERED':
+        return {
+          color: theme.info,
+          icon: Truck,
+          bgColor: theme.infoLight,
+          label: 'Delivered',
+        };
+      case 'CANCELLED':
+        return {
+          color: theme.error,
+          icon: XCircle,
+          bgColor: theme.errorLight,
+          label: 'Cancelled',
+        };
+      default:
+        return {
+          color: theme.textSecondary,
+          icon: AlertCircle,
+          bgColor: theme.border,
+          label: 'Unknown',
+        };
+    }
+  };
+
+  const getPaymentStatusConfig = (status?: string) => {
+    switch (status) {
+      case 'PAID':
+        return { color: theme.success, label: 'Paid' };
+      case 'PENDING':
+        return { color: theme.warning, label: 'Pending' };
+      case 'FAILED':
+        return { color: theme.error, label: 'Failed' };
+      case 'REFUNDED':
+        return { color: theme.info, label: 'Refunded' };
+      case 'PARTIALLY_PAID':
+        return { color: theme.warning, label: 'Partially Paid' };
+      default:
+        return { color: theme.textSecondary, label: 'Unknown' };
+    }
+  };
+
+  const statusConfig = getStatusConfig(order?.status);
+  const paymentConfig = getPaymentStatusConfig(order?.payment_status);
+  const StatusIcon = statusConfig.icon;
+
+  const formatDate = (dateString?: string) => {
+    if (!dateString) return 'N/A';
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+  };
+
+  return (
+    <SafeAreaView style={{ flex: 1, backgroundColor: theme.background }}>
+      {/* Header */}
+      <View
+        style={{
+          paddingHorizontal: 20,
+
+          paddingVertical: 20,
+        }}
+      >
+        <View
+          style={{
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+          }}
+        >
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+            <TouchableOpacity
+              onPress={() => {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                router.back();
+              }}
+              style={{
+                width: 40,
+                height: 40,
+                borderRadius: 20,
+                backgroundColor: theme.backgroundSecondary,
+                justifyContent: 'center',
+                alignItems: 'center',
+              }}
+            >
+              <ArrowLeft color={theme.text} size={22} />
+            </TouchableOpacity>
+            <View>
+              <Text
+                style={{ color: theme.text, fontSize: 20, fontWeight: 'bold' }}
+              >
+                Order Details
+              </Text>
+              <Text style={{ color: theme.textSecondary, fontSize: 13 }}>
+                #{order?.id.toUpperCase()}
+              </Text>
+            </View>
+          </View>
+
+          <View style={{ flexDirection: 'row', gap: 8 }}>
+            <TouchableOpacity
+              style={{
+                width: 40,
+                height: 40,
+                borderRadius: 20,
+                backgroundColor: theme.backgroundSecondary,
+                justifyContent: 'center',
+                alignItems: 'center',
+              }}
+              onPress={() =>
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
+              }
+            >
+              <Share2 color={theme.text} size={20} />
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={{
+                width: 40,
+                height: 40,
+                borderRadius: 20,
+                backgroundColor: theme.backgroundSecondary,
+                justifyContent: 'center',
+                alignItems: 'center',
+              }}
+              onPress={() =>
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
+              }
+            >
+              <Download color={theme.text} size={20} />
+            </TouchableOpacity>
+          </View>
+        </View>
+      </View>
+
+      <ScrollView
+        style={{ flex: 1 }}
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ paddingBottom: 24 }}
+      >
+        {/* Status Card */}
+        <MotiView
+          from={{ opacity: 0, translateY: 20 }}
+          animate={{ opacity: 1, translateY: 0 }}
+          transition={{ type: 'timing', duration: 400 }}
+          style={{ paddingHorizontal: 20, marginTop: 20 }}
+        >
+          <LinearGradient
+            colors={[statusConfig.bgColor, statusConfig.bgColor + '80']}
+            style={{
+              borderRadius: 20,
+              padding: 20,
+              borderWidth: 1,
+              borderColor: statusConfig.color + '30',
+            }}
+          >
+            <View
+              style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+              }}
+            >
+              <View
+                style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}
+              >
+                <View
+                  style={{
+                    width: 48,
+                    height: 48,
+                    borderRadius: 24,
+                    backgroundColor: statusConfig.color + '20',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                  }}
+                >
+                  <StatusIcon color={statusConfig.color} size={24} />
+                </View>
+                <View>
+                  <Text
+                    style={{
+                      fontSize: 18,
+                      fontWeight: 'bold',
+                      color: theme.text,
+                      marginBottom: 2,
+                    }}
+                  >
+                    {statusConfig.label}
+                  </Text>
+                  <Text style={{ fontSize: 13, color: theme.textSecondary }}>
+                    Order Status
+                  </Text>
+                </View>
+              </View>
+              <View
+                style={{
+                  backgroundColor: statusConfig.color + '20',
+                  paddingHorizontal: 12,
+                  paddingVertical: 6,
+                  borderRadius: 12,
+                }}
+              >
+                <Text
+                  style={{
+                    color: statusConfig.color,
+                    fontSize: 12,
+                    fontWeight: '600',
+                  }}
+                >
+                  {order?.transaction_type || 'ORDER'}
+                </Text>
+              </View>
+            </View>
+
+            {order?.delivered_at && (
+              <View
+                style={{
+                  marginTop: 16,
+                  paddingTop: 16,
+                  borderTopWidth: 1,
+                  borderTopColor: theme.border,
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  gap: 8,
+                }}
+              >
+                <Calendar color={theme.textSecondary} size={16} />
+                <Text style={{ color: theme.textSecondary, fontSize: 13 }}>
+                  Delivered: {formatDate(order?.delivered_at)}
+                </Text>
+              </View>
+            )}
+          </LinearGradient>
+        </MotiView>
+
+        {/* Confirmation Code */}
+        <View style={{ paddingHorizontal: 20, marginTop: 24 }}>
+          <View
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              gap: 8,
+              marginBottom: 16,
+            }}
+          >
+            <LockKeyholeIcon color={theme.primary} size={20} />
+            <Text
+              style={{ fontSize: 18, fontWeight: 'bold', color: theme.text }}
+            >
+              Confirmation Code
+            </Text>
+          </View>
+
+          <View
+            style={{
+              backgroundColor: theme.card,
+              borderRadius: 16,
+              overflow: 'hidden',
+              borderWidth: 1,
+              padding: 10,
+              borderColor: theme.border,
+            }}
+          >
+            <View className="flex flex-row items-center gap-10">
+              <Text
+                className="flex-1 text-3xl text-center font-semibold tracking-wider"
+                style={{ color: theme.primary }}
+              >
+                {codeHidden
+                  ? '••••••••'
+                  : order?.confirmation_code ||
+                    order?.id.slice(0, 8).toUpperCase()}
+              </Text>
+              <TouchableOpacity onPress={() => setCodeHidden(!codeHidden)}>
+                {codeHidden ? (
+                  <EyeClosed color={theme.primary} size={24} />
+                ) : (
+                  <Eye color={theme.primary} size={24} />
+                )}
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+
+        {/* Order Items */}
+        <View style={{ paddingHorizontal: 20, marginTop: 24 }}>
+          <View
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              gap: 8,
+              marginBottom: 16,
+            }}
+          >
+            <ShoppingBag color={theme.primary} size={20} />
+            <Text
+              style={{ fontSize: 18, fontWeight: 'bold', color: theme.text }}
+            >
+              Order Items{' '}
+              {order?.items && order.items.length > 0
+                ? `(${order.items.length})`
+                : ''}
+            </Text>
+          </View>
+
+          <View
+            style={{
+              backgroundColor: theme.card,
+              borderRadius: 16,
+              overflow: 'hidden',
+              borderWidth: 1,
+              borderColor: theme.border,
+            }}
+          >
+            {order?.items?.map((orderItem: OrderItem, index: number) => (
+              <View key={index}>
+                <View style={{ flexDirection: 'row', padding: 16, gap: 12 }}>
+                  <Image
+                    source={
+                      orderItem.item.main_image
+                        ? { uri: handleImageSrc(orderItem.item.main_image) }
+                        : images.OFFER_PLACEHOLDER_IMAGE
+                    }
+                    style={{
+                      width: 80,
+                      height: 80,
+                      borderRadius: 12,
+                      backgroundColor: theme.backgroundSecondary,
+                    }}
+                    resizeMode="cover"
+                  />
+                  <View style={{ flex: 1, justifyContent: 'space-between' }}>
+                    <View>
+                      <Text
+                        style={{
+                          fontSize: 16,
+                          fontWeight: '600',
+                          color: theme.text,
+                          marginBottom: 4,
+                        }}
+                        numberOfLines={2}
+                      >
+                        {orderItem.item.title}
+                      </Text>
+                      <Text
+                        style={{
+                          fontSize: 13,
+                          color: theme.textSecondary,
+                        }}
+                      >
+                        Qty: {orderItem.quantity}
+                      </Text>
+                    </View>
+                    <Text
+                      style={{
+                        fontSize: 18,
+                        fontWeight: 'bold',
+                        color: theme.primary,
+                      }}
+                    >
+                      ${formatPrice(orderItem.total)}
+                    </Text>
+                  </View>
+                </View>
+                {index < (order?.items?.length || 0) - 1 && (
+                  <View
+                    style={{
+                      height: 1,
+                      backgroundColor: theme.border,
+                      marginHorizontal: 16,
+                    }}
+                  />
+                )}
+              </View>
+            ))}
+          </View>
+        </View>
+
+        {/* Customer Information */}
+        {order?.client_data && (
+          <View style={{ paddingHorizontal: 20, marginTop: 24 }}>
+            <View
+              style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                gap: 8,
+                marginBottom: 16,
+              }}
+            >
+              <User color={theme.primary} size={20} />
+              <Text
+                style={{ fontSize: 18, fontWeight: 'bold', color: theme.text }}
+              >
+                Customer Information
+              </Text>
+            </View>
+
+            <View
+              style={{
+                backgroundColor: theme.card,
+                borderRadius: 16,
+                padding: 16,
+                gap: 16,
+                borderWidth: 1,
+                borderColor: theme.border,
+              }}
+            >
+              <View
+                style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}
+              >
+                <View
+                  style={{
+                    width: 40,
+                    height: 40,
+                    borderRadius: 20,
+                    backgroundColor: theme.primary + '20',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                  }}
+                >
+                  <User color={theme.primary} size={20} />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={{ fontSize: 12, color: theme.textSecondary }}>
+                    Full Name
+                  </Text>
+                  <Text
+                    style={{
+                      fontSize: 15,
+                      fontWeight: '600',
+                      color: theme.text,
+                    }}
+                  >
+                    {order?.client_data.first_name}{' '}
+                    {order?.client_data.last_name}
+                  </Text>
+                </View>
+              </View>
+
+              <View
+                style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}
+              >
+                <View
+                  style={{
+                    width: 40,
+                    height: 40,
+                    borderRadius: 20,
+                    backgroundColor: theme.primary + '20',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                  }}
+                >
+                  <Phone color={theme.primary} size={20} />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={{ fontSize: 12, color: theme.textSecondary }}>
+                    Phone Number
+                  </Text>
+                  <TouchableOpacity
+                    onPress={() =>
+                      Linking.openURL(`tel:${order?.client_data?.phone_number}`)
+                    }
+                  >
+                    <Text
+                      style={{
+                        fontSize: 15,
+                        fontWeight: '600',
+                        color: theme.primary,
+                      }}
+                    >
+                      {order?.client_data.phone_number}
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+
+              <View
+                style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}
+              >
+                <View
+                  style={{
+                    width: 40,
+                    height: 40,
+                    borderRadius: 20,
+                    backgroundColor: theme.primary + '20',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                  }}
+                >
+                  <Mail color={theme.primary} size={20} />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={{ fontSize: 12, color: theme.textSecondary }}>
+                    Email Address
+                  </Text>
+                  <TouchableOpacity
+                    onPress={() =>
+                      Linking.openURL(`mailto:${order?.client_data?.email}`)
+                    }
+                  >
+                    <Text
+                      style={{
+                        fontSize: 15,
+                        fontWeight: '600',
+                        color: theme.primary,
+                      }}
+                      numberOfLines={1}
+                    >
+                      {order?.client_data.email}
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+
+              <View
+                style={{
+                  flexDirection: 'row',
+                  alignItems: 'flex-start',
+                  gap: 12,
+                }}
+              >
+                <View
+                  style={{
+                    width: 40,
+                    height: 40,
+                    borderRadius: 20,
+                    backgroundColor: theme.primary + '20',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                  }}
+                >
+                  <MapPin color={theme.primary} size={20} />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={{ fontSize: 12, color: theme.textSecondary }}>
+                    Delivery Address
+                  </Text>
+                  <Text
+                    style={{
+                      fontSize: 15,
+                      fontWeight: '600',
+                      color: theme.text,
+                      lineHeight: 20,
+                    }}
+                  >
+                    {order?.client_data.address}
+                  </Text>
+                </View>
+              </View>
+            </View>
+          </View>
+        )}
+
+        {/* Payment Information */}
+        <View style={{ paddingHorizontal: 20, marginTop: 24 }}>
+          <View
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              gap: 8,
+              marginBottom: 16,
+            }}
+          >
+            <CreditCard color={theme.primary} size={20} />
+            <Text
+              style={{ fontSize: 18, fontWeight: 'bold', color: theme.text }}
+            >
+              Payment Details
+            </Text>
+          </View>
+
+          <View
+            style={{
+              backgroundColor: theme.card,
+              borderRadius: 16,
+              padding: 16,
+              gap: 12,
+              borderWidth: 1,
+              borderColor: theme.border,
+            }}
+          >
+            <View
+              style={{
+                flexDirection: 'row',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+              }}
+            >
+              <Text style={{ fontSize: 14, color: theme.textSecondary }}>
+                Payment Method
+              </Text>
+              <Text
+                style={{ fontSize: 15, fontWeight: '600', color: theme.text }}
+              >
+                {order?.payment_method?.replace('_', ' ') || 'N/A'}
+              </Text>
+            </View>
+
+            <View
+              style={{
+                flexDirection: 'row',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+              }}
+            >
+              <Text style={{ fontSize: 14, color: theme.textSecondary }}>
+                Payment Status
+              </Text>
+              <View
+                style={{
+                  backgroundColor: paymentConfig.color + '20',
+                  paddingHorizontal: 12,
+                  paddingVertical: 6,
+                  borderRadius: 12,
+                }}
+              >
+                <Text
+                  style={{
+                    fontSize: 13,
+                    fontWeight: '600',
+                    color: paymentConfig.color,
+                  }}
+                >
+                  {paymentConfig.label}
+                </Text>
+              </View>
+            </View>
+
+            <View
+              style={{
+                height: 1,
+                backgroundColor: theme.border,
+                marginVertical: 4,
+              }}
+            />
+
+            <View
+              style={{
+                flexDirection: 'row',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+              }}
+            >
+              <Text style={{ fontSize: 14, color: theme.textSecondary }}>
+                Subtotal
+              </Text>
+              <Text
+                style={{ fontSize: 15, fontWeight: '600', color: theme.text }}
+              >
+                ${formatPrice(order?.total_price || 0)}
+              </Text>
+            </View>
+
+            <View
+              style={{
+                flexDirection: 'row',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                paddingTop: 12,
+                borderTopWidth: 2,
+                borderTopColor: theme.border,
+              }}
+            >
+              <Text
+                style={{ fontSize: 16, fontWeight: 'bold', color: theme.text }}
+              >
+                Total
+              </Text>
+              <Text
+                style={{
+                  fontSize: 22,
+                  fontWeight: 'bold',
+                  color: theme.primary,
+                }}
+              >
+                ${formatPrice(order?.total_price || 0)}{' '}
+                {order?.currency || 'USD'}
+              </Text>
+            </View>
+          </View>
+        </View>
+
+        {/* Order Timeline */}
+        <View style={{ paddingHorizontal: 20, marginTop: 24 }}>
+          <View
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              gap: 8,
+              marginBottom: 16,
+            }}
+          >
+            <Receipt color={theme.primary} size={20} />
+            <Text
+              style={{ fontSize: 18, fontWeight: 'bold', color: theme.text }}
+            >
+              Order Timeline
+            </Text>
+          </View>
+
+          <View
+            style={{
+              backgroundColor: theme.card,
+              borderRadius: 16,
+              padding: 16,
+              gap: 12,
+              borderWidth: 1,
+              borderColor: theme.border,
+            }}
+          >
+            {order?.created_at && (
+              <View
+                style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}
+              >
+                <View
+                  style={{
+                    width: 8,
+                    height: 8,
+                    borderRadius: 4,
+                    backgroundColor: theme.primary,
+                  }}
+                />
+                <View style={{ flex: 1 }}>
+                  <Text style={{ fontSize: 13, color: theme.textSecondary }}>
+                    Order Created
+                  </Text>
+                  <Text
+                    style={{
+                      fontSize: 14,
+                      fontWeight: '600',
+                      color: theme.text,
+                    }}
+                  >
+                    {formatDate(order?.created_at)}
+                  </Text>
+                </View>
+              </View>
+            )}
+
+            {order?.date_trx && (
+              <View
+                style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}
+              >
+                <View
+                  style={{
+                    width: 8,
+                    height: 8,
+                    borderRadius: 4,
+                    backgroundColor: theme.success,
+                  }}
+                />
+                <View style={{ flex: 1 }}>
+                  <Text style={{ fontSize: 13, color: theme.textSecondary }}>
+                    Transaction Date
+                  </Text>
+                  <Text
+                    style={{
+                      fontSize: 14,
+                      fontWeight: '600',
+                      color: theme.text,
+                    }}
+                  >
+                    {formatDate(order?.date_trx)}
+                  </Text>
+                </View>
+              </View>
+            )}
+
+            {order?.delivered_at && (
+              <View
+                style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}
+              >
+                <View
+                  style={{
+                    width: 8,
+                    height: 8,
+                    borderRadius: 4,
+                    backgroundColor: theme.info,
+                  }}
+                />
+                <View style={{ flex: 1 }}>
+                  <Text style={{ fontSize: 13, color: theme.textSecondary }}>
+                    Delivered
+                  </Text>
+                  <Text
+                    style={{
+                      fontSize: 14,
+                      fontWeight: '600',
+                      color: theme.text,
+                    }}
+                  >
+                    {formatDate(order?.delivered_at)}
+                  </Text>
+                </View>
+              </View>
+            )}
+
+            {order?.expiry && (
+              <View
+                style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}
+              >
+                <View
+                  style={{
+                    width: 8,
+                    height: 8,
+                    borderRadius: 4,
+                    backgroundColor: theme.warning,
+                  }}
+                />
+                <View style={{ flex: 1 }}>
+                  <Text style={{ fontSize: 13, color: theme.textSecondary }}>
+                    Expires On
+                  </Text>
+                  <Text
+                    style={{
+                      fontSize: 14,
+                      fontWeight: '600',
+                      color: theme.text,
+                    }}
+                  >
+                    {formatDate(order?.expiry)}
+                  </Text>
+                </View>
+              </View>
+            )}
+          </View>
+        </View>
+
+        {/* QR Code Section */}
+        {order?.qr_code_url && (
+          <View style={{ paddingHorizontal: 20, marginTop: 24 }}>
+            <View
+              style={{
+                backgroundColor: theme.card,
+                borderRadius: 16,
+                padding: 20,
+                alignItems: 'center',
+                borderWidth: 1,
+                borderColor: theme.border,
+              }}
+            >
+              <Text
+                style={{
+                  fontSize: 16,
+                  fontWeight: 'bold',
+                  color: theme.text,
+                  marginBottom: 12,
+                }}
+              >
+                Order QR Code
+              </Text>
+              <Image
+                source={{ uri: order?.qr_code_url }}
+                style={{ width: 200, height: 200, borderRadius: 12 }}
+                resizeMode="contain"
+              />
+              <Text
+                style={{
+                  fontSize: 12,
+                  color: theme.textSecondary,
+                  marginTop: 8,
+                  textAlign: 'center',
+                }}
+              >
+                Show this QR code for verification
+              </Text>
+            </View>
+          </View>
+        )}
+      </ScrollView>
+    </SafeAreaView>
+  );
+}

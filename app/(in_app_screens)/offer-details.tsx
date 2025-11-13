@@ -25,6 +25,8 @@ import {
   ShoppingCart,
   HeartPulse,
   Leaf,
+  Minus,
+  Plus,
 } from 'lucide-react-native';
 import { useAppStore } from '@/stores/appStore';
 import { Offer } from '@/types/appTypes';
@@ -148,6 +150,7 @@ export default function OfferDetailsScreen() {
       `${offer.title} is added to your cart`,
       'success'
     );
+    router.replace('/(tabs)');
   };
 
   return (
@@ -556,35 +559,46 @@ export default function OfferDetailsScreen() {
 
       {/* Footer */}
       <BlurView
-        className="absolute bottom-0 left-0 right-0 border-t"
+        className="absolute bottom-5 left-0 right-0 border-t"
         intensity={50}
         tint={isDark ? 'dark' : 'light'}
         style={{
-          backgroundColor: `${theme.card}95`,
+          backgroundColor: `${theme.card}`,
           borderColor: theme.border,
         }}
       >
-        <View className="flex-row gap-3 items-center px-6 py-4">
+        <View className="flex flex-col gap-3 items-center px-6 py-4">
+          <View className="flex-row w-full gap-7 items-center justify-center rounded-xl  ">
+            <TouchableOpacity
+              // onPress={() => updateCartItem(item.id, item.quantity - 1)}
+              className="w-9 h-9 justify-center items-center"
+              activeOpacity={0.7}
+            >
+              <Minus color={theme.primary} size={16} strokeWidth={2.5} />
+            </TouchableOpacity>
+
+            <View className="px-4 py-1.5 rounded-lg mx-1">
+              <Text className="text-[15px] font-bold text-white">
+                {/* {item.quantity} */}2
+              </Text>
+            </View>
+
+            <TouchableOpacity
+              // onPress={() => updateCartItem(item.id, item.quantity + 1)}
+              className="w-9 h-9 justify-center items-center"
+              activeOpacity={0.7}
+            >
+              <Plus color={theme.primary} size={16} strokeWidth={2.5} />
+            </TouchableOpacity>
+          </View>
           <TouchableOpacity
             onPress={handleAddToCart}
-            className="flex-row flex-1 items-center px-6 py-4 rounded-2xl gap-2 shadow-lg"
+            className="flex-row w-full items-center justify-center px-6 py-4 rounded-2xl gap-2 shadow-lg"
             style={{ backgroundColor: theme.primary }}
             activeOpacity={0.8}
           >
-            <PlusCircle color="#fff" size={22} />
             <Text className="text-white text-base font-inter-bold">
               Add to Cart
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            onPress={() => router.push('/(tabs)/cart')}
-            className="flex-row items-center px-6 py-4 rounded-2xl gap-2 shadow-lg"
-            style={{ backgroundColor: theme.secondary }}
-            activeOpacity={0.8}
-          >
-            <ShoppingCart color="#fff" size={22} />
-            <Text className="text-white text-base font-inter-bold">
-              Go to Cart
             </Text>
           </TouchableOpacity>
         </View>

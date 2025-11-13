@@ -47,7 +47,7 @@ export default function CategoriesScreen() {
 
   const renderCategoryItem = ({ item: category }: { item: any }) => (
     <TouchableOpacity
-      className="w-28 h-32 rounded-2xl p-1 border-2"
+      className="w-28 h-28 rounded-2xl p-1 border-2"
       style={{
         backgroundColor:
           selectedCategory === category.id ? theme.primaryLight : theme.card,
@@ -72,23 +72,23 @@ export default function CategoriesScreen() {
             ? { uri: handleImageSrc(category.main_image) }
             : images.CATEGORY_PLACEHOLDER_IMAGE
         }
-        resizeMode="cover"
+        resizeMode="center"
         className="w-full h-16 rounded-lg mb-2"
       />
-      <View className="flex-1 justify-center">
+      <View className="flex-1 justify-start">
         <Text
           className="text-sm font-bold text-center mb-0.5"
           style={{ color: theme.text }}
         >
           {category.name}
         </Text>
-        <Text
+        {/* <Text
           className="text-[10px] text-center leading-3"
           style={{ color: theme.textSecondary }}
           numberOfLines={2}
         >
           {category.description}
-        </Text>
+        </Text> */}
       </View>
     </TouchableOpacity>
   );

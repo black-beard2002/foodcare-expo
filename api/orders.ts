@@ -93,6 +93,7 @@ class OrdersApiImpl implements OrdersApi {
         };
       }
     } catch (error) {
+      console.log('order create error:', error);
       return {
         success: false,
         error: 'Failed to create order',

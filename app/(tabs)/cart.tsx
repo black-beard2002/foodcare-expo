@@ -17,7 +17,7 @@ import {
 } from 'lucide-react-native';
 import { useAppStore } from '@/stores/appStore';
 import { useTheme } from '@/hooks/useTheme';
-import { useAlert } from '@/providers/AlertProvider';
+
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { CartItem } from '@/types/appTypes';
 import { formatPrice, handleImageSrc } from '@/utils/helpers';
@@ -29,7 +29,6 @@ const CartItemComponent = ({
   theme,
   removeFromCart,
   updateCartItem,
-  showAlert,
 }: any) => {
   const animatedValue = useRef(new Animated.Value(0)).current;
 
@@ -111,7 +110,6 @@ const CartItemComponent = ({
           <TouchableOpacity
             onPress={() => {
               removeFromCart(item.id);
-              showAlert('Removed', 'Item removed from cart', 'info');
             }}
             className="w-9 h-9 rounded-xl justify-center items-center"
             style={{ backgroundColor: `${theme.error}15` }}
@@ -180,7 +178,7 @@ const CartItemComponent = ({
 
 export default function CartScreen() {
   const { theme } = useTheme();
-  const { showAlert } = useAlert();
+
   const {
     cart,
     updateCartItem,
@@ -202,7 +200,6 @@ export default function CartScreen() {
       theme={theme}
       removeFromCart={removeFromCart}
       updateCartItem={updateCartItem}
-      showAlert={showAlert}
     />
   );
 
@@ -302,10 +299,12 @@ export default function CartScreen() {
       />
 
       <View
-        className="absolute bottom-0 left-0 right-0 px-6 pt-5 pb-6 border-t shadow-2xl"
+        className="fixed bottom-24 left-0 rounded-2xl right-0 px-6 pt-5 pb-6 border-t shadow-2xl"
         style={{
           backgroundColor: theme.card,
           borderColor: theme.border,
+          width: '90%',
+          alignSelf: 'center',
         }}
       >
         <View className="mb-4">

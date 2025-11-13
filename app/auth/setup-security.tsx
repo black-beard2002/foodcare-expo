@@ -1,4 +1,4 @@
-import React, { useState, useEffect, JSX } from 'react';
+import React, { useState, useEffect, JSX, useCallback } from 'react';
 import {
   View,
   Text,
@@ -11,7 +11,14 @@ import {
   ColorValue,
 } from 'react-native';
 import { router } from 'expo-router';
-import { ArrowLeft, Lock, Fingerprint, Shield } from 'lucide-react-native';
+import {
+  ArrowLeft,
+  Lock,
+  Fingerprint,
+  Shield,
+  PartyPopper,
+  Sparkles,
+} from 'lucide-react-native';
 import * as LocalAuthentication from 'expo-local-authentication';
 import { useAuthStore } from '@/stores/authStore';
 import { useSettingsStore } from '@/stores/settingsStore';
@@ -19,9 +26,11 @@ import { useAlert } from '@/providers/AlertProvider';
 import { useTheme } from '@/hooks/useTheme';
 import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { MotiView } from 'moti';
 
 export default function SetupSecurityScreen(): JSX.Element {
-  const { setOnboardingComplete } = useAuthStore();
+  const { setOnboardingComplete, updateProfile, isLoading, user } =
+    useAuthStore();
   const {
     biometricEnabled,
     setUserPin,
@@ -32,6 +41,7 @@ export default function SetupSecurityScreen(): JSX.Element {
 
   const [localBiometricEnabled, setLocalBiometricEnabled] =
     useState<boolean>(biometricEnabled);
+  const [isCompleting, setIsCompleting] = useState(false);
   const [localPinEnabled, setLocalPinEnabled] = useState<boolean>(pinEnabled);
   const [showPinModal, setShowPinModal] = useState<boolean>(false);
   const [pin, setPin] = useState<string>('');
@@ -196,12 +206,32 @@ export default function SetupSecurityScreen(): JSX.Element {
     }
   };
 
-  const handleContinue = (): void => {
+  const handleContinue = useCallback(async () => {
     setBiometricEnabled(localBiometricEnabled);
     setPinEnabled(localPinEnabled);
     setOnboardingComplete(true);
-    router.replace('/auth/onboarding-step-3');
-  };
+    setIsCompleting(true);
+    console.log('Updating profile with settings...', user);
+    const result = await updateProfile(user!);
+
+    if (result.success) {
+      setOnboardingComplete(true);
+
+      await new Promise((resolve) => setTimeout(resolve, 1500));
+
+      showAlert(
+        `Welcome ${user?.first_name}!`,
+        "Your account is ready. Let's start exploring!",
+        'success'
+      );
+      setTimeout(() => {
+        router.replace('/(tabs)');
+      }, 500);
+    } else {
+      setIsCompleting(false);
+      showAlert('Error', result.error || 'Failed to complete setup', 'error');
+    }
+  }, [user, updateProfile, setOnboardingComplete]);
 
   const renderPinInput = (
     currentPin: string,
@@ -246,6 +276,84 @@ export default function SetupSecurityScreen(): JSX.Element {
   const accentGradient: [ColorValue, ColorValue] = isDark
     ? ['rgba(244, 208, 63, 1)', 'rgba(245, 158, 11, 1)']
     : ['rgba(244, 208, 63, 1)', 'rgb(247, 177, 57)'];
+  const successGradient: [ColorValue, ColorValue] = isDark
+    ? (['rgba(34,197,94,1)', 'rgba(22,163,74,1)'] as const)
+    : (['rgba(34,197,94,1)', 'rgba(22,163,74,1)'] as const);
+  if (isCompleting) {
+    return (
+      <LinearGradient
+        colors={gradientColors}
+        style={{
+          position: 'absolute',
+          left: 0,
+          right: 0,
+          top: 0,
+          bottom: 0,
+          paddingTop: 80,
+        }}
+      >
+        <MotiView
+          from={{ scale: 0, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{
+            type: 'timing',
+            duration: 600,
+          }}
+        >
+          <LinearGradient
+            colors={successGradient}
+            style={{
+              borderRadius: 32,
+              marginTop: 32,
+              width: 128,
+              height: 128,
+              alignSelf: 'center',
+              justifyContent: 'center',
+              alignItems: 'center',
+              marginBottom: 24,
+            }}
+          >
+            <PartyPopper color="#fff" size={72} />
+          </LinearGradient>
+        </MotiView>
+
+        <MotiView
+          from={{ translateY: 20, opacity: 0 }}
+          animate={{ translateY: 0, opacity: 1 }}
+          transition={{
+            type: 'timing',
+            duration: 600,
+            delay: 300,
+          }}
+        >
+          <Text
+            className="text-4xl font-bold mb-4 text-center"
+            style={{ color: theme.text }}
+          >
+            Welcome Aboard!
+          </Text>
+          <Text
+            className="text-lg text-center leading-7 mb-8 px-8"
+            style={{ color: theme.textSecondary }}
+          >
+            Your account is all set up. Get ready to discover amazing food!
+          </Text>
+        </MotiView>
+
+        <MotiView
+          from={{ scale: 0.8, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{
+            type: 'timing',
+            duration: 600,
+            delay: 600,
+          }}
+        >
+          <ActivityIndicator size="large" color={theme.primary} />
+        </MotiView>
+      </LinearGradient>
+    );
+  }
 
   return (
     <LinearGradient
@@ -258,7 +366,7 @@ export default function SetupSecurityScreen(): JSX.Element {
         bottom: 0,
       }}
     >
-      <SafeAreaView className="flex-1">
+      <SafeAreaView className="flex-1 pt-16">
         {/* Header */}
         <View className="flex-row items-center px-6 mb-10 md:px-8 md:mb-12">
           <TouchableOpacity onPress={() => router.back()} className="mr-4">
@@ -378,19 +486,35 @@ export default function SetupSecurityScreen(): JSX.Element {
 
           {/* Continue Button */}
           <TouchableOpacity
-            className="w-full p-4 rounded-xl items-center mb-4 max-w-md md:p-5"
-            style={{ backgroundColor: theme.primary }}
             onPress={handleContinue}
+            disabled={isLoading}
+            className="w-full py-4 rounded-xl items-center justify-center"
+            style={{
+              backgroundColor: theme.primary,
+              opacity: isLoading ? 0.7 : 1,
+            }}
           >
-            <Text className="text-white text-base font-inter-medium md:text-lg">
-              Continue to App
-            </Text>
+            {isLoading ? (
+              <ActivityIndicator color="#fff" />
+            ) : (
+              <View className="flex-row items-center">
+                <Text
+                  className="text-base font-semibold mr-2"
+                  style={{
+                    color: '#fff',
+                  }}
+                >
+                  Complete Setup
+                </Text>
+                <Sparkles color={'#fff'} size={18} />
+              </View>
+            )}
           </TouchableOpacity>
 
           {/* Skip Option */}
           <TouchableOpacity onPress={handleContinue}>
             <Text
-              className="text-sm font-inter-medium md:text-base"
+              className="text-sm font-inter-medium md:text-base mt-4"
               style={{ color: theme.textSecondary }}
             >
               Skip for now

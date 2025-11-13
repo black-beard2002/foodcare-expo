@@ -270,17 +270,6 @@ export default function PersonalInfoScreen() {
                       <User color="#fff" size={40} strokeWidth={2} />
                     </LinearGradient>
                   </View>
-                  {isEditing && (
-                    <View
-                      className="absolute bottom-0 right-0 w-8 h-8 rounded-full justify-center items-center border-2"
-                      style={{
-                        backgroundColor: theme.primary,
-                        borderColor: theme.card,
-                      }}
-                    >
-                      <Edit3 color="#fff" size={14} strokeWidth={2.5} />
-                    </View>
-                  )}
                 </View>
                 <Text
                   className="text-2xl font-bold mb-1"
