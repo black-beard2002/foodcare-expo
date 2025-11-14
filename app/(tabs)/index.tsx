@@ -23,29 +23,21 @@ import * as images from '../../constants/images';
 import {
   Star,
   Search,
-  Bell,
-  Filter,
-  TrendingUp,
   ChefHat,
   Sparkles,
-  MapPinned,
-  MapPinHouse,
   User,
   UtensilsCrossed,
-  SunMoon,
   MapPin,
-  Clock,
-  Heart,
   ShoppingCart,
   Wifi,
   WifiOff,
   RefreshCw,
-  Zap,
   Sun,
   Moon,
   Route,
   ArrowRight,
   EarthIcon,
+  Heart,
 } from 'lucide-react-native';
 import { useAppStore } from '@/stores/appStore';
 import { useTheme } from '@/hooks/useTheme';
@@ -69,10 +61,6 @@ import {
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const HERO_CARD_WIDTH = SCREEN_WIDTH - 40;
 const CATEGORY_WIDTH = 120;
-
-const Spacer = ({ height = 16, width = 0 }) => (
-  <View style={{ height, width }} />
-);
 
 // Animated Badge Component
 const AnimatedBadge = ({ count, color }: { count: number; color: string }) => {
@@ -234,7 +222,7 @@ const ModernFeaturedCard = ({
             <View style={{ alignItems: 'flex-start' }}>
               <View
                 style={{
-                  backgroundColor: theme.primary,
+                  backgroundColor: theme.primaryLight,
                   paddingHorizontal: 16,
                   paddingVertical: 8,
                   borderRadius: 20,
@@ -246,7 +234,7 @@ const ModernFeaturedCard = ({
                 <Text
                   style={{
                     color: '#fff',
-                    fontSize: 16,
+                    fontSize: 14,
                     fontWeight: 'bold',
                   }}
                 >
@@ -267,6 +255,7 @@ const ModernFeaturedCard = ({
                   opacity: 0.9,
                   marginBottom: 4,
                 }}
+                numberOfLines={2}
               >
                 {item.description || 'Delicious food awaits'}
               </Text>
@@ -394,7 +383,7 @@ const EnhancedNearYouCard = ({
             width: 200,
             height: 200,
             borderRadius: 100,
-            shadowColor: '#c94242',
+            shadowColor: theme.shadow,
             shadowOffset: { width: 0, height: 12 },
             shadowOpacity: 0.5,
             shadowRadius: 20,
@@ -652,7 +641,7 @@ export default function HomeScreen(): JSX.Element {
   const { user } = useAuthStore();
   const { showAlert } = useAlert();
   const [refreshing, setRefreshing] = useState(false);
-  const isLocked = useRef(false);
+  const hasFetched = useRef(false);
   const [filterVisible, setFilterVisible] = useState(false);
   const [activeFilters, setActiveFilters] = useState<FilterOptions | null>(
     null
@@ -669,10 +658,9 @@ export default function HomeScreen(): JSX.Element {
       initNetworkListener();
       await refreshData(true);
     };
-    if (!isLocked.current) {
-      init();
-      isLocked.current = true;
-    }
+    if (hasFetched.current) return; // skip if already fetched
+    hasFetched.current = true; // mark as fetched
+    init();
   }, []);
 
   useEffect(() => {
@@ -816,43 +804,29 @@ export default function HomeScreen(): JSX.Element {
             alignItems: 'center',
           }}
         >
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-            <TouchableOpacity
-              style={{
-                width: 48,
-                height: 48,
-                borderRadius: 24,
-                backgroundColor: theme.card,
-                justifyContent: 'center',
-                alignItems: 'center',
-              }}
-            >
-              <User color={theme.textSecondary} size={24} />
-            </TouchableOpacity>
-            <View>
-              <Text style={{ fontSize: 13, color: theme.textSecondary }}>
-                Welcome back
+          <View>
+            <Text style={{ fontSize: 13, color: theme.textSecondary }}>
+              Welcome back
+            </Text>
+            <View className="flex flex-row items-center gap-1">
+              <MapPin size={14} color={theme.textSecondary} />
+              <Text
+                style={{
+                  fontSize: 16,
+                  fontWeight: 'bold',
+                  color: theme.text,
+                }}
+              >
+                {user?.address?.split(',')[0] || 'Food Lover'}
               </Text>
-              <View className="flex flex-row items-center gap-1">
-                <MapPin size={14} color={theme.textSecondary} />
-                <Text
-                  style={{
-                    fontSize: 16,
-                    fontWeight: 'bold',
-                    color: theme.text,
-                  }}
-                >
-                  {user?.address?.split(',')[0] || 'Food Lover'}
-                </Text>
-              </View>
             </View>
           </View>
 
           <View style={{ flexDirection: 'row', gap: 8 }}>
             <TouchableOpacity
               style={{
-                width: 48,
-                height: 48,
+                width: 45,
+                height: 45,
                 borderRadius: 24,
                 backgroundColor: theme.card,
                 justifyContent: 'center',
@@ -861,15 +835,15 @@ export default function HomeScreen(): JSX.Element {
               onPress={toggleTheme}
             >
               {isDark ? (
-                <Sun color={theme.textSecondary} size={22} />
+                <Sun color={theme.textSecondary} size={20} />
               ) : (
-                <Moon color={theme.textSecondary} size={22} />
+                <Moon color={theme.textSecondary} size={20} />
               )}
             </TouchableOpacity>
             <TouchableOpacity
               style={{
-                width: 48,
-                height: 48,
+                width: 45,
+                height: 45,
                 borderRadius: 24,
                 backgroundColor: theme.card,
                 justifyContent: 'center',
@@ -877,14 +851,38 @@ export default function HomeScreen(): JSX.Element {
               }}
               onPress={() => router.push('/(tabs)/cart')}
             >
-              <ShoppingCart color={theme.textSecondary} size={22} />
+              <ShoppingCart color={theme.textSecondary} size={20} />
               <AnimatedBadge count={cartCount} color={theme.primary} />
             </TouchableOpacity>
-
             <TouchableOpacity
               style={{
-                width: 48,
-                height: 48,
+                width: 45,
+                height: 45,
+                borderRadius: 24,
+                backgroundColor: theme.card,
+                justifyContent: 'center',
+                alignItems: 'center',
+              }}
+              // onPress={() => router.push('/(in_app_screens)/favourites')}
+              onPress={() =>
+                showAlert(
+                  'Favorites coming soon!',
+                  'This is the alert description section',
+                  'success'
+                )
+              }
+            >
+              <Heart
+                color={theme.textSecondary}
+                fill={isNewFavoritedAdded ? theme.error : 'transparent'}
+                size={20}
+                strokeWidth={isNewFavoritedAdded ? 0 : 2}
+              />
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={{
+                width: 45,
+                height: 45,
                 borderRadius: 24,
                 backgroundColor: theme.card,
                 justifyContent: 'center',
@@ -892,7 +890,7 @@ export default function HomeScreen(): JSX.Element {
               }}
               onPress={() => router.push('/(in_app_screens)/search')}
             >
-              <Search color={theme.textSecondary} size={22} />
+              <Search color={theme.textSecondary} size={20} />
             </TouchableOpacity>
           </View>
         </View>
@@ -913,7 +911,7 @@ export default function HomeScreen(): JSX.Element {
       >
         {/* Promotional Banner / Featured Carousel */}
         {featuredOffers.length > 0 && (
-          <View style={{ paddingVertical: 20 }}>
+          <View style={{ marginBottom: 24 }}>
             <View className="flex mb-4 flex-row items-center justify-between px-5">
               <View className="flex flex-row items-center gap-2">
                 <Sparkles color={theme.textSecondary} />

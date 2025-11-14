@@ -1,4 +1,5 @@
-import { AlertTriangle, CheckCircle, Info, XCircle } from 'lucide-react-native';
+import { useTheme } from '@/hooks/useTheme';
+import { AlertTriangle, Check, Info, X } from 'lucide-react-native';
 import React, {
   createContext,
   useContext,
@@ -25,7 +26,7 @@ interface Alert {
 }
 
 interface AlertContextType {
-  showAlert: (title: string, message: string, type?: AlertType) => void;
+  showAlert: (title: string, message?: string, type?: AlertType) => void;
 }
 
 const AlertContext = createContext<AlertContextType | undefined>(undefined);
@@ -41,7 +42,7 @@ export const AlertProvider = ({ children }: { children: ReactNode }) => {
 
   const showAlert = (
     title: string,
-    message: string,
+    message?: string,
     type: AlertType = 'info'
   ) => {
     const id = Date.now();
@@ -53,12 +54,16 @@ export const AlertProvider = ({ children }: { children: ReactNode }) => {
     }, 4000);
   };
 
+  const handleAlertDismiss = (id: number) => {
+    setAlerts((prev) => prev.filter((a) => a.id !== id));
+  };
+
   return (
     <AlertContext.Provider value={{ showAlert }}>
       {children}
       <View style={styles.container}>
         {alerts.map((alert) => (
-          <Toast key={alert.id} {...alert} />
+          <Toast key={alert.id} alert={alert} onDismiss={handleAlertDismiss} />
         ))}
       </View>
     </AlertContext.Provider>
@@ -72,18 +77,24 @@ const matteColors: Record<AlertType, string> = {
   info: '#1565C0',
 };
 
-const Toast = ({ title, message, type }: Alert) => {
+const Toast = ({
+  alert,
+  onDismiss,
+}: {
+  alert: Alert;
+  onDismiss: (id: number) => void;
+}) => {
   const slideAnim = useRef(new Animated.Value(-100)).current;
   const fadeAnim = useRef(new Animated.Value(0)).current;
-
-  const bgColor = matteColors[type] || matteColors.info;
+  const { theme } = useTheme();
+  const iconColor = matteColors[alert.type] || matteColors.info;
 
   const IconComponent = {
-    success: CheckCircle,
-    error: XCircle,
+    success: Check,
+    error: X,
     warning: AlertTriangle,
     info: Info,
-  }[type];
+  }[alert.type];
 
   useEffect(() => {
     Animated.parallel([
@@ -122,18 +133,38 @@ const Toast = ({ title, message, type }: Alert) => {
       style={[
         styles.toast,
         {
-          backgroundColor: bgColor,
+          backgroundColor: theme.card,
           opacity: fadeAnim,
           transform: [{ translateY: slideAnim }],
         },
       ]}
     >
-      <View style={styles.row}>
-        <IconComponent color="#F5F5F5" size={22} style={styles.icon} />
-        <View style={styles.textContainer}>
-          <Text style={styles.title}>{title}</Text>
-          {message ? <Text style={styles.message}>{message}</Text> : null}
+      <View className="flex flex-row items-center gap-5">
+        <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
+          <View
+            className="mr-4 w-10 h-10 justify-center items-center rounded-md"
+            style={{ backgroundColor: theme.background }}
+          >
+            <IconComponent color={iconColor} size={20} />
+          </View>
+
+          <View style={styles.textContainer}>
+            <Text style={[styles.title, { color: theme.text }]}>
+              {alert.title}
+            </Text>
+            {alert.message ? (
+              <Text style={[styles.message, { color: theme.textSecondary }]}>
+                {alert.message}
+              </Text>
+            ) : null}
+          </View>
         </View>
+        <TouchableOpacity
+          onPress={() => onDismiss(alert.id)}
+          className="w-10 h-10 flex justify-center items-center"
+        >
+          <X size={16} color={theme.textSecondary} />
+        </TouchableOpacity>
       </View>
     </Animated.View>
   );
@@ -148,14 +179,6 @@ const styles = StyleSheet.create({
     zIndex: 1000,
     paddingHorizontal: 16,
   },
-  row: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  icon: {
-    fontSize: 20,
-    marginRight: 12,
-  },
   textContainer: {
     flex: 1,
   },
@@ -165,7 +188,7 @@ const styles = StyleSheet.create({
     maxWidth: 380,
     marginVertical: 8,
     paddingVertical: 14,
-    paddingHorizontal: 18,
+    paddingHorizontal: 14,
     borderRadius: 12,
     shadowColor: '#000',
     shadowOpacity: 0.1,
@@ -176,12 +199,12 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 15,
     fontWeight: '600',
-    color: '#F5F5F5',
+
     letterSpacing: 0.3,
   },
   message: {
     fontSize: 13,
-    color: '#E0E0E0',
+
     marginTop: 4,
     lineHeight: 18,
   },

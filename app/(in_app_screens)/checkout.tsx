@@ -44,7 +44,6 @@ export default function CheckoutScreen() {
   const { addExpense } = useBudgetStore();
   const { user } = useAuthStore();
   const { createOrder, isLoading } = useOrderStore();
-  console.log('user', user);
   const [customerInfo, setCustomerInfo] = useState({
     name: user?.first_name?.concat(` ${user.last_name}`),
     phone: user?.phone_number ?? '',
@@ -52,7 +51,6 @@ export default function CheckoutScreen() {
     specialInstructions: '',
   });
   const [showOrderModal, setShowOrderModal] = useState(false);
-  const [confirmation_code, setConfirmationCode] = useState('');
 
   const handleReserveOrder = async () => {
     if (!customerInfo.name?.trim() || !customerInfo.phone?.trim()) {
@@ -96,7 +94,6 @@ export default function CheckoutScreen() {
     const result = await createOrder(orderData);
 
     if (result.success && result.confirmation_code) {
-      setConfirmationCode(result.confirmation_code);
       setShowOrderModal(true);
       // Update budget store with the new expense according to each cart item category
       cart.forEach(async (item) => {
@@ -333,7 +330,7 @@ export default function CheckoutScreen() {
               />
             </View>
 
-            <View
+            {/* <View
               className="flex-row items-center rounded-2xl border px-4 py-3 gap-3 shadow-sm"
               style={{
                 backgroundColor: theme.card,
@@ -356,7 +353,7 @@ export default function CheckoutScreen() {
                   setCustomerInfo({ ...customerInfo, pickupTime: text })
                 }
               />
-            </View>
+            </View> */}
 
             <View
               className="flex-row items-start rounded-2xl border px-4 py-4 gap-3 shadow-sm"

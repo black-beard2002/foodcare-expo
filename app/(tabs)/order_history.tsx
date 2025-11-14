@@ -23,11 +23,7 @@ import {
 } from 'lucide-react-native';
 import { useTheme } from '@/hooks/useTheme';
 import { useAlert } from '@/providers/AlertProvider';
-import {
-  OrderItem,
-  TransactionBase,
-  TransactionStatus,
-} from '@/types/appTypes';
+import { TransactionBase, TransactionStatus } from '@/types/appTypes';
 import OrderCancelModal from '@/components/OrderCancelModal';
 import { formatDateTime } from '@/utils/formatters';
 import { MotiView } from 'moti';
@@ -237,8 +233,8 @@ export default function OrderHistoryScreen() {
       </View>
 
       {/* Compact Info Grid */}
-      <View className="flex-row flex-wrap gap-2 mb-3 md:gap-3 md:mb-4">
-        <View className="flex-row items-center gap-1.5 px-2 py-1 rounded-lg bg-primary/10 md:px-3 md:py-1.5">
+      <View className="flex-row items-center justify-center  mb-3 gap-3">
+        <View className="flex-row items-center gap-1.5 px-2 py-1 rounded-lg md:px-3 md:py-1.5">
           <Phone
             color={theme.primary}
             size={12}
@@ -252,7 +248,7 @@ export default function OrderHistoryScreen() {
           </Text>
         </View>
 
-        <View className="flex-row items-center gap-1.5 px-2 py-1 rounded-lg bg-primary/10 md:px-3 md:py-1.5">
+        <View className="flex-row items-center gap-1.5 px-2 py-1 rounded-lg md:px-3 md:py-1.5">
           <CalendarClock
             color={theme.primary}
             size={12}
@@ -263,25 +259,6 @@ export default function OrderHistoryScreen() {
             style={{ color: theme.textSecondary }}
           >
             {formatDateTime(order.created_at ?? '')}
-          </Text>
-        </View>
-      </View>
-
-      {/* Status Badge */}
-      <View className="mb-3 md:mb-4">
-        <View
-          className="w-full py-2 rounded-xl items-center justify-center md:py-3"
-          style={{
-            backgroundColor: theme.background,
-          }}
-        >
-          <Text
-            className="text-sm font-semibold capitalize md:text-sm"
-            style={{
-              color: theme.text,
-            }}
-          >
-            {order.confirmation_code}
           </Text>
         </View>
       </View>

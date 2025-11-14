@@ -6,6 +6,7 @@ import {
   Image,
   TouchableOpacity,
   Linking,
+  ColorValue,
 } from 'react-native';
 import { TransactionBase, OrderItem } from '@/types/appTypes';
 import { useTheme } from '@/hooks/useTheme';
@@ -26,7 +27,7 @@ import {
   AlertCircle,
   Truck,
   Receipt,
-  Download,
+  ScanQrCode,
   Share2,
   User,
   ShoppingBag,
@@ -39,11 +40,13 @@ import * as Haptics from 'expo-haptics';
 import { formatPrice, handleImageSrc } from '@/utils/helpers';
 import * as images from '@/constants/images';
 import { useOrderStore } from '@/stores/orderStore';
+import { useCameraPermissions } from 'expo-camera';
 
 export default function OrderDetailsScreen() {
   const { theme } = useTheme();
   const { id } = useLocalSearchParams<{ id: string }>();
   const { orders } = useOrderStore();
+  const [permission, requestPermission] = useCameraPermissions();
   const [codeHidden, setCodeHidden] = useState(true);
   const [order, setOrder] = useState<TransactionBase | null>(null);
   useEffect(() => {
@@ -125,6 +128,15 @@ export default function OrderDetailsScreen() {
       minute: '2-digit',
     });
   };
+  function handleQrScan() {
+    requestPermission();
+    const isPermissionGranted = Boolean(permission?.granted);
+    if (!isPermissionGranted) {
+      requestPermission();
+    } else {
+      router.replace('/(in_app_screens)/qrScan');
+    }
+  }
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: theme.background }}>
@@ -188,21 +200,24 @@ export default function OrderDetailsScreen() {
             >
               <Share2 color={theme.text} size={20} />
             </TouchableOpacity>
-            <TouchableOpacity
-              style={{
-                width: 40,
-                height: 40,
-                borderRadius: 20,
-                backgroundColor: theme.backgroundSecondary,
-                justifyContent: 'center',
-                alignItems: 'center',
-              }}
-              onPress={() =>
-                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
-              }
-            >
-              <Download color={theme.text} size={20} />
-            </TouchableOpacity>
+            {order?.status === 'PENDING' && (
+              <TouchableOpacity
+                style={{
+                  width: 40,
+                  height: 40,
+                  borderRadius: 20,
+                  backgroundColor: theme.backgroundSecondary,
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                }}
+                onPress={() => {
+                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                  handleQrScan();
+                }}
+              >
+                <ScanQrCode color={theme.text} size={20} />
+              </TouchableOpacity>
+            )}
           </View>
         </View>
       </View>
@@ -220,7 +235,10 @@ export default function OrderDetailsScreen() {
           style={{ paddingHorizontal: 20, marginTop: 20 }}
         >
           <LinearGradient
-            colors={[statusConfig.bgColor, statusConfig.bgColor + '80']}
+            colors={[
+              statusConfig.bgColor as ColorValue,
+              (statusConfig.bgColor + '80') as ColorValue,
+            ]}
             style={{
               borderRadius: 20,
               padding: 20,
@@ -670,7 +688,7 @@ export default function OrderDetailsScreen() {
               </Text>
             </View>
 
-            <View
+            {/* <View
               style={{
                 flexDirection: 'row',
                 justifyContent: 'space-between',
@@ -698,7 +716,7 @@ export default function OrderDetailsScreen() {
                   {paymentConfig.label}
                 </Text>
               </View>
-            </View>
+            </View> */}
 
             <View
               style={{
@@ -901,7 +919,7 @@ export default function OrderDetailsScreen() {
         </View>
 
         {/* QR Code Section */}
-        {order?.qr_code_url && (
+        {/* {order?.qr_code_url && (
           <View style={{ paddingHorizontal: 20, marginTop: 24 }}>
             <View
               style={{
@@ -924,7 +942,7 @@ export default function OrderDetailsScreen() {
                 Order QR Code
               </Text>
               <Image
-                source={{ uri: order?.qr_code_url }}
+                source={{ uri: handleImageSrc(order?.qr_code_url) }}
                 style={{ width: 200, height: 200, borderRadius: 12 }}
                 resizeMode="contain"
               />
@@ -940,7 +958,7 @@ export default function OrderDetailsScreen() {
               </Text>
             </View>
           </View>
-        )}
+        )} */}
       </ScrollView>
     </SafeAreaView>
   );

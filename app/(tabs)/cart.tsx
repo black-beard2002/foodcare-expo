@@ -253,10 +253,6 @@ export default function CartScreen() {
     );
   }
 
-  const subtotal = getCartTotal();
-  const deliveryFee = 5.0;
-  const total = subtotal + deliveryFee;
-
   return (
     <SafeAreaView
       className="flex-1"
@@ -299,35 +295,15 @@ export default function CartScreen() {
       />
 
       <View
-        className="fixed bottom-24 left-0 rounded-2xl right-0 px-6 pt-5 pb-6 border-t shadow-2xl"
+        className="fixed bottom-24 left-0 rounded-2xl right-0 px-6 pt-5 pb-6 shadow-2xl"
         style={{
           backgroundColor: theme.card,
-          borderColor: theme.border,
+
           width: '90%',
           alignSelf: 'center',
         }}
       >
         <View className="mb-4">
-          <View className="flex-row justify-between items-center mb-3">
-            <Text
-              className="text-[15px]"
-              style={{ color: theme.textSecondary }}
-            >
-              Subtotal
-            </Text>
-            <Text
-              className="text-[15px] font-medium"
-              style={{ color: theme.text }}
-            >
-              ${subtotal.toFixed(2)}
-            </Text>
-          </View>
-
-          <View
-            className="h-[1px] my-3"
-            style={{ backgroundColor: theme.border }}
-          />
-
           <View className="flex-row justify-between items-center">
             <Text
               className="text-[17px] font-bold"
@@ -339,7 +315,7 @@ export default function CartScreen() {
               className="text-[28px] font-bold"
               style={{ color: theme.primary }}
             >
-              ${total.toFixed(2)}
+              ${getCartTotal().toFixed(2)}
             </Text>
           </View>
         </View>

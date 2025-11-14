@@ -82,13 +82,6 @@ export default function CategoriesScreen() {
         >
           {category.name}
         </Text>
-        {/* <Text
-          className="text-[10px] text-center leading-3"
-          style={{ color: theme.textSecondary }}
-          numberOfLines={2}
-        >
-          {category.description}
-        </Text> */}
       </View>
     </TouchableOpacity>
   );
@@ -99,7 +92,7 @@ export default function CategoriesScreen() {
       style={{
         backgroundColor: theme.card,
         borderColor: theme.border,
-        shadowColor: '#000',
+        shadowColor: theme.shadow,
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.08,
         shadowRadius: 4,
@@ -119,7 +112,10 @@ export default function CategoriesScreen() {
           }
           className="w-full h-28"
         />
-        <View className="absolute top-2 right-2 bg-[#FF6B35] px-1.5 py-1 rounded">
+        <View
+          className="absolute top-2 right-2 px-1.5 py-1 rounded-xl"
+          style={{ backgroundColor: theme.primaryLight + 'CC' }}
+        >
           <Text className="text-white text-[10px] font-bold">
             {getDiscountPercentage(offer.price, offer.sale_price ?? 0)}% OFF
           </Text>
@@ -159,7 +155,7 @@ export default function CategoriesScreen() {
             </Text>
             <Text
               className="text-base font-bold"
-              style={{ color: theme.success }}
+              style={{ color: theme.primary }}
             >
               ${formatPrice(offer.sale_price ?? offer.price)}
             </Text>
