@@ -14,7 +14,7 @@ interface OrderStore {
   updateOrder: (
     orderId: string,
     updatedFields: Partial<TransactionBase>
-  ) => Promise<{ success: boolean; message: string }>;
+  ) => Promise<{ success: boolean; message: string; data?: TransactionBase }>;
   clearOrders: () => void;
   setLoading: (loading: boolean) => void;
   setError: (error: string | null) => void;
@@ -30,6 +30,7 @@ interface OrderStore {
     orderId: string,
     updatedFields: Partial<TransactionBase>
   ) => void;
+  confirmOrder: (transaction_id: string, tenant_id: string) => Promise<void>;
 }
 
 export const useOrderStore = create<OrderStore>((set, get) => ({
@@ -59,6 +60,9 @@ export const useOrderStore = create<OrderStore>((set, get) => ({
       ),
     }));
   },
+  confirmOrder: async (transaction_id: string, tenant_id: string) => {
+    const res = await ordersApi.confirmOrder(transaction_id, tenant_id);
+  },
   updateOrder: async (orderId, updatedFields) => {
     set({ isLoading: true, error: null });
     try {
@@ -83,6 +87,7 @@ export const useOrderStore = create<OrderStore>((set, get) => ({
       return {
         success: true,
         message: 'Order confirmed successfully',
+        data: response.data,
       };
     } catch (error) {
       return {

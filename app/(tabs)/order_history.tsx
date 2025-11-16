@@ -56,16 +56,27 @@ export default function OrderHistoryScreen() {
     fetchOrders();
   }, []);
   useEffect(() => {
-    if (!user?.tenant_id) return;
+    console.log('Entering ws use effect');
+    // if (!user?.tenant_id) return;
 
     const ws = new WebSocket(
-      `wss://octosys-api.compugear.store/transaction/api/v1/ws/mobile/${user.id}`
+      `wss://octosys-api.compugear.store/transaction/api/v1/ws/mobile/${user?.id}`
     );
+    ws.onopen = () => {
+      console.log('CONNECTED');
+    };
+    ws.onerror = (err) => {
+      console.log('connection err:', err);
+    };
+    ws.onclose = () => {
+      console.log('WS Closed');
+    };
     ws.onmessage = (event) => {
       // WebSockets send text → parse it
       const data: { transaction_id: string; status: string } = JSON.parse(
         event.data
       );
+      console.log('ws data', data);
 
       if (data) {
         const targetTrans = orders.find(

@@ -13,6 +13,7 @@ export interface OrdersApi {
     id: string,
     data: Partial<TransactionBase>
   ) => Promise<ApiResponse<TransactionBase>>;
+  confirmOrder: (transaction_id: string, tenant_id: string) => Promise<void>;
 }
 
 export type OrderStatus = TransactionStatus;
@@ -26,7 +27,7 @@ class OrdersApiImpl implements OrdersApi {
         '/transaction/get-all',
         { params: { user_id: userId, transaction_type: 'ORDER' } }
       );
-      console.log('getOrders response_api:', response_api);
+
       const responseBody = response_api.data;
       if (responseBody.success) {
         return {
@@ -98,6 +99,20 @@ class OrdersApiImpl implements OrdersApi {
         success: false,
         error: 'Failed to create order',
       };
+    }
+  }
+  async confirmOrder(transaction_id: string, tenant_id: string) {
+    try {
+      console.log('t_id', tenant_id);
+      console.log('trx_id', transaction_id);
+      const response_api = await this.transaction_api.post(
+        `/transaction/${transaction_id}/confirm`,
+        {},
+        { params: { tenant_id } }
+      );
+      return response_api.data;
+    } catch (err) {
+      console.log('confirm trx api err', err);
     }
   }
 

@@ -48,82 +48,102 @@ export interface ColorTheme {
 }
 
 export const lightTheme: ColorTheme = {
-  primary: '#3e73ff',
-  primaryLight: '#6b93ff',
-  primaryDark: '#2656e6',
-  secondary: '#4d45d6',
-  secondaryLight: '#6e68e0',
-  secondaryDark: '#352bb1',
+  primary: '#4CAF50',
+  primaryLight: '#7CCF7E',
+  primaryDark: '#3A8B3E',
+
+  secondary: '#43A047',
+  secondaryLight: '#66BB6A',
+  secondaryDark: '#2E7D32',
+
   background: '#ffffff',
   backgroundSecondary: '#FFFFFF',
   surface: '#FFFFFF',
   card: '#F5F5F5',
+
   text: '#1A1A2E',
   textSecondary: '#5A5F7D',
   textTertiary: '#9095B0',
   textInverse: '#FFFFFF',
+
   border: '#D8DCEF',
   borderLight: '#E8EBFA',
   divider: '#E3E6F5',
+
   success: '#4CAF50',
   successLight: '#E8F5E9',
   warning: '#FFA726',
   warningLight: '#FFF3E0',
   error: '#EF5350',
   errorLight: '#FFEBEE',
-  info: '#3e73ff',
-  infoLight: '#E8EEFF',
+
+  info: '#4CAF50',
+  infoLight: '#E8F5E9',
+
   inputBackground: '#F5F7FF',
   inputBorder: '#D8DCEF',
   inputPlaceholder: '#9095B0',
-  shadow: '#3e73ff15',
+
+  shadow: '#4CAF5015',
   overlay: '#1A1A2E80',
+
   tabBarBackground: '#FFFFFF',
   tabBarBorder: '#E8EBFA',
-  tabBarActive: '#3e73ff',
+  tabBarActive: '#4CAF50',
   tabBarInactive: '#9095B0',
-  accent: '#4d45d6',
-  highlight: '#F0F2FF',
+
+  accent: '#43A047',
+  highlight: '#E9F7EC',
   disabled: '#CED1E0',
 };
 
 export const darkTheme: ColorTheme = {
-  primary: '#3e73ff',
-  primaryLight: '#6b93ff',
-  primaryDark: '#2656e6',
-  secondary: '#4d45d6',
-  secondaryLight: '#6e68e0',
-  secondaryDark: '#352bb1',
+  primary: '#4CAF50',
+  primaryLight: '#7CCF7E',
+  primaryDark: '#3A8B3E',
+
+  secondary: '#43A047',
+  secondaryLight: '#66BB6A',
+  secondaryDark: '#2E7D32',
+
   background: '#111111',
   backgroundSecondary: '#16182A',
   surface: '#1C1F33',
   card: '#1e1e1e',
+
   text: '#FFFFFF',
   textSecondary: '#B4B8D4',
   textTertiary: '#7E83A8',
   textInverse: '#0F1119',
+
   border: '#2D3250',
   borderLight: '#252840',
   divider: '#2A2E4A',
+
   success: '#66BB6A',
   successLight: '#4CAF5033',
   warning: '#FFB74D',
   warningLight: '#FFA72633',
   error: '#EF5350',
   errorLight: '#EF535033',
-  info: '#3e73ff',
-  infoLight: '#3e73ff33',
+
+  info: '#4CAF50',
+  infoLight: '#4CAF5033',
+
   inputBackground: '#1C1F33',
   inputBorder: '#353A5C',
   inputPlaceholder: '#7E83A8',
+
   shadow: '#00000050',
   overlay: '#000000CC',
+
   tabBarBackground: '#16182A',
   tabBarBorder: '#2A2E4A',
-  tabBarActive: '#3e73ff',
+  tabBarActive: '#4CAF50',
   tabBarInactive: '#7E83A8',
-  accent: '#4d45d6',
-  highlight: '#3e73ff26',
+
+  accent: '#43A047',
+  highlight: '#4CAF5026',
   disabled: '#4A4E6B',
 };
 

@@ -28,7 +28,7 @@ export default function QrScan() {
   const { theme } = useTheme();
   const [permission, requestPermission] = useCameraPermissions();
   const [scanned, setScanned] = useState(false);
-  const { updateOrder, isLoading } = useOrderStore();
+  const { updateOrder, isLoading, confirmOrder } = useOrderStore();
   const { showAlert } = useAlert();
   const [scannedData, setScannedData] = useState<ScannedData | null>(null);
 
@@ -51,6 +51,9 @@ export default function QrScan() {
           });
           if (res.success) {
             showAlert('Success', res.message, 'success');
+            if (res.data) {
+              await confirmOrder(res.data.id, res.data.tenant_id!);
+            }
           } else {
             showAlert('Error', res.message, 'error');
           }
