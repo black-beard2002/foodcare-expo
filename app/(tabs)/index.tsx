@@ -863,14 +863,7 @@ export default function HomeScreen(): JSX.Element {
                 justifyContent: 'center',
                 alignItems: 'center',
               }}
-              // onPress={() => router.push('/(in_app_screens)/favourites')}
-              onPress={() =>
-                showAlert(
-                  'Favorites coming soon!',
-                  'This is the alert description section',
-                  'success'
-                )
-              }
+              onPress={() => router.push('/(in_app_screens)/favourites')}
             >
               <Heart
                 color={theme.textSecondary}

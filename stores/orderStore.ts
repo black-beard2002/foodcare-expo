@@ -26,6 +26,10 @@ interface OrderStore {
     confirmation_code?: string;
     error?: string;
   }>;
+  updateLocalOrder: (
+    orderId: string,
+    updatedFields: Partial<TransactionBase>
+  ) => void;
 }
 
 export const useOrderStore = create<OrderStore>((set, get) => ({
@@ -48,6 +52,13 @@ export const useOrderStore = create<OrderStore>((set, get) => ({
     set((state) => ({
       orders: state.orders.filter((o) => o.id !== orderId),
     })),
+  updateLocalOrder: (orderId, updatedFields) => {
+    set((state) => ({
+      orders: state.orders.map((o) =>
+        o.id === orderId ? { ...o, ...updatedFields } : o
+      ),
+    }));
+  },
   updateOrder: async (orderId, updatedFields) => {
     set({ isLoading: true, error: null });
     try {

@@ -42,13 +42,50 @@ export default function OrderHistoryScreen() {
   const { user } = useAuthStore();
   const HERO_CARD_WIDTH = SCREEN_WIDTH - 40;
   const [selectedOrder, setSelectedOrder] = useState<TransactionBase | null>();
-  const { orders, updateOrder, clearOrders, fetchOrders, isLoading } =
-    useOrderStore();
+  const {
+    orders,
+    updateLocalOrder,
+    updateOrder,
+    clearOrders,
+    fetchOrders,
+    isLoading,
+  } = useOrderStore();
   const { showAlert } = useAlert();
 
   useEffect(() => {
     fetchOrders();
   }, []);
+  useEffect(() => {
+    if (!user?.tenant_id) return;
+
+    const ws = new WebSocket(
+      `wss://octosys-api.compugear.store/transaction/api/v1/ws/mobile/${user.id}`
+    );
+    ws.onmessage = (event) => {
+      // WebSockets send text → parse it
+      const data: { transaction_id: string; status: string } = JSON.parse(
+        event.data
+      );
+
+      if (data) {
+        const targetTrans = orders.find(
+          (trx) => trx.id === data.transaction_id
+        );
+
+        if (targetTrans) {
+          updateLocalOrder(data.transaction_id, {
+            status: data.status as TransactionStatus,
+          });
+        }
+      }
+
+      showAlert(`your order is ${data.status}`, '', 'success');
+    };
+
+    return () => {
+      ws.close();
+    };
+  }, [orders, updateLocalOrder, user?.tenant_id]);
 
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<TransactionStatus | 'all'>(

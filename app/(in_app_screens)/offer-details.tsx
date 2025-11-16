@@ -1,4 +1,10 @@
-import React, { useEffect, useMemo, useState, useRef } from 'react';
+import React, {
+  useEffect,
+  useMemo,
+  useState,
+  useRef,
+  useCallback,
+} from 'react';
 import {
   View,
   Text,
@@ -8,6 +14,7 @@ import {
   ActivityIndicator,
   Dimensions,
   Animated,
+  FlatList,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import * as images from '../../constants/images';
@@ -23,6 +30,8 @@ import {
   Plus,
   Info,
   Sparkles,
+  ChevronLeft,
+  ChevronRight,
 } from 'lucide-react-native';
 import { useAppStore } from '@/stores/appStore';
 import { Offer } from '@/types/appTypes';
@@ -37,23 +46,17 @@ import {
   handleImageSrc,
 } from '@/utils/helpers';
 
-const { height: SCREEN_HEIGHT } = Dimensions.get('window');
+const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
+const IMAGE_HEIGHT = SCREEN_HEIGHT * 0.42;
+const THUMBNAIL_SIZE = 70;
 
 export default function OfferDetailsScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const [offer, setOffer] = useState<Offer | null>(null);
-  const { addToCart, updateCartItem, cart } = useAppStore();
-  const item = useMemo(
-    () =>
-      cart.find((cartItem) => cartItem.offer.id === id) || {
-        id: `${offer?.id}-${Date.now()}`,
-        offer: offer!,
-        quantity: 0,
-      },
-    [cart, id, offer]
-  );
+  const [selectedImageIndex, setSelectedImageIndex] = useState(0);
+
+  const { addToCart, updateCartItem, cart, offers } = useAppStore();
   const { addToRecentlyViewed } = useRecentlyViewedStore();
-  const { offers } = useAppStore();
   const { showAlert } = useAlert();
   const {
     isFavorite,
@@ -70,6 +73,56 @@ export default function OfferDetailsScreen() {
   const contentTranslateY = useRef(new Animated.Value(50)).current;
   const contentOpacity = useRef(new Animated.Value(0)).current;
   const headerOpacity = useRef(new Animated.Value(0)).current;
+  const thumbnailOpacity = useRef(new Animated.Value(0)).current;
+
+  const carouselRef = useRef<FlatList>(null);
+
+  // Get all images (main image + additional images)
+  const allImages = useMemo(() => {
+    if (!offer) return [];
+    const imageList = [];
+
+    if (offer.main_image) {
+      imageList.push(offer.main_image);
+    }
+
+    if (offer.images && Array.isArray(offer.images)) {
+      imageList.push(...offer.images);
+    }
+
+    return imageList;
+  }, [offer]);
+
+  const item = useMemo(
+    () =>
+      cart.find((cartItem) => cartItem.offer.id === id) || {
+        id: `${offer?.id}-${Date.now()}`,
+        offer: offer!,
+        quantity: 0,
+      },
+    [cart, id, offer]
+  );
+
+  // Carousel handlers
+  const handleImageSelect = useCallback((index: number) => {
+    setSelectedImageIndex(index);
+    carouselRef.current?.scrollToIndex({ index, animated: true });
+  }, []);
+
+  const onViewableItemsChanged = useCallback(({ viewableItems }: any) => {
+    if (viewableItems.length > 0) {
+      setSelectedImageIndex(viewableItems[0].index || 0);
+    }
+  }, []);
+
+  const viewabilityConfigCallbackPairs = useRef([
+    {
+      viewabilityConfig: {
+        itemVisiblePercentThreshold: 50,
+      },
+      onViewableItemsChanged,
+    },
+  ]);
 
   useEffect(() => {
     const foundOffer = offers.find((o) => o.id === id);
@@ -93,16 +146,20 @@ export default function OfferDetailsScreen() {
             useNativeDriver: true,
           }),
         ]),
-        // Header fade in
         Animated.timing(headerOpacity, {
           toValue: 1,
           duration: 500,
           delay: 200,
           useNativeDriver: true,
         }),
+        Animated.timing(thumbnailOpacity, {
+          toValue: 1,
+          duration: 500,
+          delay: 400,
+          useNativeDriver: true,
+        }),
       ]).start();
 
-      // Content slides up and fades in
       Animated.parallel([
         Animated.timing(contentTranslateY, {
           toValue: 0,
@@ -118,37 +175,22 @@ export default function OfferDetailsScreen() {
         }),
       ]).start();
     }
-  }, [id]);
+  }, [id, offers, addToRecentlyViewed]);
 
   useEffect(() => {
     setIsNewFavoritedAdded(false);
-  }, []);
+  }, [setIsNewFavoritedAdded]);
 
-  if (!offer) {
-    return (
-      <View
-        className="flex-1 items-center justify-center"
-        style={{ backgroundColor: theme.background }}
-      >
-        <Text
-          className="text-lg font-inter-regular"
-          style={{ color: theme.text }}
-        >
-          Offer not found
-        </Text>
-      </View>
-    );
-  }
-
-  const handleFavoritePress = () => {
+  const handleFavoritePress = useCallback(() => {
     if (isFavorite(id)) {
       removeFromFavorites(id);
     } else {
-      addToFavorites(offer);
+      if (offer) addToFavorites(offer);
     }
-  };
+  }, [id, offer, isFavorite, removeFromFavorites, addToFavorites]);
 
-  const handleAddToCart = () => {
+  const handleAddToCart = useCallback(() => {
+    if (!offer) return;
     addToCart(offer);
     showAlert(
       'Added to cart',
@@ -156,11 +198,11 @@ export default function OfferDetailsScreen() {
       'success'
     );
     router.replace('/(tabs)');
-  };
+  }, [offer, addToCart, showAlert]);
 
-  const renderCustomProperties = () => {
+  const renderCustomProperties = useCallback(() => {
     if (
-      !offer.custom_properties ||
+      !offer?.custom_properties ||
       Object.keys(offer.custom_properties).length === 0
     ) {
       return null;
@@ -200,7 +242,7 @@ export default function OfferDetailsScreen() {
 
       if (typeof value === 'object' && value !== null) {
         return (
-          <View className="mt-3 space-y-2">
+          <View className="mt-3 gap-1">
             {Object.entries(value).map(([subKey, subValue], subIndex) => (
               <View
                 key={subIndex}
@@ -310,7 +352,190 @@ export default function OfferDetailsScreen() {
         </View>
       </View>
     );
-  };
+  }, [offer, theme]);
+
+  const renderImageCarousel = useCallback(() => {
+    if (allImages.length === 0) {
+      return (
+        <Animated.View
+          style={{
+            opacity: imageOpacity,
+            transform: [{ scale: imageScale }],
+          }}
+        >
+          <Image
+            source={images.OFFER_PLACEHOLDER_IMAGE}
+            className="w-full"
+            style={{ height: IMAGE_HEIGHT }}
+            resizeMode="cover"
+          />
+        </Animated.View>
+      );
+    }
+
+    return (
+      <Animated.View
+        style={{
+          opacity: imageOpacity,
+          transform: [{ scale: imageScale }],
+        }}
+      >
+        <FlatList
+          ref={carouselRef}
+          data={allImages}
+          horizontal
+          pagingEnabled
+          showsHorizontalScrollIndicator={false}
+          viewabilityConfigCallbackPairs={
+            viewabilityConfigCallbackPairs.current
+          }
+          keyExtractor={(item, index) => `image-${index}`}
+          renderItem={({ item }) => (
+            <View style={{ width: SCREEN_WIDTH, height: IMAGE_HEIGHT }}>
+              <Image
+                source={{ uri: handleImageSrc(item) }}
+                className="w-full h-full"
+                resizeMode="cover"
+              />
+            </View>
+          )}
+        />
+
+        {/* Image Counter Badge */}
+        {allImages.length > 1 && (
+          <View
+            className="absolute bottom-4 right-4 px-4 py-2 rounded-full"
+            style={{
+              backgroundColor: 'rgba(0, 0, 0, 0.7)',
+            }}
+          >
+            <Text className="text-white text-sm font-inter-semibold">
+              {selectedImageIndex + 1} / {allImages.length}
+            </Text>
+          </View>
+        )}
+
+        {/* Navigation Arrows for multiple images */}
+        {allImages.length > 1 && (
+          <>
+            <TouchableOpacity
+              onPress={() => {
+                const prevIndex =
+                  selectedImageIndex > 0
+                    ? selectedImageIndex - 1
+                    : allImages.length - 1;
+                handleImageSelect(prevIndex);
+              }}
+              className="absolute left-4 top-1/2 w-10 h-10 rounded-full items-center justify-center"
+              style={{
+                backgroundColor: 'rgba(0, 0, 0, 0.5)',
+                transform: [{ translateY: -20 }],
+              }}
+            >
+              <ChevronLeft color="white" size={24} strokeWidth={2.5} />
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              onPress={() => {
+                const nextIndex =
+                  selectedImageIndex < allImages.length - 1
+                    ? selectedImageIndex + 1
+                    : 0;
+                handleImageSelect(nextIndex);
+              }}
+              className="absolute right-4 top-1/2 w-10 h-10 rounded-full items-center justify-center"
+              style={{
+                backgroundColor: 'rgba(0, 0, 0, 0.5)',
+                transform: [{ translateY: -20 }],
+              }}
+            >
+              <ChevronRight color="white" size={24} strokeWidth={2.5} />
+            </TouchableOpacity>
+          </>
+        )}
+      </Animated.View>
+    );
+  }, [
+    allImages,
+    imageOpacity,
+    imageScale,
+    selectedImageIndex,
+    handleImageSelect,
+  ]);
+
+  const renderThumbnails = useCallback(() => {
+    if (allImages.length <= 1) return null;
+
+    return (
+      <Animated.View className="mb-6" style={{ opacity: thumbnailOpacity }}>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={{ paddingHorizontal: 4 }}
+        >
+          <View className="flex-row gap-3">
+            {allImages.map((img, index) => (
+              <TouchableOpacity
+                key={index}
+                onPress={() => handleImageSelect(index)}
+                activeOpacity={0.7}
+                style={{
+                  width: THUMBNAIL_SIZE,
+                  height: THUMBNAIL_SIZE,
+                  borderRadius: 16,
+                  overflow: 'hidden',
+                  borderWidth: 3,
+                  borderColor:
+                    selectedImageIndex === index
+                      ? theme.primary
+                      : 'transparent',
+                  shadowColor: theme.text,
+                  shadowOffset: { width: 0, height: 2 },
+                  shadowOpacity: selectedImageIndex === index ? 0.3 : 0.1,
+                  shadowRadius: 4,
+                  elevation: selectedImageIndex === index ? 4 : 2,
+                }}
+              >
+                <Image
+                  source={{ uri: handleImageSrc(img) }}
+                  className="w-full h-full"
+                  resizeMode="cover"
+                />
+                {selectedImageIndex === index && (
+                  <View
+                    className="absolute inset-0"
+                    style={{ backgroundColor: 'rgba(0, 0, 0, 0.2)' }}
+                  />
+                )}
+              </TouchableOpacity>
+            ))}
+          </View>
+        </ScrollView>
+      </Animated.View>
+    );
+  }, [
+    allImages,
+    thumbnailOpacity,
+    selectedImageIndex,
+    handleImageSelect,
+    theme,
+  ]);
+
+  if (!offer) {
+    return (
+      <View
+        className="flex-1 items-center justify-center"
+        style={{ backgroundColor: theme.background }}
+      >
+        <Text
+          className="text-lg font-inter-regular"
+          style={{ color: theme.text }}
+        >
+          Offer not found
+        </Text>
+      </View>
+    );
+  }
 
   return (
     <SafeAreaView
@@ -360,24 +585,8 @@ export default function OfferDetailsScreen() {
 
       {/* Content */}
       <ScrollView showsVerticalScrollIndicator={false}>
-        {/* Offer Image */}
-        <Animated.View
-          style={{
-            opacity: imageOpacity,
-            transform: [{ scale: imageScale }],
-          }}
-        >
-          <Image
-            source={
-              offer.main_image
-                ? { uri: handleImageSrc(offer.main_image) }
-                : images.OFFER_PLACEHOLDER_IMAGE
-            }
-            className="w-full"
-            style={{ height: SCREEN_HEIGHT * 0.42 }}
-            resizeMode="cover"
-          />
-        </Animated.View>
+        {/* Image Carousel */}
+        {renderImageCarousel()}
 
         {/* Details Container */}
         <Animated.View
@@ -401,6 +610,10 @@ export default function OfferDetailsScreen() {
               {getDiscountPercentage(offer.price, offer.sale_price ?? 0)}% OFF
             </Text>
           </View>
+
+          {/* Thumbnails */}
+          {renderThumbnails()}
+
           {/* Title */}
           <Text
             className="text-3xl font-inter-bold leading-tight mb-2"
