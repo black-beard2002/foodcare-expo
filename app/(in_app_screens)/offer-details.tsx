@@ -339,15 +339,18 @@ export default function OfferDetailsScreen() {
                 <View className="flex-row items-center gap-2 mb-1">
                   <Building2 color={theme.primary} size={16} />
                   <Text
-                    className="text-xs font-inter-medium uppercase tracking-wide"
-                    style={{ color: theme.textSecondary }}
+                    className="text-xs  uppercase tracking-wide"
+                    style={{
+                      color: theme.textSecondary,
+                      fontFamily: 'FredokaMedium',
+                    }}
                   >
                     Restaurant
                   </Text>
                 </View>
                 <Text
-                  className="text-xl font-inter-bold"
-                  style={{ color: theme.text }}
+                  className="text-xl "
+                  style={{ color: theme.text, fontFamily: 'PoppinsMedium' }}
                   numberOfLines={2}
                 >
                   {provider.name}
@@ -369,8 +372,8 @@ export default function OfferDetailsScreen() {
                 >
                   <MessageCircle color="#25D366" size={18} />
                   <Text
-                    className="text-sm font-inter-semibold"
-                    style={{ color: '#25D366' }}
+                    className="text-sm "
+                    style={{ color: '#25D366', fontFamily: 'PoppinsMedium' }}
                   >
                     WhatsApp
                   </Text>
@@ -389,8 +392,11 @@ export default function OfferDetailsScreen() {
                 >
                   <MapPin color={theme.primary} size={18} />
                   <Text
-                    className="text-sm font-inter-semibold"
-                    style={{ color: theme.primary }}
+                    className="text-sm "
+                    style={{
+                      color: theme.primary,
+                      fontFamily: 'PoppinsMedium',
+                    }}
                   >
                     Locations
                   </Text>
@@ -404,8 +410,11 @@ export default function OfferDetailsScreen() {
               style={{ borderTopWidth: 1, borderTopColor: theme.border + '40' }}
             >
               <Text
-                className="text-xs font-inter-medium"
-                style={{ color: theme.textSecondary }}
+                className="text-xs "
+                style={{
+                  color: theme.textSecondary,
+                  fontFamily: 'PoppinsMedium',
+                }}
               >
                 Tap to view full details
               </Text>
@@ -438,15 +447,21 @@ export default function OfferDetailsScreen() {
             <Clock color={theme.primary} size={22} />
           </View>
           <Text
-            className="text-lg font-inter-bold"
-            style={{ color: theme.text }}
+            className="text-lg "
+            style={{ color: theme.text, fontFamily: 'FredokaMedium' }}
           >
             Pickup Time Range
           </Text>
         </View>
 
         <View className="flex-row items-center gap-2 ml-15">
-          <Text style={{ fontSize: 20, color: theme.primary }}>
+          <Text
+            style={{
+              fontSize: 20,
+              color: theme.primary,
+              fontFamily: 'PoppinsMedium',
+            }}
+          >
             {formatDateRange([
               offer.pickup_start_time ?? '',
               offer.pickup_end_time ?? '',
@@ -495,14 +510,17 @@ export default function OfferDetailsScreen() {
             >
               <View>
                 <Text
-                  className="text-2xl font-inter-bold"
-                  style={{ color: theme.text }}
+                  className="text-2xl "
+                  style={{ color: theme.text, fontFamily: 'FredokaMedium' }}
                 >
                   All Locations
                 </Text>
                 <Text
-                  className="text-sm font-inter-medium mt-1"
-                  style={{ color: theme.textSecondary }}
+                  className="text-sm  mt-1"
+                  style={{
+                    color: theme.textSecondary,
+                    fontFamily: 'PoppinsMedium',
+                  }}
                 >
                   {offer.provider.addresses.length} location
                   {offer.provider.addresses.length > 1 ? 's' : ''} available
@@ -555,7 +573,7 @@ export default function OfferDetailsScreen() {
                           style={{ backgroundColor: theme.primary + '20' }}
                         >
                           <Text
-                            className="text-xs font-inter-bold"
+                            className="text-xs "
                             style={{ color: theme.primary }}
                           >
                             PRIMARY
@@ -564,20 +582,29 @@ export default function OfferDetailsScreen() {
                       )}
 
                       <Text
-                        className="text-base font-inter-bold mb-1"
-                        style={{ color: theme.text }}
+                        className="text-base  mb-1"
+                        style={{
+                          color: theme.text,
+                          fontFamily: 'PoppinsMedium',
+                        }}
                       >
                         {address.street}
                       </Text>
                       <Text
-                        className="text-sm font-inter-medium mb-2"
-                        style={{ color: theme.textSecondary }}
+                        className="text-sm  mb-2"
+                        style={{
+                          color: theme.textSecondary,
+                          fontFamily: 'PoppinsMedium',
+                        }}
                       >
                         {address.city}, {address.state} {address.zipcode}
                       </Text>
                       <Text
-                        className="text-xs font-inter-regular"
-                        style={{ color: theme.textSecondary }}
+                        className="text-xs "
+                        style={{
+                          color: theme.textSecondary,
+                          fontFamily: 'PoppinsMedium',
+                        }}
                       >
                         {address.country}
                       </Text>
@@ -592,8 +619,11 @@ export default function OfferDetailsScreen() {
                         >
                           <Navigation color={theme.primary} size={14} />
                           <Text
-                            className="text-xs font-inter-semibold"
-                            style={{ color: theme.primary }}
+                            className="text-xs "
+                            style={{
+                              color: theme.primary,
+                              fontFamily: 'PoppinsMedium',
+                            }}
                           >
                             Tap to navigate
                           </Text>
@@ -696,25 +726,31 @@ export default function OfferDetailsScreen() {
             >
               {/* Provider Name and Type */}
               <Text
-                className="text-3xl font-inter-bold mb-2"
-                style={{ color: theme.text }}
+                className="text-3xl  mb-2"
+                style={{ color: theme.text, fontFamily: 'PoppinsMedium' }}
               >
                 {provider.name}
               </Text>
               <Text
-                className="text-base font-inter-medium mb-6"
-                style={{ color: theme.textSecondary }}
+                className="text-base  mb-6"
+                style={{
+                  color: theme.textSecondary,
+                  fontFamily: 'PoppinsMedium',
+                }}
               >
                 {provider.provider_type.charAt(0).toUpperCase() +
                   provider.provider_type.slice(1)}{' '}
-                Provider
+                Restaurant
               </Text>
 
               {/* Description */}
               {provider.description && (
                 <Text
-                  className="text-sm font-inter-regular leading-6 mb-6"
-                  style={{ color: theme.textSecondary }}
+                  className="text-sm  leading-6 mb-6"
+                  style={{
+                    color: theme.textSecondary,
+                    fontFamily: 'PoppinsMedium',
+                  }}
                 >
                   {provider.description}
                 </Text>
@@ -729,7 +765,10 @@ export default function OfferDetailsScreen() {
                     style={{ backgroundColor: '#25D366' }}
                   >
                     <MessageCircle color="white" size={20} />
-                    <Text className="text-sm font-inter-bold text-white">
+                    <Text
+                      className="text-sm  text-white"
+                      style={{ fontFamily: 'PoppinsMedium' }}
+                    >
                       WhatsApp
                     </Text>
                   </TouchableOpacity>
@@ -744,7 +783,10 @@ export default function OfferDetailsScreen() {
                     style={{ backgroundColor: theme.primary }}
                   >
                     <Phone color="white" size={20} />
-                    <Text className="text-sm font-inter-bold text-white">
+                    <Text
+                      className="text-sm  text-white"
+                      style={{ fontFamily: 'PoppinsMedium' }}
+                    >
                       Call
                     </Text>
                   </TouchableOpacity>
@@ -764,8 +806,8 @@ export default function OfferDetailsScreen() {
                   >
                     <Mail color={theme.primary} size={20} />
                     <Text
-                      className="flex-1 text-sm font-inter-medium"
-                      style={{ color: theme.text }}
+                      className="flex-1 text-sm "
+                      style={{ color: theme.text, fontFamily: 'PoppinsMedium' }}
                     >
                       {provider.primary_email}
                     </Text>
@@ -784,8 +826,8 @@ export default function OfferDetailsScreen() {
                   >
                     <Globe color={theme.primary} size={20} />
                     <Text
-                      className="flex-1 text-sm font-inter-medium"
-                      style={{ color: theme.text }}
+                      className="flex-1 text-sm "
+                      style={{ color: theme.text, fontFamily: 'PoppinsMedium' }}
                     >
                       {provider.website}
                     </Text>
@@ -802,14 +844,17 @@ export default function OfferDetailsScreen() {
                     }}
                   >
                     <Text
-                      className="text-sm font-inter-medium"
-                      style={{ color: theme.textSecondary }}
+                      className="text-sm "
+                      style={{
+                        color: theme.textSecondary,
+                        fontFamily: 'FredokaMedium',
+                      }}
                     >
                       Founded
                     </Text>
                     <Text
-                      className="text-sm font-inter-bold"
-                      style={{ color: theme.text }}
+                      className="text-sm "
+                      style={{ color: theme.text, fontFamily: 'PoppinsMedium' }}
                     >
                       {provider.founded_year}
                     </Text>
@@ -851,8 +896,11 @@ export default function OfferDetailsScreen() {
                   }}
                 >
                   <Text
-                    className="text-sm font-inter-semibold"
-                    style={{ color: theme.primary }}
+                    className="text-sm "
+                    style={{
+                      color: theme.primary,
+                      fontFamily: 'PoppinsMedium',
+                    }}
                   >
                     {String(v)}
                   </Text>
@@ -877,15 +925,18 @@ export default function OfferDetailsScreen() {
                 }}
               >
                 <Text
-                  className="text-sm font-inter-medium flex-1"
-                  style={{ color: theme.textSecondary }}
+                  className="text-sm  flex-1"
+                  style={{
+                    color: theme.textSecondary,
+                    fontFamily: 'PoppinsMedium',
+                  }}
                 >
                   {subKey.charAt(0).toUpperCase() +
                     subKey.slice(1).replace(/_/g, ' ')}
                 </Text>
                 <Text
-                  className="text-sm font-inter-bold"
-                  style={{ color: theme.text }}
+                  className="text-sm "
+                  style={{ color: theme.text, fontFamily: 'PoppinsMedium' }}
                 >
                   {String(subValue)}
                 </Text>
@@ -897,8 +948,8 @@ export default function OfferDetailsScreen() {
 
       return (
         <Text
-          className="text-base font-inter-semibold mt-2"
-          style={{ color: theme.text }}
+          className="text-base  mt-2"
+          style={{ color: theme.text, fontFamily: 'PoppinsMedium' }}
         >
           {String(value)}
         </Text>
@@ -915,8 +966,8 @@ export default function OfferDetailsScreen() {
             <Sparkles color={theme.primary} size={18} />
           </View>
           <Text
-            className="text-xl font-inter-bold"
-            style={{ color: theme.text }}
+            className="text-xl "
+            style={{ color: theme.text, fontFamily: 'FredokaMedium' }}
           >
             Additional Details
           </Text>
@@ -955,8 +1006,11 @@ export default function OfferDetailsScreen() {
                 >
                   <View className="flex-row items-center justify-between mb-1">
                     <Text
-                      className="text-sm font-inter-medium tracking-wide uppercase"
-                      style={{ color: theme.textSecondary }}
+                      className="text-sm  tracking-wide uppercase"
+                      style={{
+                        color: theme.textSecondary,
+                        fontFamily: 'PoppinsMedium',
+                      }}
                     >
                       {propertyTitle}
                     </Text>
@@ -1032,7 +1086,7 @@ export default function OfferDetailsScreen() {
               backgroundColor: 'rgba(0, 0, 0, 0.7)',
             }}
           >
-            <Text className="text-white text-sm font-inter-semibold">
+            <Text className="text-white text-sm ">
               {selectedImageIndex + 1} / {allImages.length}
             </Text>
           </View>
@@ -1151,8 +1205,8 @@ export default function OfferDetailsScreen() {
         style={{ backgroundColor: theme.background }}
       >
         <Text
-          className="text-lg font-inter-regular"
-          style={{ color: theme.text }}
+          className="text-lg "
+          style={{ color: theme.text, fontFamily: 'FredokaMedium' }}
         >
           Offer not found
         </Text>
@@ -1230,7 +1284,10 @@ export default function OfferDetailsScreen() {
                 borderColor: 'white',
               }}
             >
-              <Text className="text-white text-base font-inter-bold">
+              <Text
+                className="text-white text-base "
+                style={{ fontFamily: 'FredokaMedium' }}
+              >
                 {getDiscountPercentage(offer.price, offer.sale_price ?? 0)}% OFF
               </Text>
             </View>
@@ -1241,8 +1298,8 @@ export default function OfferDetailsScreen() {
 
           {/* Title */}
           <Text
-            className="text-3xl font-inter-bold leading-tight mb-2"
-            style={{ color: theme.text }}
+            className="text-3xl  leading-tight mb-2"
+            style={{ color: theme.text, fontFamily: 'PoppinsMedium' }}
           >
             {offer.title}
           </Text>
@@ -1252,8 +1309,8 @@ export default function OfferDetailsScreen() {
             <View className="flex-row items-center gap-1">
               <Star color={theme.warning} fill={theme.warning} size={18} />
               <Text
-                className="text-base font-inter-bold"
-                style={{ color: theme.text }}
+                className="text-base "
+                style={{ color: theme.text, fontFamily: 'PoppinsMedium' }}
               >
                 {offer.rating || '5.0'}
               </Text>
@@ -1263,8 +1320,11 @@ export default function OfferDetailsScreen() {
               style={{ backgroundColor: theme.textSecondary }}
             />
             <Text
-              className="text-sm font-inter-medium"
-              style={{ color: theme.textSecondary }}
+              className="text-sm "
+              style={{
+                color: theme.textSecondary,
+                fontFamily: 'PoppinsMedium',
+              }}
             >
               {offer.stock_status === 'in_stock' ||
               offer.stock_status === 'low_stock'
@@ -1282,14 +1342,11 @@ export default function OfferDetailsScreen() {
           {/* Description */}
           {offer.description && (
             <View className="mb-6">
-              <Text
-                className="text-lg font-inter-bold mb-3"
-                style={{ color: theme.text }}
-              >
+              <Text className="text-lg  mb-3" style={{ color: theme.text }}>
                 Description
               </Text>
               <Text
-                className="text-base font-inter-regular leading-6"
+                className="text-base  leading-6"
                 style={{ color: theme.textSecondary }}
               >
                 {offer.description}
@@ -1309,14 +1366,20 @@ export default function OfferDetailsScreen() {
             <View className="flex-row justify-between items-start mb-4">
               <View className="flex-1">
                 <Text
-                  className="text-xs font-inter-medium mb-1 uppercase tracking-wider"
-                  style={{ color: theme.textSecondary }}
+                  className="text-xs  mb-1 uppercase tracking-wider"
+                  style={{
+                    color: theme.textSecondary,
+                    fontFamily: 'FredokaMedium',
+                  }}
                 >
                   Original Price
                 </Text>
                 <Text
-                  className="text-2xl line-through font-inter-regular"
-                  style={{ color: theme.textSecondary }}
+                  className="text-2xl line-through "
+                  style={{
+                    color: theme.textSecondary,
+                    fontFamily: 'PoppinsMedium',
+                  }}
                 >
                   ${formatPrice(offer.price)}
                 </Text>
@@ -1325,16 +1388,22 @@ export default function OfferDetailsScreen() {
               {offer.sale_price && (
                 <View className="items-end">
                   <Text
-                    className="text-xs font-inter-medium mb-1 uppercase tracking-wider"
-                    style={{ color: theme.success }}
+                    className="text-xs  mb-1 uppercase tracking-wider"
+                    style={{
+                      color: theme.success,
+                      fontFamily: 'FredokaMedium',
+                    }}
                   >
                     You Save
                   </Text>
                   <View className="flex-row items-center gap-1">
                     <Coins color={theme.success} size={20} />
                     <Text
-                      className="text-xl font-inter-bold"
-                      style={{ color: theme.success }}
+                      className="text-xl "
+                      style={{
+                        color: theme.success,
+                        fontFamily: 'PoppinsMedium',
+                      }}
                     >
                       ${(offer.price - offer.sale_price).toFixed(2)}
                     </Text>
@@ -1349,14 +1418,14 @@ export default function OfferDetailsScreen() {
                 style={{ backgroundColor: `${theme.primary}10` }}
               >
                 <Text
-                  className="text-xs font-inter-medium mb-1 uppercase tracking-wider"
-                  style={{ color: theme.primary }}
+                  className="text-xs  mb-1 uppercase tracking-wider"
+                  style={{ color: theme.primary, fontFamily: 'FredokaMedium' }}
                 >
                   Special Price
                 </Text>
                 <Text
-                  className="text-4xl font-inter-bold"
-                  style={{ color: theme.primary }}
+                  className="text-4xl "
+                  style={{ color: theme.primary, fontFamily: 'PoppinsMedium' }}
                 >
                   ${formatPrice(offer.sale_price)}
                 </Text>
@@ -1368,8 +1437,8 @@ export default function OfferDetailsScreen() {
           {offer.tags && offer.tags.length > 0 && (
             <View className="mb-6">
               <Text
-                className="text-lg font-inter-bold mb-3"
-                style={{ color: theme.text }}
+                className="text-lg  mb-3"
+                style={{ color: theme.text, fontFamily: 'FredokaMedium' }}
               >
                 Features
               </Text>
@@ -1385,8 +1454,11 @@ export default function OfferDetailsScreen() {
                     }}
                   >
                     <Text
-                      className="text-sm font-inter-semibold"
-                      style={{ color: theme.success }}
+                      className="text-sm "
+                      style={{
+                        color: theme.success,
+                        fontFamily: 'PoppinsMedium',
+                      }}
                     >
                       {tag}
                     </Text>
@@ -1435,8 +1507,8 @@ export default function OfferDetailsScreen() {
 
               <View className="px-4">
                 <Text
-                  className="text-base font-inter-bold"
-                  style={{ color: theme.text }}
+                  className="text-base "
+                  style={{ color: theme.text, fontFamily: 'PoppinsMedium' }}
                 >
                   {item.quantity}
                 </Text>
@@ -1466,11 +1538,12 @@ export default function OfferDetailsScreen() {
             }}
             activeOpacity={0.8}
           >
-            <Text className="text-white text-base font-inter-bold">
-              Add to Cart
-            </Text>
+            <Text className="text-white text-base ">Add to Cart</Text>
             {offer.sale_price && (
-              <Text className="text-white text-sm font-inter-regular">
+              <Text
+                className="text-white text-sm "
+                style={{ fontFamily: 'PoppinsMedium' }}
+              >
                 • ${formatPrice(offer.sale_price)}
               </Text>
             )}

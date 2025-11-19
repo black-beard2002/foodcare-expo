@@ -166,8 +166,8 @@ export default function PersonalInfoScreen() {
             <ArrowLeft color={theme.text} size={24} />
           </TouchableOpacity>
           <Text
-            className="text-xl font-bold flex-1 text-center"
-            style={{ color: theme.text }}
+            className="text-xl flex-1 text-center"
+            style={{ color: theme.text, fontFamily: 'FredokaMedium' }}
           >
             Personal Information
           </Text>
@@ -185,7 +185,7 @@ export default function PersonalInfoScreen() {
     >
       {/* Header */}
       <View
-        className="flex-row items-center justify-between px-6 py-4 border-b"
+        className="flex-row items-center justify-between px-6 py-8 border-b"
         style={{ borderBottomColor: theme.border }}
       >
         <TouchableOpacity
@@ -196,8 +196,8 @@ export default function PersonalInfoScreen() {
           <ArrowLeft color={theme.text} size={24} strokeWidth={2} />
         </TouchableOpacity>
         <Text
-          className="text-xl font-bold flex-1 text-center"
-          style={{ color: theme.text }}
+          className="text-2xl  flex-1 text-center"
+          style={{ color: theme.text, fontFamily: 'FredokaMedium' }}
         >
           Personal Information
         </Text>
@@ -207,8 +207,8 @@ export default function PersonalInfoScreen() {
               <View className="flex-row items-center gap-1">
                 <X color={theme.error} size={18} strokeWidth={2} />
                 <Text
-                  className="text-base font-semibold"
-                  style={{ color: theme.error }}
+                  className="text-base "
+                  style={{ color: theme.error, fontFamily: 'FredokaMedium' }}
                 >
                   Cancel
                 </Text>
@@ -222,8 +222,8 @@ export default function PersonalInfoScreen() {
               <View className="flex-row items-center gap-1">
                 <Edit3 color={theme.primary} size={18} strokeWidth={2} />
                 <Text
-                  className="text-base font-semibold"
-                  style={{ color: theme.primary }}
+                  className="text-base "
+                  style={{ color: theme.primary, fontFamily: 'FredokaMedium' }}
                 >
                   Edit
                 </Text>
@@ -272,15 +272,18 @@ export default function PersonalInfoScreen() {
                   </View>
                 </View>
                 <Text
-                  className="text-2xl font-bold mb-1"
-                  style={{ color: theme.text }}
+                  className="text-2xl mb-1"
+                  style={{ color: theme.text, fontFamily: 'PoppinsMedium' }}
                 >
                   {formData.first_name.concat(` ${formData.last_name}`) ||
                     'Your Name'}
                 </Text>
                 <Text
                   className="text-sm"
-                  style={{ color: theme.textSecondary }}
+                  style={{
+                    color: theme.textSecondary,
+                    fontFamily: 'PoppinsMedium',
+                  }}
                 >
                   {formData.email_address || 'your.email@example.com'}
                 </Text>
@@ -302,8 +305,11 @@ export default function PersonalInfoScreen() {
                         />
                       </View>
                       <Text
-                        className="text-sm font-semibold"
-                        style={{ color: theme.text }}
+                        className="text-sm "
+                        style={{
+                          color: theme.text,
+                          fontFamily: 'FredokaMedium',
+                        }}
                       >
                         {field.label}
                       </Text>
@@ -324,6 +330,7 @@ export default function PersonalInfoScreen() {
                         }`}
                         style={{
                           color: isEditing ? theme.text : theme.textSecondary,
+                          fontFamily: 'PoppinsMedium',
                         }}
                         value={formData[field.key as keyof typeof formData]}
                         onChangeText={(text) =>
@@ -393,14 +400,20 @@ export default function PersonalInfoScreen() {
                     </View>
                     <View className="flex-1">
                       <Text
-                        className="text-sm font-semibold mb-1"
-                        style={{ color: theme.text }}
+                        className="text-base  mb-1"
+                        style={{
+                          color: theme.text,
+                          fontFamily: 'FredokaMedium',
+                        }}
                       >
                         Keep Your Info Updated
                       </Text>
                       <Text
                         className="text-xs leading-5"
-                        style={{ color: theme.textSecondary }}
+                        style={{
+                          color: theme.textSecondary,
+                          fontFamily: 'PoppinsMedium',
+                        }}
                       >
                         Tap Edit to update your personal information. Your data
                         is secure and private.

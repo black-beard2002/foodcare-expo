@@ -39,6 +39,9 @@ import {
   Heart,
   Clock10,
   Map,
+  CalendarDays,
+  CalendarPlus,
+  PlusCircle,
 } from 'lucide-react-native';
 import { useAppStore } from '@/stores/appStore';
 import { useTheme } from '@/hooks/useTheme';
@@ -60,6 +63,7 @@ import {
   getDiscountPercentage,
   handleImageSrc,
 } from '@/utils/helpers';
+import { useFonts } from '@expo-google-fonts/inter';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const HERO_CARD_WIDTH = SCREEN_WIDTH - 40;
@@ -358,7 +362,7 @@ const ModernCategoryChip = ({
       style={{
         color: isSelected ? theme.primary : theme.text,
         fontSize: 13,
-        fontWeight: isSelected ? '600' : '500',
+        fontFamily: 'FredokaMedium',
         textAlign: 'center',
       }}
       numberOfLines={2}
@@ -373,11 +377,28 @@ const EnhancedNearYouCard = ({
   item: offer,
   theme,
   onAdd,
+  onAddToFavourite,
+  onRemoveFromFavourite,
+  isFavourite,
 }: {
   item: Offer;
   theme: ColorTheme;
   onAdd: (offer: Offer) => void;
+  onAddToFavourite: (offer: Offer, enablePriceAlert?: boolean) => Promise<void>;
+  onRemoveFromFavourite: (offerId: string) => Promise<void>;
+  isFavourite: (offerId: string) => boolean;
 }) => {
+  const isOfferFavourited = isFavourite(offer.id);
+
+  const [showLocationsModal, setShowLocationsModal] = useState(false);
+
+  const handleFavouriteToggle = () => {
+    if (!isOfferFavourited) {
+      onAddToFavourite(offer);
+    } else {
+      onRemoveFromFavourite(offer.id);
+    }
+  };
   return (
     <TouchableOpacity
       style={{
@@ -421,11 +442,66 @@ const EnhancedNearYouCard = ({
         />
       </View>
 
-      <View style={{ paddingTop: 160, padding: 20, alignItems: 'center' }}>
+      <View
+        style={{ paddingTop: 170, padding: 20, alignItems: 'center' }}
+        className="relative"
+      >
+        <TouchableOpacity
+          onPress={handleFavouriteToggle}
+          style={{
+            position: 'absolute',
+            top: 120,
+            right: 12,
+            backgroundColor: theme.background + '40',
+            width: 40,
+            height: 40,
+            borderRadius: 20,
+            justifyContent: 'center',
+            alignItems: 'center',
+            zIndex: 2,
+            shadowColor: '#000',
+            shadowOffset: { width: 0, height: 2 },
+            shadowOpacity: 0.2,
+            shadowRadius: 4,
+          }}
+        >
+          <Heart
+            size={20}
+            strokeWidth={isFavourite(offer.id) ? 0 : 2}
+            fill={isFavourite(offer.id) ? theme.primary : 'transparent'}
+            color={isFavourite(offer.id) ? theme.primary : theme.text}
+          />
+        </TouchableOpacity>
+        {offer.provider?.logo_path && (
+          <View
+            style={{
+              position: 'absolute',
+              top: 120,
+              left: 12,
+              backgroundColor: theme.backgroundSecondary,
+              padding: 2,
+              width: 50,
+              height: 50,
+              borderRadius: 20,
+              justifyContent: 'center',
+              alignItems: 'center',
+              zIndex: 2,
+              shadowColor: '#000',
+              shadowOffset: { width: 0, height: 2 },
+              shadowOpacity: 0.2,
+              shadowRadius: 4,
+            }}
+          >
+            <Image
+              className="w-full h-full object-cover rounded-3xl"
+              source={{ uri: handleImageSrc(offer.provider?.logo_path) }}
+            />
+          </View>
+        )}
         <Text
           style={{
             fontSize: 20,
-            fontWeight: 'bold',
+            fontFamily: 'PoppinsMedium',
             color: theme.text,
             marginBottom: 4,
             textAlign: 'center',
@@ -440,10 +516,11 @@ const EnhancedNearYouCard = ({
             <Text
               style={{
                 color: theme.textSecondary,
+                fontFamily: 'PoppinsMedium',
               }}
               className="line-clamp-2 text-sm font-semibold"
             >
-              restaurant_name
+              {offer.provider?.name}
             </Text>
             <View
               className="w-px"
@@ -451,27 +528,99 @@ const EnhancedNearYouCard = ({
             >
               <Text>|</Text>
             </View>
-            <Text
-              style={{
-                color: theme.textSecondary,
-              }}
-              className="line-clamp-2 text-sm font-semibold"
-            >
-              123 food street
-            </Text>
+            {offer.provider?.addresses && (
+              <TouchableOpacity
+                onPress={() => {
+                  if (
+                    offer.provider?.addresses &&
+                    offer.provider.addresses.length > 1
+                  ) {
+                    setShowLocationsModal(true);
+                  }
+                }}
+                disabled={offer.provider.addresses.length === 1}
+              >
+                <Text
+                  style={{
+                    fontFamily: 'PoppinsMedium',
+                    color:
+                      offer.provider?.addresses.length > 1
+                        ? theme.primary
+                        : theme.textSecondary,
+                    textDecorationLine:
+                      offer.provider?.addresses.length > 1
+                        ? 'underline'
+                        : 'none',
+                  }}
+                  className="line-clamp-2 text-sm font-semibold"
+                >
+                  {offer.provider?.addresses[0].street.concat(
+                    `, ${offer.provider?.addresses[0].city}`
+                  )}
+                </Text>
+              </TouchableOpacity>
+            )}
           </View>
         </View>
-
-        <Text
+        <View
           style={{
-            fontSize: 24,
-            fontWeight: 'bold',
-            color: theme.primary,
-            marginBottom: 12,
+            flexDirection: 'row',
+            alignItems: 'center',
+            gap: 8,
           }}
         >
-          ${formatPrice(offer.sale_price ?? offer.price)}
-        </Text>
+          <View
+            style={{
+              width: 32,
+              height: 32,
+              borderRadius: 16,
+              backgroundColor: theme.primary + '15',
+              justifyContent: 'center',
+              alignItems: 'center',
+            }}
+          >
+            <Clock10 color={theme.primary} size={16} />
+          </View>
+          <Text
+            style={{
+              flex: 1,
+              fontSize: 13,
+              color: theme.textSecondary,
+              fontFamily: 'PoppinsMedium',
+            }}
+            numberOfLines={2}
+          >
+            {formatDateRange([
+              offer.pickup_start_time ?? '',
+              offer.pickup_end_time ?? '',
+            ])}
+          </Text>
+        </View>
+
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+          {offer.sale_price && (
+            <Text
+              style={{
+                fontSize: 15,
+                color: theme.textSecondary,
+                textDecorationLine: 'line-through',
+                fontFamily: 'PoppinsMedium',
+              }}
+            >
+              ${offer.price}
+            </Text>
+          )}
+          <Text
+            style={{
+              fontSize: 24,
+              fontFamily: 'PoppinsMedium',
+              color: theme.primary,
+              letterSpacing: -0.5,
+            }}
+          >
+            ${formatPrice(offer.sale_price ?? offer.price)}
+          </Text>
+        </View>
         <View className="flex flex-row items-start justify-between w-full">
           <Text
             className="line-clamp-3 flex-1"
@@ -480,6 +629,7 @@ const EnhancedNearYouCard = ({
               color: theme.textSecondary,
               flex: 1,
               lineHeight: 18,
+              fontFamily: 'PoppinsLight',
             }}
             numberOfLines={2}
           >
@@ -507,12 +657,135 @@ const EnhancedNearYouCard = ({
           </TouchableOpacity>
         </View>
       </View>
+      {/* Locations Modal */}
+      <Modal
+        visible={showLocationsModal}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setShowLocationsModal(false)}
+      >
+        <TouchableOpacity
+          style={{
+            flex: 1,
+            backgroundColor: 'rgba(0,0,0,0.5)',
+            justifyContent: 'center',
+            alignItems: 'center',
+            padding: 20,
+          }}
+          activeOpacity={1}
+          onPress={() => setShowLocationsModal(false)}
+        >
+          <TouchableOpacity
+            activeOpacity={1}
+            onPress={(e) => e.stopPropagation()}
+            style={{
+              backgroundColor: theme.card,
+              borderRadius: 20,
+              padding: 20,
+              width: '100%',
+              maxWidth: 400,
+              maxHeight: '80%',
+              shadowColor: '#000',
+              shadowOffset: { width: 0, height: 4 },
+              shadowOpacity: 0.3,
+              shadowRadius: 12,
+              elevation: 8,
+            }}
+          >
+            <View
+              style={{
+                flexDirection: 'row',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                marginBottom: 16,
+                paddingBottom: 12,
+                borderBottomWidth: 1,
+                borderBottomColor: theme.border + '40',
+              }}
+            >
+              <Text
+                style={{
+                  fontSize: 20,
+                  fontFamily: 'FredokaMedium',
+                  color: theme.text,
+                }}
+              >
+                All Locations
+              </Text>
+              <TouchableOpacity
+                onPress={() => setShowLocationsModal(false)}
+                style={{
+                  width: 32,
+                  height: 32,
+                  borderRadius: 16,
+                  backgroundColor: theme.border + '30',
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                }}
+              >
+                <Text
+                  style={{
+                    fontSize: 18,
+                    color: theme.text,
+                    fontFamily: 'FredokaMedium',
+                  }}
+                >
+                  ×
+                </Text>
+              </TouchableOpacity>
+            </View>
+
+            <ScrollView
+              showsVerticalScrollIndicator={false}
+              style={{ maxHeight: 400 }}
+            >
+              {offer.provider?.addresses.map((address, index) => (
+                <View
+                  key={index}
+                  style={{
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    gap: 12,
+                    paddingVertical: 14,
+                    paddingHorizontal: 12,
+                    borderRadius: 12,
+                    backgroundColor: theme.background,
+                    marginBottom: 10,
+                  }}
+                >
+                  <View
+                    style={{
+                      width: 40,
+                      height: 40,
+                      borderRadius: 20,
+                      backgroundColor: theme.primary + '15',
+                      justifyContent: 'center',
+                      alignItems: 'center',
+                    }}
+                  >
+                    <Map color={theme.primary} size={18} />
+                  </View>
+                  <Text
+                    style={{
+                      flex: 1,
+                      fontSize: 14,
+                      color: theme.text,
+                      fontFamily: 'PoppinsMedium',
+                      lineHeight: 20,
+                    }}
+                  >
+                    {address.street}, {address.city}
+                  </Text>
+                </View>
+              ))}
+            </ScrollView>
+          </TouchableOpacity>
+        </TouchableOpacity>
+      </Modal>
     </TouchableOpacity>
   );
 };
 
-// Modern Offer Card with Enhanced Design
-// Modern Offer Card with Enhanced Design
 const DefaultOfferCard = ({
   item: offer,
   theme,
@@ -603,7 +876,13 @@ const DefaultOfferCard = ({
               shadowRadius: 4,
             }}
           >
-            <Text style={{ color: '#fff', fontSize: 13, fontWeight: '700' }}>
+            <Text
+              style={{
+                color: '#fff',
+                fontSize: 13,
+                fontFamily: 'FredokaMedium',
+              }}
+            >
               {getDiscountPercentage(offer.price, offer.sale_price ?? 0)}% OFF
             </Text>
           </View>
@@ -642,26 +921,39 @@ const DefaultOfferCard = ({
           <View
             style={{
               position: 'absolute',
-              bottom: 12,
-              left: 12,
-              backgroundColor: '#fff',
+              bottom: 1,
+              left: 4,
               padding: 4,
               borderRadius: 12,
               zIndex: 2,
               shadowColor: '#000',
               shadowOffset: { width: 0, height: 2 },
               shadowOpacity: 0.2,
+              opacity: 0.9,
               shadowRadius: 4,
             }}
           >
             <Image
               source={{ uri: handleImageSrc(offer.provider.logo_path) }}
               style={{
-                width: 48,
-                height: 48,
+                width: 40,
+                height: 40,
                 borderRadius: 8,
               }}
             />
+            {offer.provider && offer.provider.name && (
+              <Text
+                style={{
+                  flex: 1,
+                  fontSize: 11,
+                  color: 'white',
+                  fontFamily: 'FredokaBold',
+                }}
+                numberOfLines={1}
+              >
+                {offer.provider.name}
+              </Text>
+            )}
           </View>
         )}
       </View>
@@ -672,9 +964,9 @@ const DefaultOfferCard = ({
         <Text
           style={{
             fontSize: 18,
-            fontWeight: '700',
+            fontFamily: 'PoppinsMedium',
             color: theme.text,
-            marginBottom: 12,
+            marginBottom: 5,
             lineHeight: 24,
           }}
           numberOfLines={2}
@@ -683,7 +975,7 @@ const DefaultOfferCard = ({
         </Text>
 
         {/* Info Rows */}
-        <View style={{ gap: 8, marginBottom: 16 }}>
+        <View style={{ gap: 3, marginBottom: 10 }}>
           {/* Location */}
           <View
             style={{
@@ -694,8 +986,8 @@ const DefaultOfferCard = ({
           >
             <View
               style={{
-                width: 32,
-                height: 32,
+                width: 25,
+                height: 25,
                 borderRadius: 16,
                 backgroundColor: theme.primary + '15',
                 justifyContent: 'center',
@@ -709,7 +1001,7 @@ const DefaultOfferCard = ({
                 flex: 1,
                 fontSize: 13,
                 color: theme.textSecondary,
-                fontWeight: '500',
+                fontFamily: 'PoppinsMedium',
               }}
               numberOfLines={1}
             >
@@ -733,7 +1025,7 @@ const DefaultOfferCard = ({
                     style={{
                       fontSize: 11,
                       color: theme.primary,
-                      fontWeight: '600',
+                      fontFamily: 'PoppinsMedium',
                     }}
                   >
                     +{offer.provider.addresses.length - 1}
@@ -741,41 +1033,6 @@ const DefaultOfferCard = ({
                 </TouchableOpacity>
               )}
           </View>
-
-          {/* Provider Name */}
-          {offer.provider && offer.provider.name && (
-            <View
-              style={{
-                flexDirection: 'row',
-                alignItems: 'center',
-                gap: 8,
-              }}
-            >
-              <View
-                style={{
-                  width: 32,
-                  height: 32,
-                  borderRadius: 16,
-                  backgroundColor: theme.primary + '15',
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                }}
-              >
-                <ChefHat color={theme.primary} size={16} />
-              </View>
-              <Text
-                style={{
-                  flex: 1,
-                  fontSize: 13,
-                  color: theme.textSecondary,
-                  fontWeight: '500',
-                }}
-                numberOfLines={1}
-              >
-                {offer.provider.name}
-              </Text>
-            </View>
-          )}
 
           {/* Pickup Time */}
 
@@ -788,8 +1045,8 @@ const DefaultOfferCard = ({
           >
             <View
               style={{
-                width: 32,
-                height: 32,
+                width: 25,
+                height: 25,
                 borderRadius: 16,
                 backgroundColor: theme.primary + '15',
                 justifyContent: 'center',
@@ -803,7 +1060,7 @@ const DefaultOfferCard = ({
                 flex: 1,
                 fontSize: 13,
                 color: theme.textSecondary,
-                fontWeight: '500',
+                fontFamily: 'PoppinsMedium',
               }}
               numberOfLines={2}
             >
@@ -821,7 +1078,7 @@ const DefaultOfferCard = ({
             flexDirection: 'row',
             justifyContent: 'space-between',
             alignItems: 'center',
-            paddingTop: 16,
+            paddingTop: 7,
             borderTopWidth: 1,
             borderStyle: 'dashed',
             borderTopColor: theme.border,
@@ -834,7 +1091,7 @@ const DefaultOfferCard = ({
                   fontSize: 15,
                   color: theme.textSecondary,
                   textDecorationLine: 'line-through',
-                  fontWeight: '500',
+                  fontFamily: 'PoppinsMedium',
                 }}
               >
                 ${offer.price}
@@ -843,7 +1100,7 @@ const DefaultOfferCard = ({
             <Text
               style={{
                 fontSize: 24,
-                fontWeight: '800',
+                fontFamily: 'PoppinsMedium',
                 color: theme.primary,
                 letterSpacing: -0.5,
               }}
@@ -855,8 +1112,8 @@ const DefaultOfferCard = ({
           <TouchableOpacity
             style={{
               backgroundColor: theme.primary,
-              paddingHorizontal: 24,
-              paddingVertical: 12,
+              paddingHorizontal: 14,
+              paddingVertical: 5,
               borderRadius: 16,
               flexDirection: 'row',
               alignItems: 'center',
@@ -872,10 +1129,14 @@ const DefaultOfferCard = ({
               onAdd(offer);
             }}
           >
-            <Text style={{ color: '#fff', fontSize: 18, fontWeight: '700' }}>
-              +
-            </Text>
-            <Text style={{ color: '#fff', fontSize: 14, fontWeight: '600' }}>
+            <PlusCircle color={theme.text} size={14} />
+            <Text
+              style={{
+                color: '#fff',
+                fontSize: 14,
+                fontFamily: 'PoppinsMedium',
+              }}
+            >
               Add
             </Text>
           </TouchableOpacity>
@@ -1022,6 +1283,7 @@ export default function HomeScreen(): JSX.Element {
   } = useAppStore();
   const { isNewFavoritedAdded } = useFavoritesStore();
   const { user } = useAuthStore();
+
   const { showAlert } = useAlert();
   const { addToFavorites, removeFromFavorites, isFavorite } =
     useFavoritesStore();
@@ -1228,7 +1490,13 @@ export default function HomeScreen(): JSX.Element {
           }}
         >
           <View>
-            <Text style={{ fontSize: 13, color: theme.textSecondary }}>
+            <Text
+              style={{
+                fontSize: 13,
+                color: theme.textSecondary,
+                fontFamily: 'PoppinsLight',
+              }}
+            >
               Welcome back
             </Text>
             <View className="flex flex-row items-center gap-1">
@@ -1236,7 +1504,7 @@ export default function HomeScreen(): JSX.Element {
               <Text
                 style={{
                   fontSize: 16,
-                  fontWeight: 'bold',
+                  fontFamily: 'FredokaMedium',
                   color: theme.text,
                 }}
               >
@@ -1334,7 +1602,7 @@ export default function HomeScreen(): JSX.Element {
                 <Text
                   style={{
                     fontSize: 20,
-                    fontWeight: 'bold',
+                    fontFamily: 'FredokaMedium',
                     color: theme.text,
                   }}
                 >
@@ -1374,9 +1642,10 @@ export default function HomeScreen(): JSX.Element {
         <View style={{ paddingHorizontal: 20, marginBottom: 16 }}>
           <Text
             style={{
-              fontSize: 15,
+              fontSize: 14,
               color: theme.textSecondary,
               marginBottom: 4,
+              fontFamily: 'PoppinsLight',
             }}
           >
             What do you want to eat today?
@@ -1384,8 +1653,8 @@ export default function HomeScreen(): JSX.Element {
           <Text
             style={{
               fontSize: 24,
-              fontWeight: 'bold',
               color: theme.text,
+              fontFamily: 'FredokaMedium',
             }}
           >
             Choose Your Favorite Food
@@ -1421,8 +1690,8 @@ export default function HomeScreen(): JSX.Element {
                 <Text
                   style={{
                     fontSize: 20,
-                    fontWeight: 'bold',
                     color: theme.text,
+                    fontFamily: 'FredokaMedium',
                   }}
                 >
                   Near You Offers
@@ -1438,6 +1707,9 @@ export default function HomeScreen(): JSX.Element {
                   item={item}
                   theme={theme}
                   onAdd={addToCart}
+                  onAddToFavourite={addToFavorites}
+                  onRemoveFromFavourite={removeFromFavorites}
+                  isFavourite={isFavorite}
                 />
               )}
               horizontal
@@ -1457,25 +1729,18 @@ export default function HomeScreen(): JSX.Element {
           >
             <View className="flex mb-4 flex-row items-center justify-between ">
               <View className="flex flex-row items-center gap-2">
-                <EarthIcon color={theme.textSecondary} />
+                <CalendarDays color={theme.textSecondary} />
                 <Text
                   style={{
                     fontSize: 20,
-                    fontWeight: 'bold',
+
+                    fontFamily: 'FredokaMedium',
                     color: theme.text,
                   }}
                 >
                   Pickup Today
                 </Text>
               </View>
-              <TouchableOpacity
-                onPress={() => router.push('/(tabs)/categories')}
-              >
-                <View className="flex flex-row items-center gap-1">
-                  <Text style={{ color: theme.textSecondary }}>see all</Text>
-                  <ArrowRight color={theme.textSecondary} size={16} />
-                </View>
-              </TouchableOpacity>
             </View>
             <FlatList
               data={todaysOffers}
@@ -1502,25 +1767,17 @@ export default function HomeScreen(): JSX.Element {
           <View style={{ paddingHorizontal: 20, paddingBottom: 100 }}>
             <View className="flex mb-4 flex-row items-center justify-between ">
               <View className="flex flex-row items-center gap-2">
-                <EarthIcon color={theme.textSecondary} />
+                <CalendarPlus color={theme.textSecondary} />
                 <Text
                   style={{
                     fontSize: 20,
-                    fontWeight: 'bold',
+                    fontFamily: 'FredokaMedium',
                     color: theme.text,
                   }}
                 >
                   Pickup Tommorow
                 </Text>
               </View>
-              <TouchableOpacity
-                onPress={() => router.push('/(tabs)/categories')}
-              >
-                <View className="flex flex-row items-center gap-1">
-                  <Text style={{ color: theme.textSecondary }}>see all</Text>
-                  <ArrowRight color={theme.textSecondary} size={16} />
-                </View>
-              </TouchableOpacity>
             </View>
             <FlatList
               data={tomorrowsOffers}

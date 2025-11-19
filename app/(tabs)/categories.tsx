@@ -77,8 +77,8 @@ export default function CategoriesScreen() {
       />
       <View className="flex-1 justify-start">
         <Text
-          className="text-sm font-bold text-center mb-0.5"
-          style={{ color: theme.text }}
+          className="text-sm  text-center mb-0.5"
+          style={{ color: theme.text, fontFamily: 'PoppinsMedium' }}
         >
           {category.name}
         </Text>
@@ -130,8 +130,8 @@ export default function CategoriesScreen() {
         </View>
         <View className="p-3">
           <Text
-            className="text-sm font-bold mb-1 leading-[18px]"
-            style={{ color: theme.text }}
+            className="text-sm mb-1 leading-[18px]"
+            style={{ color: theme.text, fontFamily: 'PoppinsMedium' }}
             numberOfLines={2}
           >
             {offer.title}
@@ -140,22 +140,24 @@ export default function CategoriesScreen() {
             className="text-xs mb-2"
             style={{
               color: offer.is_featured ? theme.text : theme.textSecondary,
+              fontFamily: 'PoppinsMedium',
             }}
           >
-            {'restaurant_name'}
+            {offer.provider?.name}
           </Text>
           <View className="flex-row items-center gap-2">
             <Text
               className="text-xs line-through"
               style={{
                 color: offer.is_featured ? theme.text : theme.textSecondary,
+                fontFamily: 'PoppinsMedium',
               }}
             >
               ${formatPrice(offer.price)}
             </Text>
             <Text
               className="text-base font-bold"
-              style={{ color: theme.primary }}
+              style={{ color: theme.primary, fontFamily: 'PoppinsMedium' }}
             >
               ${formatPrice(offer.sale_price ?? offer.price)}
             </Text>
@@ -223,12 +225,18 @@ export default function CategoriesScreen() {
 
       <View className="flex-1">
         <View className="flex-row justify-between items-center px-6 mb-4">
-          <Text className="text-xl font-bold" style={{ color: theme.text }}>
+          <Text
+            className="text-xl"
+            style={{ color: theme.text, fontFamily: 'FredokaMedium' }}
+          >
             {selectedCategory
               ? categories.find((c) => c.id === selectedCategory)?.name
               : 'All Offers'}
           </Text>
-          <Text className="text-sm" style={{ color: theme.textSecondary }}>
+          <Text
+            className="text-sm"
+            style={{ color: theme.textSecondary, fontFamily: 'PoppinsLight' }}
+          >
             {filteredOffers.length} offers
           </Text>
         </View>

@@ -35,10 +35,11 @@ export default function RootLayout() {
   const hasNavigated = useRef(false);
 
   const [fontsLoaded, fontError] = useFonts({
-    'Inter-Regular': Inter_400Regular,
-    'Inter-Medium': Inter_500Medium,
-    'Inter-SemiBold': Inter_600SemiBold,
-    'Inter-Bold': Inter_700Bold,
+    PoppinsLight: require('../assets/fonts/Poppins-Light.ttf'),
+    PoppinsMedium: require('../assets/fonts/Poppins-Medium.ttf'),
+    FredokaRegular: require('../assets/fonts/Fredoka-Regular.ttf'),
+    FredokaMedium: require('../assets/fonts/Fredoka-Medium.ttf'),
+    FredokaBold: require('../assets/fonts/Fredoka-Bold.ttf'),
   });
 
   // Load app data
