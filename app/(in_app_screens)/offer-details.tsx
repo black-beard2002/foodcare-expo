@@ -15,6 +15,9 @@ import {
   Dimensions,
   Animated,
   FlatList,
+  Linking,
+  Platform,
+  Modal,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import * as images from '../../constants/images';
@@ -32,28 +35,39 @@ import {
   Sparkles,
   ChevronLeft,
   ChevronRight,
+  Map,
+  Phone,
+  Navigation,
+  MessageCircle,
+  X,
+  Building2,
+  Globe,
+  Mail,
 } from 'lucide-react-native';
 import { useAppStore } from '@/stores/appStore';
-import { Offer } from '@/types/appTypes';
+import { Offer, Address } from '@/types/appTypes';
 import { useTheme } from '@/hooks/useTheme';
 import { useFavoritesStore } from '@/stores/favoritesStore';
 import { useRecentlyViewedStore } from '@/stores/recentlyViewedStore';
 import { useAlert } from '@/providers/AlertProvider';
 
 import {
+  formatDateRange,
   formatPrice,
   getDiscountPercentage,
   handleImageSrc,
 } from '@/utils/helpers';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
-const IMAGE_HEIGHT = SCREEN_HEIGHT * 0.42;
+const IMAGE_HEIGHT = SCREEN_HEIGHT * 0.45;
 const THUMBNAIL_SIZE = 70;
 
 export default function OfferDetailsScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const [offer, setOffer] = useState<Offer | null>(null);
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
+  const [showLocationsModal, setShowLocationsModal] = useState(false);
+  const [showProviderModal, setShowProviderModal] = useState(false);
 
   const { addToCart, updateCartItem, cart, offers } = useAppStore();
   const { addToRecentlyViewed } = useRecentlyViewedStore();
@@ -74,6 +88,7 @@ export default function OfferDetailsScreen() {
   const contentOpacity = useRef(new Animated.Value(0)).current;
   const headerOpacity = useRef(new Animated.Value(0)).current;
   const thumbnailOpacity = useRef(new Animated.Value(0)).current;
+  const providerCardScale = useRef(new Animated.Value(0.9)).current;
 
   const carouselRef = useRef<FlatList>(null);
 
@@ -103,6 +118,63 @@ export default function OfferDetailsScreen() {
     [cart, id, offer]
   );
 
+  // Format pickup time
+  const formatPickupTime = (dateString?: string) => {
+    if (!dateString) return '';
+    const date = new Date(dateString);
+    return date.toLocaleTimeString('en-US', {
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: true,
+    });
+  };
+
+  // Open location in maps
+  const openLocation = (address: Address) => {
+    const { latitude, longitude } = address;
+    if (!latitude || !longitude) {
+      showAlert('Error', 'Location coordinates not available', 'error');
+      return;
+    }
+
+    const scheme = Platform.select({
+      ios: 'maps:0,0?q=',
+      android: 'geo:0,0?q=',
+    });
+    const latLng = `${latitude},${longitude}`;
+    const label = `${address.street}, ${address.city}`;
+    const url = Platform.select({
+      ios: `${scheme}${label}@${latLng}`,
+      android: `${scheme}${latLng}(${label})`,
+    });
+
+    Linking.openURL(url!);
+  };
+
+  // Open WhatsApp
+  const openWhatsApp = () => {
+    if (!offer?.provider?.whatsapp_number) {
+      showAlert('Error', 'WhatsApp number not available', 'error');
+      return;
+    }
+
+    const phoneNumber = offer.provider.whatsapp_number.replace(/[^0-9]/g, '');
+    const message = `Hi! I'm interested in ordering "${offer.title}" (ID: ${offer.id}). Could you please help me with this?`;
+    const url = `whatsapp://send?phone=${phoneNumber}&text=${encodeURIComponent(
+      message
+    )}`;
+
+    Linking.canOpenURL(url)
+      .then((supported) => {
+        if (supported) {
+          return Linking.openURL(url);
+        } else {
+          showAlert('Error', 'WhatsApp is not installed', 'error');
+        }
+      })
+      .catch(() => showAlert('Error', 'Failed to open WhatsApp', 'error'));
+  };
+
   // Carousel handlers
   const handleImageSelect = useCallback((index: number) => {
     setSelectedImageIndex(index);
@@ -126,7 +198,6 @@ export default function OfferDetailsScreen() {
 
   useEffect(() => {
     const foundOffer = offers.find((o) => o.id === id);
-    console.log('Found Offer:', foundOffer);
     if (foundOffer) addToRecentlyViewed(foundOffer);
     setOffer(foundOffer || null);
 
@@ -156,6 +227,13 @@ export default function OfferDetailsScreen() {
           toValue: 1,
           duration: 500,
           delay: 400,
+          useNativeDriver: true,
+        }),
+        Animated.spring(providerCardScale, {
+          toValue: 1,
+          friction: 8,
+          tension: 40,
+          delay: 500,
           useNativeDriver: true,
         }),
       ]).start();
@@ -199,6 +277,551 @@ export default function OfferDetailsScreen() {
     );
     router.replace('/(tabs)');
   }, [offer, addToCart, showAlert]);
+
+  const renderRestaurantCard = useCallback(() => {
+    if (!offer?.provider) return null;
+
+    const provider = offer.provider;
+
+    return (
+      <Animated.View
+        style={{
+          transform: [{ scale: providerCardScale }],
+        }}
+      >
+        <TouchableOpacity
+          onPress={() => setShowProviderModal(true)}
+          activeOpacity={0.9}
+          className="mb-6 rounded-3xl overflow-hidden"
+          style={{
+            backgroundColor: theme.card,
+            borderWidth: 1,
+            borderColor: theme.border,
+            shadowColor: theme.text,
+            shadowOffset: { width: 0, height: 4 },
+            shadowOpacity: 0.1,
+            shadowRadius: 12,
+            elevation: 5,
+          }}
+        >
+          {/* Cover Image */}
+          {provider.cover_image && (
+            <Image
+              source={{ uri: handleImageSrc(provider.cover_image) }}
+              style={{ width: '100%', height: 120 }}
+              resizeMode="cover"
+            />
+          )}
+
+          <View className="p-5">
+            {/* Logo and Name */}
+            <View className="flex-row items-center gap-4 mb-4">
+              {provider.logo_path && (
+                <View
+                  className="rounded-2xl overflow-hidden"
+                  style={{
+                    padding: 2,
+                    shadowColor: theme.text,
+                    shadowOffset: { width: 0, height: 2 },
+                    shadowOpacity: 0.1,
+                    shadowRadius: 4,
+                  }}
+                >
+                  <Image
+                    source={{ uri: handleImageSrc(provider.logo_path) }}
+                    style={{ width: 70, height: 70, borderRadius: 50 }}
+                    resizeMode="cover"
+                  />
+                </View>
+              )}
+
+              <View className="flex-1">
+                <View className="flex-row items-center gap-2 mb-1">
+                  <Building2 color={theme.primary} size={16} />
+                  <Text
+                    className="text-xs font-inter-medium uppercase tracking-wide"
+                    style={{ color: theme.textSecondary }}
+                  >
+                    Restaurant
+                  </Text>
+                </View>
+                <Text
+                  className="text-xl font-inter-bold"
+                  style={{ color: theme.text }}
+                  numberOfLines={2}
+                >
+                  {provider.name}
+                </Text>
+              </View>
+            </View>
+
+            {/* Quick Actions */}
+            <View className="flex-row gap-2">
+              {provider.whatsapp_number && (
+                <TouchableOpacity
+                  onPress={openWhatsApp}
+                  className="flex-1 flex-row items-center justify-center gap-2 py-3 rounded-xl"
+                  style={{
+                    backgroundColor: '#25D366' + '15',
+                    borderWidth: 1,
+                    borderColor: '#25D366' + '40',
+                  }}
+                >
+                  <MessageCircle color="#25D366" size={18} />
+                  <Text
+                    className="text-sm font-inter-semibold"
+                    style={{ color: '#25D366' }}
+                  >
+                    WhatsApp
+                  </Text>
+                </TouchableOpacity>
+              )}
+
+              {provider.addresses && provider.addresses.length > 0 && (
+                <TouchableOpacity
+                  onPress={() => setShowLocationsModal(true)}
+                  className="flex-1 flex-row items-center justify-center gap-2 py-3 rounded-xl"
+                  style={{
+                    backgroundColor: theme.primary + '15',
+                    borderWidth: 1,
+                    borderColor: theme.primary + '40',
+                  }}
+                >
+                  <MapPin color={theme.primary} size={18} />
+                  <Text
+                    className="text-sm font-inter-semibold"
+                    style={{ color: theme.primary }}
+                  >
+                    Locations
+                  </Text>
+                </TouchableOpacity>
+              )}
+            </View>
+
+            {/* View Details */}
+            <View
+              className="mt-3 py-2 items-center"
+              style={{ borderTopWidth: 1, borderTopColor: theme.border + '40' }}
+            >
+              <Text
+                className="text-xs font-inter-medium"
+                style={{ color: theme.textSecondary }}
+              >
+                Tap to view full details
+              </Text>
+            </View>
+          </View>
+        </TouchableOpacity>
+      </Animated.View>
+    );
+  }, [offer, theme, providerCardScale]);
+
+  const renderPickupTime = useCallback(() => {
+    if (!offer?.pickup_start_time && !offer?.pickup_end_time) return null;
+
+    return (
+      <View
+        className="mb-6 rounded-2xl p-5"
+        style={{
+          backgroundColor: theme.card,
+          borderWidth: 1,
+          borderColor: theme.border,
+          borderLeftWidth: 4,
+          borderLeftColor: theme.primary,
+        }}
+      >
+        <View className="flex-row items-center gap-3 mb-3">
+          <View
+            className="w-12 h-12 rounded-2xl items-center justify-center"
+            style={{ backgroundColor: theme.primary + '15' }}
+          >
+            <Clock color={theme.primary} size={22} />
+          </View>
+          <Text
+            className="text-lg font-inter-bold"
+            style={{ color: theme.text }}
+          >
+            Pickup Time Range
+          </Text>
+        </View>
+
+        <View className="flex-row items-center gap-2 ml-15">
+          <Text style={{ fontSize: 20, color: theme.primary }}>
+            {formatDateRange([
+              offer.pickup_start_time ?? '',
+              offer.pickup_end_time ?? '',
+            ])}
+          </Text>
+        </View>
+      </View>
+    );
+  }, [offer, theme]);
+
+  const renderLocationsModal = () => {
+    if (!offer?.provider?.addresses) return null;
+
+    return (
+      <Modal
+        visible={showLocationsModal}
+        transparent={true}
+        animationType="slide"
+        onRequestClose={() => setShowLocationsModal(false)}
+      >
+        <View className="flex-1" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
+          <TouchableOpacity
+            className="flex-1"
+            activeOpacity={1}
+            onPress={() => setShowLocationsModal(false)}
+          />
+
+          <View
+            className="rounded-t-3xl p-6 max-h-[80%]"
+            style={{
+              backgroundColor: theme.background,
+              shadowColor: theme.text,
+              shadowOffset: { width: 0, height: -4 },
+              shadowOpacity: 0.2,
+              shadowRadius: 12,
+              elevation: 8,
+            }}
+          >
+            {/* Header */}
+            <View
+              className="flex-row justify-between items-center mb-5 pb-4"
+              style={{
+                borderBottomWidth: 1,
+                borderBottomColor: theme.border + '40',
+              }}
+            >
+              <View>
+                <Text
+                  className="text-2xl font-inter-bold"
+                  style={{ color: theme.text }}
+                >
+                  All Locations
+                </Text>
+                <Text
+                  className="text-sm font-inter-medium mt-1"
+                  style={{ color: theme.textSecondary }}
+                >
+                  {offer.provider.addresses.length} location
+                  {offer.provider.addresses.length > 1 ? 's' : ''} available
+                </Text>
+              </View>
+              <TouchableOpacity
+                onPress={() => setShowLocationsModal(false)}
+                className="w-10 h-10 rounded-2xl items-center justify-center"
+                style={{ backgroundColor: theme.card }}
+              >
+                <X color={theme.text} size={22} />
+              </TouchableOpacity>
+            </View>
+
+            {/* Locations List */}
+            <ScrollView showsVerticalScrollIndicator={false}>
+              {offer.provider.addresses.map((address, index) => (
+                <TouchableOpacity
+                  key={index}
+                  onPress={() => {
+                    openLocation(address);
+                    setShowLocationsModal(false);
+                  }}
+                  className="mb-4 rounded-2xl p-4"
+                  style={{
+                    backgroundColor: theme.card,
+                    borderWidth: 1,
+                    borderColor: address.is_primary
+                      ? theme.primary
+                      : theme.border,
+                    borderLeftWidth: 3,
+                    borderLeftColor: address.is_primary
+                      ? theme.primary
+                      : theme.border,
+                  }}
+                  activeOpacity={0.7}
+                >
+                  <View className="flex-row items-start gap-3">
+                    <View
+                      className="w-12 h-12 rounded-xl items-center justify-center mt-1"
+                      style={{ backgroundColor: theme.primary + '15' }}
+                    >
+                      <MapPin color={theme.primary} size={20} />
+                    </View>
+
+                    <View className="flex-1">
+                      {address.is_primary && (
+                        <View
+                          className="px-3 py-1 rounded-lg mb-2 self-start"
+                          style={{ backgroundColor: theme.primary + '20' }}
+                        >
+                          <Text
+                            className="text-xs font-inter-bold"
+                            style={{ color: theme.primary }}
+                          >
+                            PRIMARY
+                          </Text>
+                        </View>
+                      )}
+
+                      <Text
+                        className="text-base font-inter-bold mb-1"
+                        style={{ color: theme.text }}
+                      >
+                        {address.street}
+                      </Text>
+                      <Text
+                        className="text-sm font-inter-medium mb-2"
+                        style={{ color: theme.textSecondary }}
+                      >
+                        {address.city}, {address.state} {address.zipcode}
+                      </Text>
+                      <Text
+                        className="text-xs font-inter-regular"
+                        style={{ color: theme.textSecondary }}
+                      >
+                        {address.country}
+                      </Text>
+
+                      {address.latitude && address.longitude && (
+                        <View
+                          className="flex-row items-center gap-2 mt-3 pt-3"
+                          style={{
+                            borderTopWidth: 1,
+                            borderTopColor: theme.border + '40',
+                          }}
+                        >
+                          <Navigation color={theme.primary} size={14} />
+                          <Text
+                            className="text-xs font-inter-semibold"
+                            style={{ color: theme.primary }}
+                          >
+                            Tap to navigate
+                          </Text>
+                        </View>
+                      )}
+                    </View>
+                  </View>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
+    );
+  };
+
+  const renderProviderModal = () => {
+    if (!offer?.provider) return null;
+
+    const provider = offer.provider;
+
+    return (
+      <Modal
+        visible={showProviderModal}
+        transparent={true}
+        animationType="slide"
+        onRequestClose={() => setShowProviderModal(false)}
+      >
+        <View className="flex-1" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
+          <TouchableOpacity
+            className="flex-1"
+            activeOpacity={1}
+            onPress={() => setShowProviderModal(false)}
+          />
+
+          <View
+            className="rounded-t-3xl max-h-[85%]"
+            style={{
+              backgroundColor: theme.background,
+              shadowColor: theme.text,
+              shadowOffset: { width: 0, height: -4 },
+              shadowOpacity: 0.2,
+              shadowRadius: 12,
+              elevation: 8,
+            }}
+          >
+            {/* Cover Image Header */}
+            <View className="relative">
+              {provider.cover_image ? (
+                <Image
+                  source={{ uri: handleImageSrc(provider.cover_image) }}
+                  style={{ width: '100%', height: 160 }}
+                  resizeMode="cover"
+                />
+              ) : (
+                <View
+                  style={{
+                    width: '100%',
+                    height: 160,
+                    backgroundColor: theme.primary + '20',
+                  }}
+                />
+              )}
+
+              {/* Close Button */}
+              <TouchableOpacity
+                onPress={() => setShowProviderModal(false)}
+                className="absolute top-4 right-4 w-10 h-10 rounded-2xl items-center justify-center"
+                style={{ backgroundColor: 'rgba(0,0,0,0.7)' }}
+              >
+                <X color="white" size={22} />
+              </TouchableOpacity>
+
+              {/* Logo */}
+              {provider.logo_path && (
+                <View
+                  className="absolute -bottom-8 left-6 rounded-2xl overflow-hidden"
+                  style={{
+                    backgroundColor: theme.card,
+                    padding: 3,
+                    shadowColor: theme.text,
+                    shadowOffset: { width: 0, height: 4 },
+                    shadowOpacity: 0.2,
+                    shadowRadius: 8,
+                    elevation: 5,
+                  }}
+                >
+                  <Image
+                    source={{ uri: handleImageSrc(provider.logo_path) }}
+                    style={{ width: 80, height: 80, borderRadius: 14 }}
+                    resizeMode="cover"
+                  />
+                </View>
+              )}
+            </View>
+
+            <ScrollView
+              className="px-6 pt-12 pb-6"
+              showsVerticalScrollIndicator={false}
+            >
+              {/* Provider Name and Type */}
+              <Text
+                className="text-3xl font-inter-bold mb-2"
+                style={{ color: theme.text }}
+              >
+                {provider.name}
+              </Text>
+              <Text
+                className="text-base font-inter-medium mb-6"
+                style={{ color: theme.textSecondary }}
+              >
+                {provider.provider_type.charAt(0).toUpperCase() +
+                  provider.provider_type.slice(1)}{' '}
+                Provider
+              </Text>
+
+              {/* Description */}
+              {provider.description && (
+                <Text
+                  className="text-sm font-inter-regular leading-6 mb-6"
+                  style={{ color: theme.textSecondary }}
+                >
+                  {provider.description}
+                </Text>
+              )}
+
+              {/* Contact Actions */}
+              <View className="flex-row gap-3 mb-6">
+                {provider.whatsapp_number && (
+                  <TouchableOpacity
+                    onPress={openWhatsApp}
+                    className="flex-1 flex-row items-center justify-center gap-2 py-4 rounded-2xl"
+                    style={{ backgroundColor: '#25D366' }}
+                  >
+                    <MessageCircle color="white" size={20} />
+                    <Text className="text-sm font-inter-bold text-white">
+                      WhatsApp
+                    </Text>
+                  </TouchableOpacity>
+                )}
+
+                {provider.primary_phone && (
+                  <TouchableOpacity
+                    onPress={() =>
+                      Linking.openURL(`tel:${provider.primary_phone}`)
+                    }
+                    className="flex-1 flex-row items-center justify-center gap-2 py-4 rounded-2xl"
+                    style={{ backgroundColor: theme.primary }}
+                  >
+                    <Phone color="white" size={20} />
+                    <Text className="text-sm font-inter-bold text-white">
+                      Call
+                    </Text>
+                  </TouchableOpacity>
+                )}
+              </View>
+
+              {/* Info Grid */}
+              <View className="gap-3 mb-6">
+                {provider.primary_email && (
+                  <View
+                    className="flex-row items-center gap-3 p-4 rounded-2xl"
+                    style={{
+                      backgroundColor: theme.card,
+                      borderWidth: 1,
+                      borderColor: theme.border,
+                    }}
+                  >
+                    <Mail color={theme.primary} size={20} />
+                    <Text
+                      className="flex-1 text-sm font-inter-medium"
+                      style={{ color: theme.text }}
+                    >
+                      {provider.primary_email}
+                    </Text>
+                  </View>
+                )}
+
+                {provider.website && (
+                  <TouchableOpacity
+                    onPress={() => Linking.openURL(provider.website)}
+                    className="flex-row items-center gap-3 p-4 rounded-2xl"
+                    style={{
+                      backgroundColor: theme.card,
+                      borderWidth: 1,
+                      borderColor: theme.border,
+                    }}
+                  >
+                    <Globe color={theme.primary} size={20} />
+                    <Text
+                      className="flex-1 text-sm font-inter-medium"
+                      style={{ color: theme.text }}
+                    >
+                      {provider.website}
+                    </Text>
+                  </TouchableOpacity>
+                )}
+
+                {provider.founded_year && (
+                  <View
+                    className="flex-row items-center justify-between p-4 rounded-2xl"
+                    style={{
+                      backgroundColor: theme.card,
+                      borderWidth: 1,
+                      borderColor: theme.border,
+                    }}
+                  >
+                    <Text
+                      className="text-sm font-inter-medium"
+                      style={{ color: theme.textSecondary }}
+                    >
+                      Founded
+                    </Text>
+                    <Text
+                      className="text-sm font-inter-bold"
+                      style={{ color: theme.text }}
+                    >
+                      {provider.founded_year}
+                    </Text>
+                  </View>
+                )}
+              </View>
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
+    );
+  };
 
   const renderCustomProperties = useCallback(() => {
     if (
@@ -592,24 +1215,26 @@ export default function OfferDetailsScreen() {
         <Animated.View
           className="flex-1 relative mt-[-24px] rounded-t-3xl px-6 pt-6 pb-32"
           style={{
-            backgroundColor: theme.card,
+            backgroundColor: theme.background,
             opacity: contentOpacity,
             transform: [{ translateY: contentTranslateY }],
           }}
         >
           {/* Discount Badge */}
-          <View
-            className="absolute -top-5 right-6 px-5 py-3 rounded-2xl shadow-xl"
-            style={{
-              backgroundColor: theme.error,
-              borderWidth: 2,
-              borderColor: 'white',
-            }}
-          >
-            <Text className="text-white text-base font-inter-bold">
-              {getDiscountPercentage(offer.price, offer.sale_price ?? 0)}% OFF
-            </Text>
-          </View>
+          {offer.sale_price && (
+            <View
+              className="absolute -top-5 right-6 px-5 py-3 rounded-2xl shadow-xl"
+              style={{
+                backgroundColor: theme.error,
+                borderWidth: 2,
+                borderColor: 'white',
+              }}
+            >
+              <Text className="text-white text-base font-inter-bold">
+                {getDiscountPercentage(offer.price, offer.sale_price ?? 0)}% OFF
+              </Text>
+            </View>
+          )}
 
           {/* Thumbnails */}
           {renderThumbnails()}
@@ -623,14 +1248,14 @@ export default function OfferDetailsScreen() {
           </Text>
 
           {/* Rating Row */}
-          <View className="flex-row items-center gap-4 mb-4">
+          <View className="flex-row items-center gap-4 mb-6">
             <View className="flex-row items-center gap-1">
               <Star color={theme.warning} fill={theme.warning} size={18} />
               <Text
                 className="text-base font-inter-bold"
                 style={{ color: theme.text }}
               >
-                5.0
+                {offer.rating || '5.0'}
               </Text>
             </View>
             <View
@@ -641,79 +1266,38 @@ export default function OfferDetailsScreen() {
               className="text-sm font-inter-medium"
               style={{ color: theme.textSecondary }}
             >
-              Food Place
+              {offer.stock_status === 'in_stock' ||
+              offer.stock_status === 'low_stock'
+                ? `${offer.qty} available`
+                : 'OUT OF STOCK'}
             </Text>
           </View>
 
+          {/* Provider Card */}
+          {renderRestaurantCard()}
+
+          {/* Pickup Time */}
+          {renderPickupTime()}
+
           {/* Description */}
-          <Text
-            className="text-base font-inter-regular leading-6 mb-6"
-            style={{ color: theme.textSecondary }}
-          >
-            {offer.description}
-          </Text>
-
-          {/* Quick Info Cards - Grid Layout */}
-          <View className="flex-row flex-wrap gap-3 mb-6">
-            <View
-              className="flex-1 min-w-[45%] rounded-2xl p-4 items-center"
-              style={{
-                backgroundColor: theme.card,
-                borderWidth: 1,
-                borderColor: theme.border,
-              }}
-            >
-              <View
-                className="w-12 h-12 rounded-2xl items-center justify-center mb-2"
-                style={{ backgroundColor: `${theme.primary}15` }}
-              >
-                <Clock color={theme.primary} size={22} />
-              </View>
+          {offer.description && (
+            <View className="mb-6">
               <Text
-                className="text-xs font-inter-medium mb-1"
-                style={{ color: theme.textSecondary }}
-              >
-                Cook Time
-              </Text>
-              <Text
-                className="text-base font-inter-bold"
+                className="text-lg font-inter-bold mb-3"
                 style={{ color: theme.text }}
               >
-                {offer.custom_properties?.cooking_time
-                  ? `${String(offer.custom_properties.cooking_time)} min`
-                  : 'N/A'}
+                Description
               </Text>
-            </View>
-
-            <View
-              className="flex-1 min-w-[45%] rounded-2xl p-4 items-center"
-              style={{
-                backgroundColor: theme.card,
-                borderWidth: 1,
-                borderColor: theme.border,
-              }}
-            >
-              <View
-                className="w-12 h-12 rounded-2xl items-center justify-center mb-2"
-                style={{ backgroundColor: `${theme.primary}15` }}
-              >
-                <MapPin color={theme.primary} size={22} />
-              </View>
               <Text
-                className="text-xs font-inter-medium mb-1"
+                className="text-base font-inter-regular leading-6"
                 style={{ color: theme.textSecondary }}
               >
-                Distance
-              </Text>
-              <Text
-                className="text-base font-inter-bold"
-                style={{ color: theme.text }}
-              >
-                N/A
+                {offer.description}
               </Text>
             </View>
-          </View>
+          )}
 
+          {/* Price Card */}
           <View
             className="rounded-2xl p-6 mb-6 overflow-hidden"
             style={{
@@ -816,6 +1400,7 @@ export default function OfferDetailsScreen() {
         </Animated.View>
       </ScrollView>
 
+      {/* Bottom Action Bar */}
       <View
         className="absolute bottom-0 left-0 right-0"
         style={{
@@ -892,6 +1477,10 @@ export default function OfferDetailsScreen() {
           </TouchableOpacity>
         </View>
       </View>
+
+      {/* Modals */}
+      {renderLocationsModal()}
+      {renderProviderModal()}
     </SafeAreaView>
   );
 }

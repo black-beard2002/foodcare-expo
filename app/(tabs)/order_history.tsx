@@ -31,6 +31,7 @@ import { Skeleton } from 'moti/skeleton';
 import * as Haptics from 'expo-haptics';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useAuthStore } from '@/stores/authStore';
+import { TSX_WEBSOCKET_URL } from '@/constants/api_constants';
 
 export default function OrderHistoryScreen() {
   const { theme, isDark } = useTheme();
@@ -57,11 +58,7 @@ export default function OrderHistoryScreen() {
   }, []);
   useEffect(() => {
     console.log('Entering ws use effect');
-    // if (!user?.tenant_id) return;
-
-    const ws = new WebSocket(
-      `wss://octosys-api.compugear.store/transaction/api/v1/ws/mobile/${user?.id}`
-    );
+    const ws = new WebSocket(`${TSX_WEBSOCKET_URL}/ws/mobile/${user?.id}`);
     ws.onopen = () => {
       console.log('CONNECTED');
     };
@@ -72,7 +69,6 @@ export default function OrderHistoryScreen() {
       console.log('WS Closed');
     };
     ws.onmessage = (event) => {
-      // WebSockets send text → parse it
       const data: { transaction_id: string; status: string } = JSON.parse(
         event.data
       );

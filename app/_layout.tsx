@@ -22,6 +22,7 @@ import { useSearchHistoryStore } from '@/stores/searchHistoryStore';
 import { useAuthStore } from '@/stores/authStore';
 import CustomSplashScreen from '@/components/CustomSplashScreen';
 import { useSettingsStore } from '@/stores/settingsStore';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -75,7 +76,6 @@ export default function RootLayout() {
       try {
         const { user, access_token, isLoading, getUser } =
           useAuthStore.getState();
-        console.log('Auth State:', { user, access_token, isLoading });
 
         const res = await getUser();
 
@@ -83,9 +83,16 @@ export default function RootLayout() {
         if (res.success && access_token) {
           router.replace('/(tabs)');
         } else {
+          await AsyncStorage.multiRemove([
+            'user',
+            'access_token',
+            'refresh_token',
+          ]).catch((error) =>
+            console.error('Error clearing AsyncStorage:', error)
+          );
           router.replace('/auth');
         }
-
+        console.log('Auth State:', { user, access_token, isLoading });
         hasNavigated.current = true;
       } catch (error) {
         console.error('Error during navigation:', error);

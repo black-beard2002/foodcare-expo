@@ -79,6 +79,8 @@ export interface Offer {
   country?: string;
   latitude?: number;
   longitude?: number;
+  pickup_start_time?: string;
+  pickup_end_time?: string;
   location?: string;
   serialNumber: string;
   modelNumber: string;
@@ -87,7 +89,10 @@ export interface Offer {
   start_date?: string;
   end_date?: string;
   item_type?: string;
-  custom_properties?: Record<string, number | string | string[] | number[] | object>;
+  custom_properties?: Record<
+    string,
+    number | string | string[] | number[] | object
+  >;
   category_id: string;
   type_id?: string;
   brand_id?: string;
@@ -96,7 +101,50 @@ export interface Offer {
   tenant_id?: string;
   updated_at?: string;
   created_by?: string;
+  provider?: Provider;
 }
+export type SocialMedia = {
+  name?: string;
+  url?: string;
+};
+export type ProviderType =
+  | 'retail'
+  | 'service'
+  | 'food'
+  | 'tech'
+  | 'home'
+  | 'other'
+  | '';
+export interface Address {
+  street: string;
+  city: string;
+  state: string;
+  longitude: number;
+  latitude: number;
+  zipcode: string;
+  country: string;
+  is_primary: boolean;
+}
+export type Provider = {
+  id: string;
+  name: string;
+  provider_type: ProviderType;
+  founded_year: string;
+  employee_count: string;
+  addresses: Address[];
+  primary_email: string;
+  primary_phone: string;
+  website: string;
+  description: string;
+  social_media: SocialMedia[];
+  created_at: string;
+  updated_at: string;
+  settings: Record<string, string | number>;
+  created_by: string;
+  logo_path: string;
+  cover_image: string;
+  whatsapp_number: string;
+};
 
 export interface CartItem {
   id: string;

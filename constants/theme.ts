@@ -48,105 +48,210 @@ export interface ColorTheme {
 }
 
 export const lightTheme: ColorTheme = {
-  primary: '#4CAF50',
-  primaryLight: '#7CCF7E',
-  primaryDark: '#3A8B3E',
+  // Rich Gold & Deep Navy - Premium palette
+  primary: '#C9A961', // Champagne Gold
+  primaryLight: '#D4B876', // Lighter Gold
+  primaryDark: '#B8964D', // Deeper Gold
 
-  secondary: '#43A047',
-  secondaryLight: '#66BB6A',
-  secondaryDark: '#2E7D32',
+  secondary: '#2C3E50', // Deep Navy
+  secondaryLight: '#34495E', // Lighter Navy
+  secondaryDark: '#1A252F', // Darker Navy
 
-  background: '#ffffff',
-  backgroundSecondary: '#FFFFFF',
-  surface: '#FFFFFF',
-  card: '#F5F5F5',
+  background: '#FAFAFA', // Soft Off-White
+  backgroundSecondary: '#F5F5F7', // Subtle Gray
+  surface: '#FFFFFF', // Pure White
+  card: '#FFFFFF', // Pure White Cards
 
-  text: '#1A1A2E',
-  textSecondary: '#5A5F7D',
-  textTertiary: '#9095B0',
-  textInverse: '#FFFFFF',
+  text: '#1A1A1A', // Rich Black
+  textSecondary: '#4A5568', // Sophisticated Gray
+  textTertiary: '#718096', // Muted Gray
+  textInverse: '#FFFFFF', // White
 
-  border: '#D8DCEF',
-  borderLight: '#E8EBFA',
-  divider: '#E3E6F5',
+  border: '#E2E8F0', // Soft Border
+  borderLight: '#EDF2F7', // Lighter Border
+  divider: '#E8EAF0', // Subtle Divider
 
-  success: '#4CAF50',
-  successLight: '#E8F5E9',
-  warning: '#FFA726',
-  warningLight: '#FFF3E0',
-  error: '#EF5350',
-  errorLight: '#FFEBEE',
+  success: '#059669', // Emerald Green
+  successLight: '#D1FAE5', // Light Emerald
+  warning: '#D97706', // Amber
+  warningLight: '#FEF3C7', // Light Amber
+  error: '#DC2626', // Ruby Red
+  errorLight: '#FEE2E2', // Light Ruby
 
-  info: '#4CAF50',
-  infoLight: '#E8F5E9',
+  info: '#0891B2', // Cyan
+  infoLight: '#CFFAFE', // Light Cyan
 
-  inputBackground: '#F5F7FF',
-  inputBorder: '#D8DCEF',
-  inputPlaceholder: '#9095B0',
+  inputBackground: '#F9FAFB', // Soft Input BG
+  inputBorder: '#D1D5DB', // Input Border
+  inputPlaceholder: '#9CA3AF', // Placeholder Gray
 
-  shadow: '#4CAF5015',
-  overlay: '#1A1A2E80',
+  shadow: '#C9A96120', // Gold Shadow
+  overlay: '#1A1A1ACC', // Dark Overlay
 
-  tabBarBackground: '#FFFFFF',
-  tabBarBorder: '#E8EBFA',
-  tabBarActive: '#4CAF50',
-  tabBarInactive: '#9095B0',
+  tabBarBackground: '#FFFFFF', // White Tab Bar
+  tabBarBorder: '#E8EAF0', // Subtle Border
+  tabBarActive: '#C9A961', // Gold Active
+  tabBarInactive: '#9CA3AF', // Gray Inactive
 
-  accent: '#43A047',
-  highlight: '#E9F7EC',
-  disabled: '#CED1E0',
+  accent: '#8B5CF6', // Royal Purple
+  highlight: '#F3F1EC', // Cream Highlight
+  disabled: '#CBD5E0', // Disabled Gray
 };
 
 export const darkTheme: ColorTheme = {
-  primary: '#4CAF50',
-  primaryLight: '#7CCF7E',
-  primaryDark: '#3A8B3E',
+  // Luxurious Dark with Gold Accents
+  primary: '#D4AF37', // Pure Gold
+  primaryLight: '#E5C158', // Bright Gold
+  primaryDark: '#B8941F', // Deep Gold
 
-  secondary: '#43A047',
-  secondaryLight: '#66BB6A',
-  secondaryDark: '#2E7D32',
+  secondary: '#1E293B', // Midnight Blue
+  secondaryLight: '#334155', // Slate
+  secondaryDark: '#0F172A', // Deep Midnight
 
-  background: '#111111',
-  backgroundSecondary: '#16182A',
-  surface: '#1C1F33',
-  card: '#1e1e1e',
+  background: '#0A0A0A', // Rich Black
+  backgroundSecondary: '#141414', // Charcoal
+  surface: '#1A1A1A', // Dark Surface
+  card: '#1F1F1F', // Dark Card
 
-  text: '#FFFFFF',
-  textSecondary: '#B4B8D4',
-  textTertiary: '#7E83A8',
-  textInverse: '#0F1119',
+  text: '#FAFAFA', // Off-White Text
+  textSecondary: '#A1A1AA', // Silver Gray
+  textTertiary: '#71717A', // Muted Gray
+  textInverse: '#0A0A0A', // Black
 
-  border: '#2D3250',
-  borderLight: '#252840',
-  divider: '#2A2E4A',
+  border: '#27272A', // Dark Border
+  borderLight: '#2D2D30', // Lighter Dark Border
+  divider: '#262626', // Subtle Divider
 
-  success: '#66BB6A',
-  successLight: '#4CAF5033',
-  warning: '#FFB74D',
-  warningLight: '#FFA72633',
-  error: '#EF5350',
-  errorLight: '#EF535033',
+  success: '#10B981', // Emerald
+  successLight: '#05966933', // Transparent Emerald
+  warning: '#F59E0B', // Amber
+  warningLight: '#D9770633', // Transparent Amber
+  error: '#EF4444', // Red
+  errorLight: '#DC262633', // Transparent Red
 
-  info: '#4CAF50',
-  infoLight: '#4CAF5033',
+  info: '#06B6D4', // Cyan
+  infoLight: '#0891B233', // Transparent Cyan
 
-  inputBackground: '#1C1F33',
-  inputBorder: '#353A5C',
-  inputPlaceholder: '#7E83A8',
+  inputBackground: '#1F1F1F', // Dark Input
+  inputBorder: '#3F3F46', // Input Border
+  inputPlaceholder: '#71717A', // Placeholder
 
-  shadow: '#00000050',
-  overlay: '#000000CC',
+  shadow: '#00000060', // Deep Shadow
+  overlay: '#000000DD', // Strong Overlay
 
-  tabBarBackground: '#16182A',
-  tabBarBorder: '#2A2E4A',
-  tabBarActive: '#4CAF50',
-  tabBarInactive: '#7E83A8',
+  tabBarBackground: '#141414', // Dark Tab Bar
+  tabBarBorder: '#27272A', // Border
+  tabBarActive: '#D4AF37', // Gold Active
+  tabBarInactive: '#71717A', // Gray Inactive
 
-  accent: '#43A047',
-  highlight: '#4CAF5026',
-  disabled: '#4A4E6B',
+  accent: '#A78BFA', // Lavender Purple
+  highlight: '#D4AF3726', // Transparent Gold
+  disabled: '#52525B', // Disabled Gray
 };
 
+// Optional: Rose Gold variant for even more luxury
+export const roseGoldTheme: ColorTheme = {
+  // Rose Gold & Burgundy - Ultra Premium
+  primary: '#B76E79', // Rose Gold
+  primaryLight: '#C8888F', // Light Rose Gold
+  primaryDark: '#9F5A63', // Deep Rose Gold
+
+  secondary: '#5D3A3A', // Burgundy
+  secondaryLight: '#6E4848', // Light Burgundy
+  secondaryDark: '#4A2E2E', // Deep Burgundy
+
+  background: '#FFF8F8', // Soft Blush
+  backgroundSecondary: '#FFF0F0', // Blush Tint
+  surface: '#FFFFFF', // Pure White
+  card: '#FFFFFF', // Pure White Cards
+
+  text: '#2D1B1B', // Rich Brown
+  textSecondary: '#5D4848', // Warm Gray
+  textTertiary: '#8B7373', // Muted Rose
+  textInverse: '#FFFFFF', // White
+
+  border: '#F0E0E0', // Soft Rose Border
+  borderLight: '#F5E8E8', // Lighter Border
+  divider: '#F0E5E5', // Subtle Divider
+
+  success: '#059669', // Emerald
+  successLight: '#D1FAE5', // Light Emerald
+  warning: '#D97706', // Amber
+  warningLight: '#FEF3C7', // Light Amber
+  error: '#BE123C', // Deep Rose Red
+  errorLight: '#FFE4E6', // Light Rose
+
+  info: '#0891B2', // Cyan
+  infoLight: '#CFFAFE', // Light Cyan
+
+  inputBackground: '#FFF5F5', // Blush Input
+  inputBorder: '#E8D5D5', // Rose Border
+  inputPlaceholder: '#A89090', // Rose Gray
+
+  shadow: '#B76E7920', // Rose Shadow
+  overlay: '#2D1B1BCC', // Dark Overlay
+
+  tabBarBackground: '#FFFFFF', // White Tab Bar
+  tabBarBorder: '#F0E5E5', // Subtle Border
+  tabBarActive: '#B76E79', // Rose Gold Active
+  tabBarInactive: '#A89090', // Gray Inactive
+
+  accent: '#BE123C', // Deep Rose Accent
+  highlight: '#FFF0F0', // Blush Highlight
+  disabled: '#D5C5C5', // Disabled Rose Gray
+};
+
+// Optional: Platinum variant for modern luxury
+export const platinumTheme: ColorTheme = {
+  // Platinum & Charcoal - Modern Luxury
+  primary: '#8E9AAF', // Cool Platinum
+  primaryLight: '#A5AFBF', // Light Platinum
+  primaryDark: '#6D7B95', // Deep Platinum
+
+  secondary: '#3D4451', // Charcoal
+  secondaryLight: '#4F5765', // Light Charcoal
+  secondaryDark: '#2A2F3A', // Deep Charcoal
+
+  background: '#F8F9FA', // Cool White
+  backgroundSecondary: '#F1F3F5', // Cool Gray
+  surface: '#FFFFFF', // Pure White
+  card: '#FFFFFF', // Pure White Cards
+
+  text: '#212529', // Deep Charcoal Text
+  textSecondary: '#495057', // Medium Gray
+  textTertiary: '#6C757D', // Light Gray
+  textInverse: '#FFFFFF', // White
+
+  border: '#DEE2E6', // Cool Border
+  borderLight: '#E9ECEF', // Lighter Border
+  divider: '#E5E8EB', // Subtle Divider
+
+  success: '#059669', // Emerald
+  successLight: '#D1FAE5', // Light Emerald
+  warning: '#D97706', // Amber
+  warningLight: '#FEF3C7', // Light Amber
+  error: '#DC2626', // Red
+  errorLight: '#FEE2E2', // Light Red
+
+  info: '#0284C7', // Sky Blue
+  infoLight: '#E0F2FE', // Light Sky
+
+  inputBackground: '#F8F9FA', // Cool Input
+  inputBorder: '#CED4DA', // Input Border
+  inputPlaceholder: '#6C757D', // Placeholder
+
+  shadow: '#8E9AAF20', // Platinum Shadow
+  overlay: '#212529CC', // Dark Overlay
+
+  tabBarBackground: '#FFFFFF', // White Tab Bar
+  tabBarBorder: '#E5E8EB', // Subtle Border
+  tabBarActive: '#8E9AAF', // Platinum Active
+  tabBarInactive: '#6C757D', // Gray Inactive
+
+  accent: '#6366F1', // Indigo Accent
+  highlight: '#F1F3F5', // Cool Highlight
+  disabled: '#ADB5BD', // Disabled Gray
+};
 export const spacing = {
   xs: 4,
   sm: 8,
