@@ -227,13 +227,19 @@ export default function SettingScreen() {
         </View>
         <View className="flex-1">
           <Text
-            className="text-base font-semibold mb-0.5"
-            style={{ color: theme.text }}
+            className="text-base mb-0.5"
+            style={{ color: theme.text, fontFamily: 'FredokaMedium' }}
           >
             {item.label}
           </Text>
           {item.subtitle && (
-            <Text className="text-xs" style={{ color: theme.textSecondary }}>
+            <Text
+              className="text-xs"
+              style={{
+                color: theme.textSecondary,
+                fontFamily: 'PoppinsMedium',
+              }}
+            >
               {item.subtitle}
             </Text>
           )}
@@ -377,7 +383,10 @@ export default function SettingScreen() {
       style={{ backgroundColor: theme.background }}
     >
       <View className="px-6 pb-4">
-        <Text className="text-3xl font-bold" style={{ color: theme.text }}>
+        <Text
+          className="text-3xl"
+          style={{ color: theme.text, fontFamily: 'FredokaMedium' }}
+        >
           Settings
         </Text>
       </View>
@@ -411,8 +420,8 @@ export default function SettingScreen() {
               </LinearGradient>
             </View>
             <Text
-              className="text-xl font-bold mb-1"
-              style={{ color: theme.text }}
+              className="text-xl mb-1"
+              style={{ color: theme.text, fontFamily: 'PoppinsMedium' }}
             >
               {user?.first_name?.concat(` ${user.last_name}`) || 'Guest User'}
             </Text>
@@ -420,21 +429,39 @@ export default function SettingScreen() {
           <View className="gap-1 flex-1">
             <View className="flex-row items-center gap-1 mb-1">
               <Mail color={theme.textSecondary} size={14} />
-              <Text className="text-sm" style={{ color: theme.textSecondary }}>
+              <Text
+                className="text-sm"
+                style={{
+                  color: theme.textSecondary,
+                  fontFamily: 'PoppinsMedium',
+                }}
+              >
                 {user?.email_address || 'No email'}
               </Text>
             </View>
 
             <View className="flex-row items-center gap-1">
               <Phone color={theme.textSecondary} size={14} />
-              <Text className="text-sm" style={{ color: theme.textSecondary }}>
+              <Text
+                className="text-sm"
+                style={{
+                  color: theme.textSecondary,
+                  fontFamily: 'PoppinsMedium',
+                }}
+              >
                 {user?.phone_number ?? 'No phone number'}
               </Text>
             </View>
 
             <View className="flex-row items-center gap-1">
               <Calendar color={theme.textSecondary} size={14} />
-              <Text className="text-sm" style={{ color: theme.textSecondary }}>
+              <Text
+                className="text-sm"
+                style={{
+                  color: theme.textSecondary,
+                  fontFamily: 'PoppinsMedium',
+                }}
+              >
                 {new Date(user?.birthdate ?? '').toLocaleDateString()}
               </Text>
             </View>
@@ -445,8 +472,11 @@ export default function SettingScreen() {
         {profileSections.map((section, sectionIndex) => (
           <View key={sectionIndex} className="mb-6">
             <Text
-              className="text-xs font-semibold mb-3 uppercase tracking-wider px-1"
-              style={{ color: theme.textSecondary }}
+              className="text-xs mb-3 uppercase tracking-wider px-1"
+              style={{
+                color: theme.textSecondary,
+                fontFamily: 'FredokaMedium',
+              }}
             >
               {section.title}
             </Text>
@@ -478,8 +508,8 @@ export default function SettingScreen() {
         >
           <LogOut color={theme.text} size={22} strokeWidth={2} />
           <Text
-            className="text-base font-semibold"
-            style={{ color: theme.text }}
+            className="text-base"
+            style={{ color: theme.text, fontFamily: 'FredokaMedium' }}
           >
             Sign Out
           </Text>

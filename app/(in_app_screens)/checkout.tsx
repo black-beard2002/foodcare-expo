@@ -143,7 +143,10 @@ export default function CheckoutScreen() {
         <TouchableOpacity onPress={() => router.back()} className="p-2 -ml-2">
           <ArrowLeft color={theme.text} size={24} />
         </TouchableOpacity>
-        <Text className="text-2xl font-bold" style={{ color: theme.text }}>
+        <Text
+          className="text-2xl"
+          style={{ color: theme.text, fontFamily: 'FredokaMedium' }}
+        >
           Checkout
         </Text>
         <View className="w-10" />
@@ -164,8 +167,8 @@ export default function CheckoutScreen() {
               <ShoppingBag color={theme.primary} size={20} />
             </View>
             <Text
-              className="text-lg font-bold flex-1"
-              style={{ color: theme.text }}
+              className="text-lg flex-1"
+              style={{ color: theme.text, fontFamily: 'FredokaMedium' }}
             >
               Order Summary
             </Text>
@@ -174,8 +177,8 @@ export default function CheckoutScreen() {
               style={{ backgroundColor: `${theme.primary}15` }}
             >
               <Text
-                className="text-xs font-bold"
-                style={{ color: theme.primary }}
+                className="text-xs"
+                style={{ color: theme.primary, fontFamily: 'PoppinsLight' }}
               >
                 {cart.length} {cart.length === 1 ? 'item' : 'items'}
               </Text>
@@ -207,7 +210,10 @@ export default function CheckoutScreen() {
                         className="absolute -top-1 -right-1 px-1.5 py-0.5 rounded-md"
                         style={{ backgroundColor: theme.success }}
                       >
-                        <Text className="text-white text-[10px] font-bold">
+                        <Text
+                          className="text-white text-[10px]"
+                          style={{ fontFamily: 'FredokaMedium' }}
+                        >
                           SALE
                         </Text>
                       </View>
@@ -216,8 +222,8 @@ export default function CheckoutScreen() {
 
                 <View className="flex-1 ml-4 justify-between">
                   <Text
-                    className="text-base font-semibold leading-5 mb-2"
-                    style={{ color: theme.text }}
+                    className="text-base leading-5 mb-2"
+                    style={{ color: theme.text, fontFamily: 'PoppinsMedium' }}
                     numberOfLines={2}
                   >
                     {item.offer.title}
@@ -229,8 +235,11 @@ export default function CheckoutScreen() {
                       style={{ backgroundColor: theme.backgroundSecondary }}
                     >
                       <Text
-                        className="text-xs font-medium"
-                        style={{ color: theme.textSecondary }}
+                        className="text-xs"
+                        style={{
+                          color: theme.textSecondary,
+                          fontFamily: 'PoppinsMedium',
+                        }}
                       >
                         Qty: {item.quantity}
                       </Text>
@@ -241,14 +250,20 @@ export default function CheckoutScreen() {
                         item.offer.sale_price < item.offer.price && (
                           <Text
                             className="text-xs line-through"
-                            style={{ color: theme.textTertiary }}
+                            style={{
+                              color: theme.textTertiary,
+                              fontFamily: 'PoppinsMedium',
+                            }}
                           >
                             ${item.offer.price.toFixed(2)}
                           </Text>
                         )}
                       <Text
-                        className="text-lg font-bold"
-                        style={{ color: theme.primary }}
+                        className="text-lg "
+                        style={{
+                          color: theme.primary,
+                          fontFamily: 'PoppinsMedium',
+                        }}
                       >
                         $
                         {(
@@ -273,7 +288,10 @@ export default function CheckoutScreen() {
             >
               <User color={theme.info} size={20} />
             </View>
-            <Text className="text-lg font-bold" style={{ color: theme.text }}>
+            <Text
+              className="text-lg"
+              style={{ color: theme.text, fontFamily: 'FredokaMedium' }}
+            >
               Customer Information
             </Text>
           </View>
@@ -294,7 +312,7 @@ export default function CheckoutScreen() {
               </View>
               <TextInput
                 className="flex-1 text-base py-2"
-                style={{ color: theme.text, fontFamily: 'Inter-Regular' }}
+                style={{ color: theme.text, fontFamily: 'PoppinsMedium' }}
                 placeholder="Full Name *"
                 placeholderTextColor={theme.inputPlaceholder}
                 value={customerInfo.name}
@@ -319,7 +337,7 @@ export default function CheckoutScreen() {
               </View>
               <TextInput
                 className="flex-1 text-base py-2"
-                style={{ color: theme.text, fontFamily: 'Inter-Regular' }}
+                style={{ color: theme.text, fontFamily: 'PoppinsMedium' }}
                 placeholder="Phone Number *"
                 placeholderTextColor={theme.inputPlaceholder}
                 value={customerInfo.phone}
@@ -370,7 +388,7 @@ export default function CheckoutScreen() {
               </View>
               <TextInput
                 className="flex-1 text-base min-h-[80px]"
-                style={{ color: theme.text, fontFamily: 'Inter-Regular' }}
+                style={{ color: theme.text, fontFamily: 'PoppinsMedium' }}
                 placeholder="Special Instructions (Optional)"
                 placeholderTextColor={theme.inputPlaceholder}
                 value={customerInfo.specialInstructions}
@@ -397,7 +415,10 @@ export default function CheckoutScreen() {
             >
               <DollarSign color={theme.success} size={20} />
             </View>
-            <Text className="text-lg font-bold" style={{ color: theme.text }}>
+            <Text
+              className="text-lg"
+              style={{ color: theme.text, fontFamily: 'FredokaMedium' }}
+            >
               Price Breakdown
             </Text>
           </View>
@@ -414,14 +435,14 @@ export default function CheckoutScreen() {
                 className="text-base"
                 style={{
                   color: theme.textSecondary,
-                  fontFamily: 'Inter-Regular',
+                  fontFamily: 'FredokaMedium',
                 }}
               >
                 Subtotal
               </Text>
               <Text
-                className="text-base font-semibold"
-                style={{ color: theme.text }}
+                className="text-base "
+                style={{ color: theme.text, fontFamily: 'PoppinsMedium' }}
               >
                 ${subtotal.toFixed(2)}
               </Text>
@@ -432,14 +453,14 @@ export default function CheckoutScreen() {
                 className="text-base"
                 style={{
                   color: theme.textSecondary,
-                  fontFamily: 'Inter-Regular',
+                  fontFamily: 'FredokaMedium',
                 }}
               >
                 Service Fee
               </Text>
               <Text
-                className="text-base font-semibold"
-                style={{ color: theme.text }}
+                className="text-base "
+                style={{ color: theme.text, fontFamily: 'PoppinsMedium' }}
               >
                 ${deliveryFee.toFixed(2)}
               </Text>
@@ -457,14 +478,14 @@ export default function CheckoutScreen() {
                   <Percent color="#FFFFFF" size={14} />
                 </View>
                 <Text
-                  className="text-sm font-semibold flex-1"
-                  style={{ color: theme.success }}
+                  className="text-sm flex-1"
+                  style={{ color: theme.success, fontFamily: 'FredokaMedium' }}
                 >
                   You're saving
                 </Text>
                 <Text
-                  className="text-lg font-bold"
-                  style={{ color: theme.success }}
+                  className="text-lg "
+                  style={{ color: theme.success, fontFamily: 'PoppinsMedium' }}
                 >
                   ${totalSavings.toFixed(2)}
                 </Text>
@@ -475,12 +496,15 @@ export default function CheckoutScreen() {
               className="border-t pt-4 flex-row justify-between items-center"
               style={{ borderTopColor: theme.border }}
             >
-              <Text className="text-lg font-bold" style={{ color: theme.text }}>
+              <Text
+                className="text-lg"
+                style={{ color: theme.text, fontFamily: 'FredokaMedium' }}
+              >
                 Total Amount
               </Text>
               <Text
-                className="text-3xl font-bold"
-                style={{ color: theme.primary }}
+                className="text-3xl "
+                style={{ color: theme.primary, fontFamily: 'PoppinsMedium' }}
               >
                 ${total.toFixed(2)}
               </Text>
@@ -516,9 +540,10 @@ export default function CheckoutScreen() {
               <CheckCircle2 color="#FFFFFF" size={20} />
             )}
             <Text
-              className="text-lg font-bold"
+              className="text-lg "
               style={{
                 color: isReserveDisabled ? theme.textSecondary : '#FFFFFF',
+                fontFamily: 'FredokaMedium',
               }}
             >
               {isLoading
@@ -529,7 +554,7 @@ export default function CheckoutScreen() {
         </TouchableOpacity>
         <Text
           className="text-xs text-center mt-2"
-          style={{ color: theme.textSecondary, fontFamily: 'Inter-Regular' }}
+          style={{ color: theme.textSecondary, fontFamily: 'FredokaMedium' }}
         >
           * Required fields must be filled
         </Text>

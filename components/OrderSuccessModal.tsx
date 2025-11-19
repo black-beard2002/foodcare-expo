@@ -222,14 +222,14 @@ export default function OrderSuccessModal({
           >
             {/* Title */}
             <Text
-              className="text-2xl font-bold text-center mb-1"
-              style={{ color: theme.text }}
+              className="text-2xl  text-center mb-1"
+              style={{ color: theme.text, fontFamily: 'FredokaMedium' }}
             >
               Order Reserved!
             </Text>
             <Text
               className="text-sm text-center mb-5"
-              style={{ color: theme.textSecondary }}
+              style={{ color: theme.textSecondary, fontFamily: 'PoppinsLight' }}
             >
               Your order has been successfully placed
             </Text>
@@ -258,7 +258,10 @@ export default function OrderSuccessModal({
                 <View className="gap-1 pt-1">
                   <Text
                     className="text-xs"
-                    style={{ color: theme.textSecondary }}
+                    style={{
+                      color: theme.textSecondary,
+                      fontFamily: 'PoppinsMedium',
+                    }}
                   >
                     Instructions
                   </Text>
@@ -287,7 +290,12 @@ export default function OrderSuccessModal({
                 onPress={handleClose}
                 activeOpacity={0.8}
               >
-                <Text className="text-white text-base font-semibold">Done</Text>
+                <Text
+                  className="text-white text-base"
+                  style={{ fontFamily: 'FredokaMedium' }}
+                >
+                  Done
+                </Text>
               </TouchableOpacity>
 
               <TouchableOpacity
@@ -303,10 +311,13 @@ export default function OrderSuccessModal({
                 activeOpacity={0.7}
               >
                 <Text
-                  className="text-base font-semibold"
-                  style={{ color: theme.textSecondary }}
+                  className="text-base"
+                  style={{
+                    color: theme.textSecondary,
+                    fontFamily: 'FredokaMedium',
+                  }}
                 >
-                  View Order History
+                  Track Order
                 </Text>
               </TouchableOpacity>
             </View>
@@ -329,10 +340,16 @@ function InfoRow({
 }) {
   return (
     <View className="flex-row justify-between items-center">
-      <Text className="text-xs" style={{ color: theme.textSecondary }}>
+      <Text
+        className="text-xs"
+        style={{ color: theme.textSecondary, fontFamily: 'PoppinsMedium' }}
+      >
         {label}
       </Text>
-      <Text className="text-sm font-semibold" style={{ color: theme.text }}>
+      <Text
+        className="text-sm"
+        style={{ color: theme.text, fontFamily: 'PoppinsMedium' }}
+      >
         {value}
       </Text>
     </View>

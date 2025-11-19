@@ -174,11 +174,21 @@ export default function OrderDetailsScreen() {
             </TouchableOpacity>
             <View>
               <Text
-                style={{ color: theme.text, fontSize: 20, fontWeight: 'bold' }}
+                style={{
+                  color: theme.text,
+                  fontSize: 20,
+                  fontFamily: 'FredokaMedium',
+                }}
               >
                 Order Details
               </Text>
-              <Text style={{ color: theme.textSecondary, fontSize: 13 }}>
+              <Text
+                style={{
+                  color: theme.textSecondary,
+                  fontSize: 13,
+                  fontFamily: 'PoppinsMedium',
+                }}
+              >
                 #{order?.id.toUpperCase()}
               </Text>
             </View>
@@ -272,14 +282,19 @@ export default function OrderDetailsScreen() {
                   <Text
                     style={{
                       fontSize: 18,
-                      fontWeight: 'bold',
+                      fontFamily: 'PoppinsMedium',
                       color: theme.text,
-                      marginBottom: 2,
                     }}
                   >
                     {statusConfig.label}
                   </Text>
-                  <Text style={{ fontSize: 13, color: theme.textSecondary }}>
+                  <Text
+                    style={{
+                      fontSize: 13,
+                      color: theme.textSecondary,
+                      fontFamily: 'PoppinsLight',
+                    }}
+                  >
                     Order Status
                   </Text>
                 </View>
@@ -296,7 +311,7 @@ export default function OrderDetailsScreen() {
                   style={{
                     color: statusConfig.color,
                     fontSize: 12,
-                    fontWeight: '600',
+                    fontFamily: 'FredokaMedium',
                   }}
                 >
                   {order?.transaction_type || 'ORDER'}
@@ -317,7 +332,13 @@ export default function OrderDetailsScreen() {
                 }}
               >
                 <Calendar color={theme.textSecondary} size={16} />
-                <Text style={{ color: theme.textSecondary, fontSize: 13 }}>
+                <Text
+                  style={{
+                    color: theme.textSecondary,
+                    fontSize: 13,
+                    fontFamily: 'PoppinsMedium',
+                  }}
+                >
                   Delivered: {formatDate(order?.delivered_at)}
                 </Text>
               </View>
@@ -337,7 +358,11 @@ export default function OrderDetailsScreen() {
           >
             <LockKeyholeIcon color={theme.primary} size={20} />
             <Text
-              style={{ fontSize: 18, fontWeight: 'bold', color: theme.text }}
+              style={{
+                fontSize: 18,
+                fontFamily: 'FredokaMedium',
+                color: theme.text,
+              }}
             >
               Confirmation Code
             </Text>
@@ -355,8 +380,8 @@ export default function OrderDetailsScreen() {
           >
             <View className="flex flex-row items-center gap-10">
               <Text
-                className="flex-1 text-3xl text-center font-semibold tracking-wider"
-                style={{ color: theme.primary }}
+                className="flex-1 text-3xl text-center tracking-wider"
+                style={{ color: theme.primary, fontFamily: 'PoppinsMedium' }}
               >
                 {codeHidden
                   ? '••••••••'
@@ -386,7 +411,11 @@ export default function OrderDetailsScreen() {
           >
             <ShoppingBag color={theme.primary} size={20} />
             <Text
-              style={{ fontSize: 18, fontWeight: 'bold', color: theme.text }}
+              style={{
+                fontSize: 18,
+                fontFamily: 'FredokaMedium',
+                color: theme.text,
+              }}
             >
               Order Items{' '}
               {order?.items && order.items.length > 0
@@ -426,7 +455,7 @@ export default function OrderDetailsScreen() {
                       <Text
                         style={{
                           fontSize: 16,
-                          fontWeight: '600',
+                          fontFamily: 'PoppinsMedium',
                           color: theme.text,
                           marginBottom: 4,
                         }}
@@ -438,6 +467,7 @@ export default function OrderDetailsScreen() {
                         style={{
                           fontSize: 13,
                           color: theme.textSecondary,
+                          fontFamily: 'PoppinsMedium',
                         }}
                       >
                         Qty: {orderItem.quantity}
@@ -446,7 +476,7 @@ export default function OrderDetailsScreen() {
                     <Text
                       style={{
                         fontSize: 18,
-                        fontWeight: 'bold',
+                        fontFamily: 'PoppinsMedium',
                         color: theme.primary,
                       }}
                     >
@@ -481,7 +511,11 @@ export default function OrderDetailsScreen() {
             >
               <User color={theme.primary} size={20} />
               <Text
-                style={{ fontSize: 18, fontWeight: 'bold', color: theme.text }}
+                style={{
+                  fontSize: 18,
+                  fontFamily: 'FredokaMedium',
+                  color: theme.text,
+                }}
               >
                 Customer Information
               </Text>
@@ -513,13 +547,19 @@ export default function OrderDetailsScreen() {
                   <User color={theme.primary} size={20} />
                 </View>
                 <View style={{ flex: 1 }}>
-                  <Text style={{ fontSize: 12, color: theme.textSecondary }}>
+                  <Text
+                    style={{
+                      fontSize: 12,
+                      color: theme.textSecondary,
+                      fontFamily: 'FredokaMedium',
+                    }}
+                  >
                     Full Name
                   </Text>
                   <Text
                     style={{
                       fontSize: 15,
-                      fontWeight: '600',
+                      fontFamily: 'PoppinsMedium',
                       color: theme.text,
                     }}
                   >
@@ -545,7 +585,13 @@ export default function OrderDetailsScreen() {
                   <Phone color={theme.primary} size={20} />
                 </View>
                 <View style={{ flex: 1 }}>
-                  <Text style={{ fontSize: 12, color: theme.textSecondary }}>
+                  <Text
+                    style={{
+                      fontSize: 12,
+                      color: theme.textSecondary,
+                      fontFamily: 'FredokaMedium',
+                    }}
+                  >
                     Phone Number
                   </Text>
                   <TouchableOpacity
@@ -556,7 +602,7 @@ export default function OrderDetailsScreen() {
                     <Text
                       style={{
                         fontSize: 15,
-                        fontWeight: '600',
+                        fontFamily: 'PoppinsMedium',
                         color: theme.primary,
                       }}
                     >
@@ -582,7 +628,13 @@ export default function OrderDetailsScreen() {
                   <Mail color={theme.primary} size={20} />
                 </View>
                 <View style={{ flex: 1 }}>
-                  <Text style={{ fontSize: 12, color: theme.textSecondary }}>
+                  <Text
+                    style={{
+                      fontSize: 12,
+                      color: theme.textSecondary,
+                      fontFamily: 'FredokaMedium',
+                    }}
+                  >
                     Email Address
                   </Text>
                   <TouchableOpacity
@@ -593,7 +645,7 @@ export default function OrderDetailsScreen() {
                     <Text
                       style={{
                         fontSize: 15,
-                        fontWeight: '600',
+                        fontFamily: 'PoppinsMedium',
                         color: theme.primary,
                       }}
                       numberOfLines={1}
@@ -624,13 +676,19 @@ export default function OrderDetailsScreen() {
                   <MapPin color={theme.primary} size={20} />
                 </View>
                 <View style={{ flex: 1 }}>
-                  <Text style={{ fontSize: 12, color: theme.textSecondary }}>
+                  <Text
+                    style={{
+                      fontSize: 12,
+                      color: theme.textSecondary,
+                      fontFamily: 'FredokaMedium',
+                    }}
+                  >
                     Delivery Address
                   </Text>
                   <Text
                     style={{
                       fontSize: 15,
-                      fontWeight: '600',
+                      fontFamily: 'PoppinsMedium',
                       color: theme.text,
                       lineHeight: 20,
                     }}
@@ -655,7 +713,11 @@ export default function OrderDetailsScreen() {
           >
             <CreditCard color={theme.primary} size={20} />
             <Text
-              style={{ fontSize: 18, fontWeight: 'bold', color: theme.text }}
+              style={{
+                fontSize: 18,
+                fontFamily: 'FredokaMedium',
+                color: theme.text,
+              }}
             >
               Payment Details
             </Text>
@@ -678,11 +740,21 @@ export default function OrderDetailsScreen() {
                 alignItems: 'center',
               }}
             >
-              <Text style={{ fontSize: 14, color: theme.textSecondary }}>
+              <Text
+                style={{
+                  fontSize: 14,
+                  color: theme.textSecondary,
+                  fontFamily: 'FredokaMedium',
+                }}
+              >
                 Payment Method
               </Text>
               <Text
-                style={{ fontSize: 15, fontWeight: '600', color: theme.text }}
+                style={{
+                  fontSize: 15,
+                  fontFamily: 'PoppinsMedium',
+                  color: theme.text,
+                }}
               >
                 {order?.payment_method?.replace('_', ' ') || 'N/A'}
               </Text>
@@ -733,11 +805,21 @@ export default function OrderDetailsScreen() {
                 alignItems: 'center',
               }}
             >
-              <Text style={{ fontSize: 14, color: theme.textSecondary }}>
+              <Text
+                style={{
+                  fontSize: 14,
+                  color: theme.textSecondary,
+                  fontFamily: 'FredokaMedium',
+                }}
+              >
                 Subtotal
               </Text>
               <Text
-                style={{ fontSize: 15, fontWeight: '600', color: theme.text }}
+                style={{
+                  fontSize: 15,
+                  fontFamily: 'PoppinsMedium',
+                  color: theme.text,
+                }}
               >
                 ${formatPrice(order?.total_price || 0)}
               </Text>
@@ -754,14 +836,18 @@ export default function OrderDetailsScreen() {
               }}
             >
               <Text
-                style={{ fontSize: 16, fontWeight: 'bold', color: theme.text }}
+                style={{
+                  fontSize: 16,
+                  fontFamily: 'FredokaMedium',
+                  color: theme.text,
+                }}
               >
                 Total
               </Text>
               <Text
                 style={{
                   fontSize: 22,
-                  fontWeight: 'bold',
+                  fontFamily: 'PoppinsMedium',
                   color: theme.primary,
                 }}
               >
@@ -784,7 +870,11 @@ export default function OrderDetailsScreen() {
           >
             <Receipt color={theme.primary} size={20} />
             <Text
-              style={{ fontSize: 18, fontWeight: 'bold', color: theme.text }}
+              style={{
+                fontSize: 18,
+                fontFamily: 'FredokaMedium',
+                color: theme.text,
+              }}
             >
               Order Timeline
             </Text>
@@ -813,13 +903,19 @@ export default function OrderDetailsScreen() {
                   }}
                 />
                 <View style={{ flex: 1 }}>
-                  <Text style={{ fontSize: 13, color: theme.textSecondary }}>
+                  <Text
+                    style={{
+                      fontSize: 13,
+                      color: theme.textSecondary,
+                      fontFamily: 'FredokaMedium',
+                    }}
+                  >
                     Order Created
                   </Text>
                   <Text
                     style={{
                       fontSize: 14,
-                      fontWeight: '600',
+                      fontFamily: 'PoppinsMedium',
                       color: theme.text,
                     }}
                   >
@@ -842,7 +938,13 @@ export default function OrderDetailsScreen() {
                   }}
                 />
                 <View style={{ flex: 1 }}>
-                  <Text style={{ fontSize: 13, color: theme.textSecondary }}>
+                  <Text
+                    style={{
+                      fontSize: 13,
+                      color: theme.textSecondary,
+                      fontFamily: 'FredokaMedium',
+                    }}
+                  >
                     Transaction Date
                   </Text>
                   <Text
@@ -871,13 +973,19 @@ export default function OrderDetailsScreen() {
                   }}
                 />
                 <View style={{ flex: 1 }}>
-                  <Text style={{ fontSize: 13, color: theme.textSecondary }}>
+                  <Text
+                    style={{
+                      fontSize: 13,
+                      color: theme.textSecondary,
+                      fontFamily: 'FredokaMedium',
+                    }}
+                  >
                     Delivered
                   </Text>
                   <Text
                     style={{
                       fontSize: 14,
-                      fontWeight: '600',
+                      fontFamily: 'PoppinsMedium',
                       color: theme.text,
                     }}
                   >
@@ -900,13 +1008,19 @@ export default function OrderDetailsScreen() {
                   }}
                 />
                 <View style={{ flex: 1 }}>
-                  <Text style={{ fontSize: 13, color: theme.textSecondary }}>
+                  <Text
+                    style={{
+                      fontSize: 13,
+                      color: theme.textSecondary,
+                      fontFamily: 'FredokaMedium',
+                    }}
+                  >
                     Expires On
                   </Text>
                   <Text
                     style={{
                       fontSize: 14,
-                      fontWeight: '600',
+                      fontFamily: 'PoppinsMedium',
                       color: theme.text,
                     }}
                   >
@@ -934,7 +1048,7 @@ export default function OrderDetailsScreen() {
               <Text
                 style={{
                   fontSize: 16,
-                  fontWeight: 'bold',
+                  fontFamily: 'FredokaMedium',
                   color: theme.text,
                   marginBottom: 12,
                 }}

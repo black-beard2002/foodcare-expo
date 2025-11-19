@@ -227,14 +227,14 @@ export default function OrderHistoryScreen() {
           </View>
           <View>
             <Text
-              className="text-xs font-inter-medium opacity-60 md:text-sm"
-              style={{ color: theme.textSecondary }}
+              className="text-xs  opacity-60 md:text-sm"
+              style={{ color: theme.textSecondary, fontFamily: 'PoppinsLight' }}
             >
               Order #{order.id}
             </Text>
             <Text
-              className="text-sm font-inter-semibold mt-0.5 md:text-base"
-              style={{ color: theme.text }}
+              className="text-sm mt-0.5 md:text-base"
+              style={{ color: theme.text, fontFamily: 'PoppinsMedium' }}
             >
               {order.client_data?.first_name.concat(
                 ` ${order.client_data.last_name}`
@@ -285,8 +285,8 @@ export default function OrderHistoryScreen() {
             className="md:w-3.5 md:h-3.5"
           />
           <Text
-            className="text-xs font-inter-medium md:text-sm"
-            style={{ color: theme.textSecondary }}
+            className="text-xs  md:text-sm"
+            style={{ color: theme.textSecondary, fontFamily: 'PoppinsMedium' }}
           >
             {order.client_data?.phone_number}
           </Text>
@@ -299,8 +299,8 @@ export default function OrderHistoryScreen() {
             className="md:w-3.5 md:h-3.5"
           />
           <Text
-            className="text-xs font-inter-medium md:text-sm"
-            style={{ color: theme.textSecondary }}
+            className="text-xs  md:text-sm"
+            style={{ color: theme.textSecondary, fontFamily: 'PoppinsMedium' }}
           >
             {formatDateTime(order.created_at ?? '')}
           </Text>
@@ -314,13 +314,13 @@ export default function OrderHistoryScreen() {
       >
         <Text
           className="text-sm font-inter-semibold md:text-base"
-          style={{ color: theme.textSecondary }}
+          style={{ color: theme.textSecondary, fontFamily: 'FredokaMedium' }}
         >
           Total
         </Text>
         <Text
-          className="text-lg font-inter-bold md:text-xl"
-          style={{ color: theme.text }}
+          className="text-lg  md:text-xl"
+          style={{ color: theme.text, fontFamily: 'PoppinsMedium' }}
         >
           ${order.total_price}
         </Text>
@@ -335,8 +335,8 @@ export default function OrderHistoryScreen() {
         style={{ backgroundColor: theme.background }}
       >
         <Text
-          className="text-4xl font-bold w-full mb-10 md:text-4xl md:mb-12"
-          style={{ color: theme.text }}
+          className="text-4xl  w-full mb-10 md:text-4xl md:mb-12"
+          style={{ color: theme.text, fontFamily: 'FredokaMedium' }}
         >
           Order History
         </Text>
@@ -355,13 +355,13 @@ export default function OrderHistoryScreen() {
         <View>
           <Text
             className="text-4xl mb-1"
-            style={{ color: theme.text, fontWeight: 900 }}
+            style={{ color: theme.text, fontFamily: 'FredokaMedium' }}
           >
             Order History
           </Text>
           <Text
             className="text-sm font-inter-regular md:text-base"
-            style={{ color: theme.textSecondary }}
+            style={{ color: theme.textSecondary, fontFamily: 'PoppinsMedium' }}
           >
             {filteredOrders.length}{' '}
             {filteredOrders.length === 1 ? 'order' : 'orders'} found
@@ -378,8 +378,8 @@ export default function OrderHistoryScreen() {
           >
             <Trash2 color={theme.error} size={18} className="md:w-5 md:h-5" />
             <Text
-              className="text-sm font-inter-semibold md:text-base"
-              style={{ color: theme.error }}
+              className="text-sm md:text-base"
+              style={{ color: theme.error, fontFamily: 'FredokaMedium' }}
             >
               Clear All
             </Text>
@@ -413,8 +413,8 @@ export default function OrderHistoryScreen() {
               className="md:w-5 md:h-5"
             />
             <TextInput
-              className="flex-1 text-base font-inter-regular md:text-lg"
-              style={{ color: theme.text }}
+              className="flex-1 text-base md:text-lg"
+              style={{ color: theme.text, fontFamily: 'PoppinsMedium' }}
               placeholder="Search by order ID,customer name, or order item..."
               placeholderTextColor={theme.textTertiary}
               value={searchQuery}
@@ -438,8 +438,8 @@ export default function OrderHistoryScreen() {
                   }}
                 >
                   <Text
-                    className="text-sm font-inter-semibold capitalize md:text-base"
-                    style={{ color: theme.text }}
+                    className="text-sm capitalize md:text-base"
+                    style={{ color: theme.text, fontFamily: 'FredokaMedium' }}
                   >
                     {status.charAt(0).toUpperCase() + status.slice(1)}
                   </Text>
@@ -465,7 +465,10 @@ export default function OrderHistoryScreen() {
             {isLoading ? (
               <Text
                 className="text-base font-inter-regular text-center md:text-lg"
-                style={{ color: theme.textSecondary }}
+                style={{
+                  color: theme.textSecondary,
+                  fontFamily: 'PoppinsMedium',
+                }}
               >
                 Loading orders...
               </Text>
@@ -479,7 +482,10 @@ export default function OrderHistoryScreen() {
                 </Text>
                 <Text
                   className="text-base font-inter-regular text-center md:text-lg"
-                  style={{ color: theme.textSecondary }}
+                  style={{
+                    color: theme.textSecondary,
+                    fontFamily: 'PoppinsMedium',
+                  }}
                 >
                   Try adjusting your search or filter
                 </Text>

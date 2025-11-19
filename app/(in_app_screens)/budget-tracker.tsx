@@ -22,11 +22,9 @@ import {
 import { useTheme } from '@/hooks/useTheme';
 import { useBudgetStore } from '@/stores/budgetStore';
 import { useAlert } from '@/providers/AlertProvider';
-import { useAppStore } from '@/stores/appStore';
-import { Skeleton } from 'moti/skeleton';
 
 export default function BudgetTrackerScreen() {
-  const { theme, isDark } = useTheme();
+  const { theme } = useTheme();
   const {
     budgetData,
     loadBudgetData,
@@ -115,12 +113,18 @@ export default function BudgetTrackerScreen() {
             <ArrowLeft color={theme.text} size={24} />
           </TouchableOpacity>
           <View className="flex-1">
-            <Text className="text-2xl font-bold" style={{ color: theme.text }}>
+            <Text
+              className="text-2xl "
+              style={{ color: theme.text, fontFamily: 'FredokaMedium' }}
+            >
               Budget Tracker
             </Text>
             <Text
               className="text-sm mt-0.5"
-              style={{ color: theme.textSecondary }}
+              style={{
+                color: theme.textSecondary,
+                fontFamily: 'PoppinsMedium',
+              }}
             >
               Monitor your spending
             </Text>
@@ -146,8 +150,8 @@ export default function BudgetTrackerScreen() {
               <View className="flex-row items-center gap-2 mb-4">
                 <Wallet color={theme.primary} size={24} />
                 <Text
-                  className="text-lg font-bold"
-                  style={{ color: theme.text }}
+                  className="text-lg"
+                  style={{ color: theme.text, fontFamily: 'FredokaMedium' }}
                 >
                   Monthly Budget
                 </Text>
@@ -159,6 +163,7 @@ export default function BudgetTrackerScreen() {
                     className="px-4 py-3 rounded-xl mb-3 text-lg"
                     style={{
                       backgroundColor: theme.inputBackground,
+                      fontFamily: 'PoppinsMedium',
                       color: theme.text,
                       borderWidth: 1,
                       borderColor: theme.inputBorder,
@@ -175,7 +180,12 @@ export default function BudgetTrackerScreen() {
                       style={{ backgroundColor: theme.primary }}
                       onPress={handleSaveLimit}
                     >
-                      <Text className="text-white font-semibold">Save</Text>
+                      <Text
+                        className="text-white"
+                        style={{ fontFamily: 'FredokaMedium' }}
+                      >
+                        Save
+                      </Text>
                     </TouchableOpacity>
                     <TouchableOpacity
                       className="flex-1 py-3 rounded-xl items-center"
@@ -183,8 +193,10 @@ export default function BudgetTrackerScreen() {
                       onPress={() => setEditingLimit(false)}
                     >
                       <Text
-                        style={{ color: theme.textSecondary }}
-                        className="font-semibold"
+                        style={{
+                          color: theme.textSecondary,
+                          fontFamily: 'FredokaMedium',
+                        }}
                       >
                         Cancel
                       </Text>
@@ -197,14 +209,20 @@ export default function BudgetTrackerScreen() {
                     <>
                       <View className="flex-row items-baseline gap-2 mb-2">
                         <Text
-                          className="text-4xl font-bold"
-                          style={{ color: theme.text }}
+                          className="text-4xl"
+                          style={{
+                            color: theme.text,
+                            fontFamily: 'PoppinsMedium',
+                          }}
                         >
                           ${budgetData.current_month_spending.toFixed(2)}
                         </Text>
                         <Text
                           className="text-lg"
-                          style={{ color: theme.textSecondary }}
+                          style={{
+                            color: theme.textSecondary,
+                            fontFamily: 'PoppinsMedium',
+                          }}
                         >
                           / ${budgetData.monthly_limit.toFixed(2)}
                         </Text>
@@ -235,7 +253,10 @@ export default function BudgetTrackerScreen() {
                           <AlertTriangle color={theme.error} size={20} />
                           <Text
                             className="text-sm flex-1"
-                            style={{ color: theme.error }}
+                            style={{
+                              color: theme.error,
+                              fontFamily: 'PoppinsMedium',
+                            }}
                           >
                             You've exceeded your budget by $
                             {Math.abs(remaining).toFixed(2)}
@@ -244,7 +265,10 @@ export default function BudgetTrackerScreen() {
                       ) : (
                         <Text
                           className="text-sm mb-3"
-                          style={{ color: theme.textSecondary }}
+                          style={{
+                            color: theme.textSecondary,
+                            fontFamily: 'PoppinsMedium',
+                          }}
                         >
                           ${remaining.toFixed(2)} remaining this month
                         </Text>
@@ -253,7 +277,10 @@ export default function BudgetTrackerScreen() {
                   ) : (
                     <Text
                       className="text-sm mb-3"
-                      style={{ color: theme.textSecondary }}
+                      style={{
+                        color: theme.textSecondary,
+                        fontFamily: 'PoppinsMedium',
+                      }}
                     >
                       No budget limit set
                     </Text>
@@ -277,8 +304,8 @@ export default function BudgetTrackerScreen() {
               <View className="flex-row items-center gap-2 mb-4">
                 <PieChart color={theme.primary} size={20} />
                 <Text
-                  className="text-lg font-bold"
-                  style={{ color: theme.text }}
+                  className="text-lg "
+                  style={{ color: theme.text, fontFamily: 'FredokaMedium' }}
                 >
                   Spending by Category
                 </Text>
@@ -300,15 +327,19 @@ export default function BudgetTrackerScreen() {
                         >
                           <View className="flex-row items-center justify-between mb-2">
                             <Text
-                              className="font-semibold"
-                              style={{ color: theme.text }}
+                              style={{
+                                color: theme.text,
+                                fontFamily: 'FredokaMedium',
+                              }}
                             >
                               {category.category}
                             </Text>
 
                             <Text
-                              className="font-bold"
-                              style={{ color: theme.primary }}
+                              style={{
+                                color: theme.primary,
+                                fontFamily: 'PoppinsMedium',
+                              }}
                             >
                               ${category.amount.toFixed(2)}
                             </Text>
@@ -326,8 +357,11 @@ export default function BudgetTrackerScreen() {
                             />
                           </View>
                           <Text
-                            className="text-xs mt-1"
-                            style={{ color: theme.textSecondary }}
+                            className="text-xs mt-2"
+                            style={{
+                              color: theme.textSecondary,
+                              fontFamily: 'PoppinsMedium',
+                            }}
                           >
                             {categoryPercentage.toFixed(1)}% of total spending
                           </Text>
@@ -342,7 +376,10 @@ export default function BudgetTrackerScreen() {
                 >
                   <Text
                     className="text-sm"
-                    style={{ color: theme.textSecondary }}
+                    style={{
+                      color: theme.textSecondary,
+                      fontFamily: 'FredokaMedium',
+                    }}
                   >
                     No spending data yet
                   </Text>
@@ -353,8 +390,8 @@ export default function BudgetTrackerScreen() {
               <View className="flex-row items-center gap-2 mb-4">
                 <TrendingUp color={theme.primary} size={20} />
                 <Text
-                  className="text-lg font-bold"
-                  style={{ color: theme.text }}
+                  className="text-lg "
+                  style={{ color: theme.text, fontFamily: 'FredokaMedium' }}
                 >
                   Spending History
                 </Text>
@@ -372,8 +409,10 @@ export default function BudgetTrackerScreen() {
                         style={{ backgroundColor: theme.card }}
                       >
                         <Text
-                          className="font-semibold"
-                          style={{ color: theme.text }}
+                          style={{
+                            color: theme.text,
+                            fontFamily: 'FredokaMedium',
+                          }}
                         >
                           {new Date(history.month + '-01').toLocaleDateString(
                             'en-US',
@@ -384,8 +423,10 @@ export default function BudgetTrackerScreen() {
                           )}
                         </Text>
                         <Text
-                          className="font-bold"
-                          style={{ color: theme.primary }}
+                          style={{
+                            color: theme.primary,
+                            fontFamily: 'PoppinsMedium',
+                          }}
                         >
                           ${history.amount.toFixed(2)}
                         </Text>
@@ -399,7 +440,10 @@ export default function BudgetTrackerScreen() {
                 >
                   <Text
                     className="text-sm"
-                    style={{ color: theme.textSecondary }}
+                    style={{
+                      color: theme.textSecondary,
+                      fontFamily: 'FredokaMedium',
+                    }}
                   >
                     No history data yet
                   </Text>
@@ -410,8 +454,8 @@ export default function BudgetTrackerScreen() {
               <View className="flex-row items-center gap-2 mb-4">
                 <HandCoins color={theme.primary} size={20} />
                 <Text
-                  className="text-lg font-bold"
-                  style={{ color: theme.text }}
+                  className="text-lg "
+                  style={{ color: theme.text, fontFamily: 'FredokaMedium' }}
                 >
                   Total Spending
                 </Text>
@@ -425,14 +469,17 @@ export default function BudgetTrackerScreen() {
                   >
                     <HandCoins color={theme.primary} size={32} />
                     <Text
-                      className="text-3xl font-bold mt-2"
-                      style={{ color: theme.text }}
+                      className="text-3xl  mt-2"
+                      style={{ color: theme.text, fontFamily: 'PoppinsMedium' }}
                     >
                       ${budgetData.overall_spending.toFixed(2)}
                     </Text>
                     <Text
                       className="text-sm mt-1"
-                      style={{ color: theme.textSecondary }}
+                      style={{
+                        color: theme.textSecondary,
+                        fontFamily: 'PoppinsMedium',
+                      }}
                     >
                       Overall spending to date
                     </Text>
@@ -444,7 +491,10 @@ export default function BudgetTrackerScreen() {
                   >
                     <Text
                       className="text-sm"
-                      style={{ color: theme.textSecondary }}
+                      style={{
+                        color: theme.textSecondary,
+                        fontFamily: 'FredokaMedium',
+                      }}
                     >
                       No overall spending data yet
                     </Text>
@@ -461,7 +511,9 @@ export default function BudgetTrackerScreen() {
             >
               <View className="flex-row items-center gap-2">
                 <Trash2 color="white" size={20} className="mb-1" />
-                <Text className="font-semibold" style={{ color: theme.text }}>
+                <Text
+                  style={{ color: theme.text, fontFamily: 'FredokaMedium' }}
+                >
                   Clear Budget Data
                 </Text>
               </View>
@@ -478,10 +530,7 @@ export default function BudgetTrackerScreen() {
             className="w-full p-6 rounded-xl"
             style={{ backgroundColor: theme.card }}
           >
-            <Text
-              className="text-lg font-bold mb-4"
-              style={{ color: theme.text }}
-            >
+            <Text className="text-lg  mb-4" style={{ color: theme.text }}>
               Confirm Clear Data
             </Text>
             <Text

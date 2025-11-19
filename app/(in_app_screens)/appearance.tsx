@@ -121,8 +121,8 @@ export default function SettingsScreen() {
 
           <View className="flex-1">
             <Text
-              className="text-3xl font-inter-bold"
-              style={{ color: theme.text }}
+              className="text-3xl "
+              style={{ color: theme.text, fontFamily: 'FredokaMedium' }}
             >
               Appearance
             </Text>
@@ -139,8 +139,8 @@ export default function SettingsScreen() {
         </View>
 
         <Text
-          className="text-sm font-inter-medium"
-          style={{ color: theme.textSecondary }}
+          className="text-sm "
+          style={{ color: theme.textSecondary, fontFamily: 'PoppinsLight' }}
         >
           Customize your luxury experience
         </Text>
@@ -181,14 +181,17 @@ export default function SettingsScreen() {
               </View>
             </View>
             <Text
-              className="text-center text-xl font-inter-bold mb-2"
-              style={{ color: theme.text }}
+              className="text-center text-xl mb-2"
+              style={{ color: theme.text, fontFamily: 'FredokaMedium' }}
             >
               {getThemeDisplayName(currentTheme)}
             </Text>
             <Text
-              className="text-center text-sm font-inter-medium"
-              style={{ color: theme.textSecondary }}
+              className="text-center text-sm "
+              style={{
+                color: theme.textSecondary,
+                fontFamily: 'PoppinsLight',
+              }}
             >
               Currently active theme
             </Text>
@@ -223,14 +226,17 @@ export default function SettingsScreen() {
                 </View>
                 <View className="flex-1">
                   <Text
-                    className="text-base font-inter-bold mb-0.5"
-                    style={{ color: theme.text }}
+                    className="text-base mb-0.5"
+                    style={{ color: theme.text, fontFamily: 'FredokaMedium' }}
                   >
                     Dark Mode
                   </Text>
                   <Text
-                    className="text-xs font-inter-medium"
-                    style={{ color: theme.textSecondary }}
+                    className="text-xs "
+                    style={{
+                      color: theme.textSecondary,
+                      fontFamily: 'PoppinsLight',
+                    }}
                   >
                     Quick toggle between light and dark
                   </Text>
@@ -250,8 +256,8 @@ export default function SettingsScreen() {
         {/* Theme Options Section */}
         <View className="mx-5 mb-6">
           <Text
-            className="text-xs font-inter-bold mb-4 uppercase tracking-wider px-1"
-            style={{ color: theme.textSecondary }}
+            className="text-xs mb-4 uppercase tracking-wider px-1"
+            style={{ color: theme.textSecondary, fontFamily: 'FredokaMedium' }}
           >
             Luxury Themes
           </Text>
@@ -364,8 +370,9 @@ export default function SettingsScreen() {
                           <View className="flex-1">
                             <View className="flex-row items-center gap-2 mb-1">
                               <Text
-                                className="text-lg font-inter-bold"
+                                className="text-lg"
                                 style={{
+                                  fontFamily: 'PoppinsMedium',
                                   color: isSelected
                                     ? theme.primary
                                     : theme.text,
@@ -381,8 +388,11 @@ export default function SettingsScreen() {
                                   }}
                                 >
                                   <Text
-                                    className="text-xs font-inter-bold"
-                                    style={{ color: option.color }}
+                                    className="text-xs"
+                                    style={{
+                                      color: option.color,
+                                      fontFamily: 'PoppinsMedium',
+                                    }}
                                   >
                                     PREMIUM
                                   </Text>
@@ -390,8 +400,11 @@ export default function SettingsScreen() {
                               )}
                             </View>
                             <Text
-                              className="text-sm font-inter-medium leading-5"
-                              style={{ color: theme.textSecondary }}
+                              className="text-sm  leading-5"
+                              style={{
+                                color: theme.textSecondary,
+                                fontFamily: 'PoppinsMedium',
+                              }}
                             >
                               {option.description}
                             </Text>
@@ -427,14 +440,17 @@ export default function SettingsScreen() {
             </View>
             <View className="flex-1">
               <Text
-                className="text-base font-inter-bold mb-2"
-                style={{ color: theme.text }}
+                className="text-lg mb-2"
+                style={{ color: theme.text, fontFamily: 'FredokaMedium' }}
               >
                 Premium Experience
               </Text>
               <Text
-                className="text-sm font-inter-medium leading-6"
-                style={{ color: theme.textSecondary }}
+                className="text-sm  leading-6"
+                style={{
+                  color: theme.textSecondary,
+                  fontFamily: 'PoppinsMedium',
+                }}
               >
                 Each theme is carefully crafted with premium color palettes to
                 provide a luxury experience. Choose the one that best matches

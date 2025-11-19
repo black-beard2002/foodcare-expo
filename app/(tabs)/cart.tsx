@@ -22,6 +22,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { CartItem } from '@/types/appTypes';
 import { formatPrice, handleImageSrc } from '@/utils/helpers';
 import * as images from '@/constants/images';
+import { ColorTheme } from '@/constants/theme';
 
 const CartItemComponent = ({
   item,
@@ -29,7 +30,13 @@ const CartItemComponent = ({
   theme,
   removeFromCart,
   updateCartItem,
-}: any) => {
+}: {
+  item: CartItem;
+  index: number;
+  theme: ColorTheme;
+  removeFromCart: (id: string) => void;
+  updateCartItem: (id: string, quantity: number) => void;
+}) => {
   const animatedValue = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
@@ -77,7 +84,10 @@ const CartItemComponent = ({
             className="absolute -top-1.5 -right-1.5 px-2 py-1 rounded-lg shadow-md"
             style={{ backgroundColor: theme.primary }}
           >
-            <Text className="text-white text-[11px] font-bold">
+            <Text
+              className="text-white text-[11px]"
+              style={{ fontFamily: 'fredokaMedium' }}
+            >
               -{discountPercent}%
             </Text>
           </View>
@@ -88,21 +98,23 @@ const CartItemComponent = ({
         <View className="flex-row justify-between items-start">
           <View className="flex-1 mr-2">
             <Text
-              className="text-[17px] font-bold leading-6 mb-1.5"
-              style={{ color: theme.text }}
+              className="text-[17px] leading-6 mb-1.5"
+              style={{ color: theme.text, fontFamily: 'PoppinsMedium' }}
               numberOfLines={2}
             >
               {item.offer.title}
             </Text>
             <View
               className="self-start px-2.5 py-1 rounded-lg"
-              style={{ backgroundColor: `${theme.primary}15` }}
+              style={{
+                backgroundColor: `${theme.primary}15`,
+              }}
             >
               <Text
-                className="text-xs font-medium"
-                style={{ color: theme.primary }}
+                className="text-xs"
+                style={{ color: theme.primary, fontFamily: 'PoppinsMedium' }}
               >
-                restaurant_name
+                {item.offer.provider?.name}
               </Text>
             </View>
           </View>
@@ -124,15 +136,18 @@ const CartItemComponent = ({
             {item.offer.sale_price &&
               item.offer.sale_price < item.offer.price && (
                 <Text
-                  className="text-sm font-medium line-through"
-                  style={{ color: theme.textSecondary }}
+                  className="text-sm line-through"
+                  style={{
+                    color: theme.textSecondary,
+                    fontFamily: 'PoppinsMedium',
+                  }}
                 >
                   ${formatPrice(item.offer.price)}
                 </Text>
               )}
             <Text
-              className="text-xl font-bold"
-              style={{ color: theme.primary }}
+              className="text-xl"
+              style={{ color: theme.primary, fontFamily: 'PoppinsMedium' }}
             >
               ${formatPrice(item.offer.sale_price ?? item.offer.price)}
             </Text>
@@ -153,11 +168,11 @@ const CartItemComponent = ({
               <Minus color={theme.primary} size={16} strokeWidth={2.5} />
             </TouchableOpacity>
 
-            <View
-              className="px-4 py-1.5 rounded-lg mx-1"
-              style={{ backgroundColor: theme.primary }}
-            >
-              <Text className="text-[15px] font-bold text-white">
+            <View className="px-4 py-1.5 rounded-lg mx-1">
+              <Text
+                className="text-base text-white"
+                style={{ fontFamily: 'PoppinsMedium' }}
+              >
                 {item.quantity}
               </Text>
             </View>
@@ -211,8 +226,8 @@ export default function CartScreen() {
       >
         <View className="px-6 pt-5 pb-5">
           <Text
-            className="text-[32px] font-bold tracking-tight"
-            style={{ color: theme.text }}
+            className="text-[32px] tracking-tight"
+            style={{ color: theme.text, fontFamily: 'FredokaMedium' }}
           >
             My Cart
           </Text>
@@ -226,14 +241,14 @@ export default function CartScreen() {
             <ShoppingBag color={theme.primary} size={64} strokeWidth={1.5} />
           </View>
           <Text
-            className="text-2xl w-full text-center font-bold mb-3"
-            style={{ color: theme.text }}
+            className="text-2xl w-full text-center mb-3"
+            style={{ color: theme.text, fontFamily: 'FredokaMedium' }}
           >
             Your cart is empty
           </Text>
           <Text
             className="text-base text-center mb-8 leading-6"
-            style={{ color: theme.textSecondary }}
+            style={{ color: theme.textSecondary, fontFamily: 'PoppinsMedium' }}
           >
             Add some delicious offers to get started!
           </Text>
@@ -243,7 +258,10 @@ export default function CartScreen() {
             onPress={() => router.push('/(tabs)')}
             activeOpacity={0.8}
           >
-            <Text className="text-white text-base font-bold">
+            <Text
+              className="text-white text-base"
+              style={{ fontFamily: 'FredokaMedium' }}
+            >
               Browse Offers
             </Text>
             <ArrowRight color="#FFFFFF" size={20} />
@@ -261,14 +279,14 @@ export default function CartScreen() {
       <View className="flex-row justify-between items-center px-6 pt-5 pb-5">
         <View>
           <Text
-            className="text-[32px] font-bold tracking-tight"
-            style={{ color: theme.text }}
+            className="text-[32px] tracking-tight"
+            style={{ color: theme.text, fontFamily: 'FredokaMedium' }}
           >
             My Cart
           </Text>
           <Text
             className="text-[15px] font-medium mt-1"
-            style={{ color: theme.textSecondary }}
+            style={{ color: theme.textSecondary, fontFamily: 'PoppinsLight' }}
           >
             {getCartItemCount()} {getCartItemCount() === 1 ? 'item' : 'items'}
           </Text>
@@ -306,14 +324,14 @@ export default function CartScreen() {
         <View className="mb-4">
           <View className="flex-row justify-between items-center">
             <Text
-              className="text-[17px] font-bold"
-              style={{ color: theme.text }}
+              className="text-[17px]"
+              style={{ color: theme.text, fontFamily: 'FredokaMedium' }}
             >
               Total Amount
             </Text>
             <Text
-              className="text-[28px] font-bold"
-              style={{ color: theme.primary }}
+              className="text-[28px]"
+              style={{ color: theme.primary, fontFamily: 'PoppinsMedium' }}
             >
               ${getCartTotal().toFixed(2)}
             </Text>
@@ -326,7 +344,10 @@ export default function CartScreen() {
           onPress={() => router.push('/(in_app_screens)/checkout')}
           activeOpacity={0.8}
         >
-          <Text className="text-white text-[17px] font-bold">
+          <Text
+            className="text-white text-[17px]"
+            style={{ fontFamily: 'FredokaMedium' }}
+          >
             Proceed to Checkout
           </Text>
           <ArrowRight color="#FFFFFF" size={20} />

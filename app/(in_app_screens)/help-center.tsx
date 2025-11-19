@@ -104,7 +104,7 @@ export default function HelpCenterScreen() {
     >
       {/* Header */}
       <View
-        className="flex-row items-center justify-between px-6 py-4 border-b"
+        className="flex-row items-center justify-between px-6 py-8 border-b"
         style={{ borderBottomColor: theme.border }}
       >
         <TouchableOpacity
@@ -115,8 +115,8 @@ export default function HelpCenterScreen() {
           <ArrowLeft color={theme.text} size={24} strokeWidth={2} />
         </TouchableOpacity>
         <Text
-          className="text-xl font-bold flex-1 text-center"
-          style={{ color: theme.text }}
+          className="text-2xl  flex-1 text-center"
+          style={{ color: theme.text, fontFamily: 'FredokaMedium' }}
         >
           Help Center
         </Text>
@@ -144,12 +144,18 @@ export default function HelpCenterScreen() {
             </View>
             <View className="flex-1">
               <Text
-                className="text-xl font-bold mb-1"
-                style={{ color: theme.text }}
+                className="text-xl  mb-1"
+                style={{ color: theme.text, fontFamily: 'FredokaMedium' }}
               >
                 How can we help?
               </Text>
-              <Text className="text-sm" style={{ color: theme.textSecondary }}>
+              <Text
+                className="text-sm"
+                style={{
+                  color: theme.textSecondary,
+                  fontFamily: 'PoppinsMedium',
+                }}
+              >
                 We're here to assist you
               </Text>
             </View>
@@ -158,8 +164,8 @@ export default function HelpCenterScreen() {
 
         {/* Contact Methods */}
         <Text
-          className="text-sm font-semibold mb-3 uppercase tracking-wider px-1"
-          style={{ color: theme.textSecondary }}
+          className="text-sm mb-3 uppercase tracking-wider px-1"
+          style={{ color: theme.textSecondary, fontFamily: 'FredokaMedium' }}
         >
           Get Help
         </Text>
@@ -193,14 +199,17 @@ export default function HelpCenterScreen() {
                   </View>
                   <View className="flex-1">
                     <Text
-                      className="text-lg font-bold mb-0.5"
-                      style={{ color: theme.text }}
+                      className="text-lg  mb-0.5"
+                      style={{ color: theme.text, fontFamily: 'FredokaMedium' }}
                     >
                       {method.title}
                     </Text>
                     <Text
                       className="text-sm"
-                      style={{ color: theme.textSecondary }}
+                      style={{
+                        color: theme.textSecondary,
+                        fontFamily: 'PoppinsMedium',
+                      }}
                     >
                       {method.description}
                     </Text>
@@ -208,8 +217,8 @@ export default function HelpCenterScreen() {
                 </View>
                 <View className="flex-row items-center justify-between px-1">
                   <Text
-                    className="text-sm font-semibold"
-                    style={{ color: method.color }}
+                    className="text-sm"
+                    style={{ color: method.color, fontFamily: 'PoppinsMedium' }}
                   >
                     {method.details}
                   </Text>
@@ -226,8 +235,8 @@ export default function HelpCenterScreen() {
 
         {/* FAQ Section */}
         <Text
-          className="text-sm font-semibold mb-3 uppercase tracking-wider px-1"
-          style={{ color: theme.textSecondary }}
+          className="text-sm mb-3 uppercase tracking-wider px-1"
+          style={{ color: theme.textSecondary, fontFamily: 'FredokaMedium' }}
         >
           Frequently Asked Questions
         </Text>
@@ -243,8 +252,8 @@ export default function HelpCenterScreen() {
                 activeOpacity={0.7}
               >
                 <Text
-                  className="text-base font-semibold flex-1 mr-4"
-                  style={{ color: theme.text }}
+                  className="text-base flex-1 mr-4"
+                  style={{ color: theme.text, fontFamily: 'FredokaMedium' }}
                 >
                   {faq.question}
                 </Text>
@@ -283,7 +292,10 @@ export default function HelpCenterScreen() {
                     >
                       <Text
                         className="text-sm leading-6"
-                        style={{ color: theme.textSecondary }}
+                        style={{
+                          color: theme.textSecondary,
+                          fontFamily: 'PoppinsMedium',
+                        }}
                       >
                         {faq.answer}
                       </Text>
@@ -313,14 +325,14 @@ export default function HelpCenterScreen() {
           }}
         >
           <Text
-            className="text-sm font-semibold mb-2"
-            style={{ color: theme.text }}
+            className="text-sm mb-2"
+            style={{ color: theme.text, fontFamily: 'FredokaMedium' }}
           >
             Still need help?
           </Text>
           <Text
             className="text-xs leading-5"
-            style={{ color: theme.textSecondary }}
+            style={{ color: theme.textSecondary, fontFamily: 'PoppinsMedium' }}
           >
             Our support team is available 24/7 to assist you with any questions
             or concerns you may have.
