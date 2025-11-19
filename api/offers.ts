@@ -14,12 +14,15 @@ class OffersApiImpl implements OffersApi {
   catalog_api = createAxiosInstance(CATALOG_API ?? '');
   async getOffers(): Promise<ApiResponse<Offer[]>> {
     try {
-      const response_api = await this.catalog_api.get('/item/get-all', {
-        params: {
-          item_type: 'OFFER',
-          status: 'visible',
-        },
-      });
+      const response_api = await this.catalog_api.get(
+        '/item/get-items-provider',
+        {
+          params: {
+            item_type: 'OFFER',
+            status: 'visible',
+          },
+        }
+      );
       const responseBody = response_api.data;
       if (responseBody.success) {
         return {

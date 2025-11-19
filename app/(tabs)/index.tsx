@@ -17,15 +17,14 @@ import {
   ImageBackground,
   Dimensions,
   Animated,
+  Modal,
 } from 'react-native';
 import { router } from 'expo-router';
 import * as images from '../../constants/images';
 import {
-  Star,
   Search,
   ChefHat,
   Sparkles,
-  User,
   UtensilsCrossed,
   MapPin,
   ShoppingCart,
@@ -38,6 +37,8 @@ import {
   ArrowRight,
   EarthIcon,
   Heart,
+  Clock10,
+  Map,
 } from 'lucide-react-native';
 import { useAppStore } from '@/stores/appStore';
 import { useTheme } from '@/hooks/useTheme';
@@ -53,6 +54,8 @@ import { useAuthStore } from '@/stores/authStore';
 import * as Haptics from 'expo-haptics';
 import { ColorTheme } from '@/constants/theme';
 import {
+  formatDateRange,
+  formatDateTime,
   formatPrice,
   getDiscountPercentage,
   handleImageSrc,
@@ -219,10 +222,16 @@ const ModernFeaturedCard = ({
               justifyContent: 'space-between',
             }}
           >
-            <View style={{ alignItems: 'flex-start' }}>
+            <View
+              style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+              }}
+            >
               <View
                 style={{
-                  backgroundColor: theme.primaryLight,
+                  backgroundColor: theme.primary + '70',
                   paddingHorizontal: 16,
                   paddingVertical: 8,
                   borderRadius: 20,
@@ -245,6 +254,12 @@ const ModernFeaturedCard = ({
                   % off
                 </Text>
               </View>
+              {item.provider?.logo_path && (
+                <Image
+                  className="w-14 h-14 rounded-full object-cover"
+                  source={{ uri: handleImageSrc(item.provider.logo_path) }}
+                />
+              )}
             </View>
 
             <View>
@@ -259,16 +274,30 @@ const ModernFeaturedCard = ({
               >
                 {item.description || 'Delicious food awaits'}
               </Text>
-              <Text
-                style={{
-                  color: '#fff',
-                  fontSize: 22,
-                  fontWeight: 'bold',
-                }}
-                numberOfLines={2}
-              >
-                {item.title}
-              </Text>
+              <View className="flex flex-row items-center gap-2">
+                <Text
+                  style={{
+                    color: '#fff',
+                    fontSize: 22,
+                    fontWeight: 'bold',
+                  }}
+                  numberOfLines={2}
+                >
+                  {item.title}
+                </Text>
+                <Text
+                  style={{
+                    color: '#fff',
+                    fontSize: 10,
+                    backgroundColor: theme.primary + '80',
+                    padding: 4,
+                    borderRadius: 10,
+                    fontWeight: 'bold',
+                  }}
+                >
+                  {item.provider?.name}
+                </Text>
+              </View>
             </View>
           </LinearGradient>
         </ImageBackground>
@@ -482,147 +511,501 @@ const EnhancedNearYouCard = ({
   );
 };
 
-// Trending Offer Card (2 per row)
-const TrendingOfferCard = ({
+// Modern Offer Card with Enhanced Design
+// Modern Offer Card with Enhanced Design
+const DefaultOfferCard = ({
   item: offer,
   theme,
   onAdd,
+  onAddToFavourite,
+  onRemoveFromFavourite,
+  isFavourite,
 }: {
   item: Offer;
   theme: ColorTheme;
   onAdd: (offer: Offer) => void;
-}) => (
-  <TouchableOpacity
-    style={{
-      width: (SCREEN_WIDTH - 48) / 2,
-      marginBottom: 16,
-      borderRadius: 20,
-      backgroundColor: theme.card,
-      overflow: 'hidden',
-      shadowColor: theme.shadow,
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.1,
-      shadowRadius: 8,
-      elevation: 3,
-    }}
-    onPress={() =>
-      router.push(`/(in_app_screens)/offer-details?id=${offer.id}`)
+  onAddToFavourite: (offer: Offer, enablePriceAlert?: boolean) => Promise<void>;
+  onRemoveFromFavourite: (offerId: string) => Promise<void>;
+  isFavourite: (offerId: string) => boolean;
+}) => {
+  const isOfferFavourited = isFavourite(offer.id);
+  const { showAlert } = useAlert();
+
+  const [showLocationsModal, setShowLocationsModal] = useState(false);
+
+  const handleFavouriteToggle = () => {
+    if (!isOfferFavourited) {
+      onAddToFavourite(offer);
+    } else {
+      onRemoveFromFavourite(offer.id);
     }
-    activeOpacity={0.9}
-  >
-    <View style={{ position: 'relative' }}>
-      <Image
-        source={
-          offer.main_image
-            ? { uri: handleImageSrc(offer.main_image) }
-            : images.OFFER_PLACEHOLDER_IMAGE
-        }
-        style={{ width: '100%', height: 120 }}
-        resizeMode="cover"
-      />
-      {offer.sale_price && (
-        <View
+  };
+
+  return (
+    <TouchableOpacity
+      style={{
+        width: SCREEN_WIDTH - 100,
+        marginBottom: 16,
+        borderRadius: 24,
+        backgroundColor: theme.card,
+        overflow: 'hidden',
+        shadowColor: theme.shadow,
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.15,
+        shadowRadius: 12,
+        elevation: 5,
+      }}
+      onPress={() =>
+        router.push(`/(in_app_screens)/offer-details?id=${offer.id}`)
+      }
+      activeOpacity={0.95}
+    >
+      {/* Image Section with Enhanced Overlay */}
+      <View style={{ position: 'relative', height: 180 }}>
+        <Image
+          source={
+            offer.main_image
+              ? { uri: handleImageSrc(offer.main_image) }
+              : images.OFFER_PLACEHOLDER_IMAGE
+          }
+          style={{ width: '100%', height: '100%' }}
+          resizeMode="cover"
+        />
+
+        {/* Gradient Overlay */}
+        <LinearGradient
+          colors={['rgba(0,0,0,0.4)', 'transparent', 'rgba(0,0,0,0.7)']}
           style={{
             position: 'absolute',
-            top: 8,
-            right: 8,
-            backgroundColor: theme.primary,
-            paddingHorizontal: 8,
-            paddingVertical: 4,
-            borderRadius: 8,
+            top: 0,
+            bottom: 0,
+            left: 0,
+            right: 0,
+            zIndex: 1,
           }}
-        >
-          <Text style={{ color: '#fff', fontSize: 11, fontWeight: 'bold' }}>
-            -{getDiscountPercentage(offer.price, offer.sale_price ?? 0)}%
-          </Text>
-        </View>
-      )}
-    </View>
+        />
 
-    <View style={{ padding: 12 }}>
-      <Text
-        style={{
-          fontSize: 15,
-          fontWeight: '600',
-          color: theme.text,
-          marginBottom: 6,
-        }}
-        numberOfLines={1}
-      >
-        {offer.title}
-      </Text>
-
-      <View
-        style={{
-          flexDirection: 'row',
-          alignItems: 'center',
-          gap: 4,
-          marginBottom: 3,
-        }}
-      >
-        <Star color={theme.warning} size={12} fill={theme.warning} />
-        <Text style={{ fontSize: 12, color: theme.textSecondary }}>
-          {offer.rating || '5.0'}
-        </Text>
-        <Text style={{ fontSize: 12, color: theme.textSecondary }}>
-          • {offer.location || '2.5 km'}
-        </Text>
-      </View>
-      <View
-        style={{
-          flexDirection: 'row',
-          alignItems: 'center',
-          gap: 4,
-          marginBottom: 8,
-        }}
-      >
-        <ChefHat color={theme.primary} size={12} fill={theme.primary} />
-        <Text style={{ fontSize: 12, color: theme.textSecondary }}>
-          restaurant_name
-        </Text>
-      </View>
-
-      <View
-        style={{
-          flexDirection: 'row',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-        }}
-      >
-        <View>
-          <Text
+        {/* Discount Badge */}
+        {offer.sale_price && (
+          <View
             style={{
-              fontSize: 16,
-              fontWeight: 'bold',
-              color: theme.primary,
+              position: 'absolute',
+              top: 12,
+              left: 12,
+              backgroundColor: theme.primary + '80',
+              paddingHorizontal: 12,
+              paddingVertical: 6,
+              borderRadius: 12,
+              zIndex: 2,
+              shadowColor: '#000',
+              shadowOffset: { width: 0, height: 2 },
+              shadowOpacity: 0.25,
+              shadowRadius: 4,
             }}
           >
-            ${formatPrice(offer.sale_price ?? offer.price)}
-          </Text>
-        </View>
+            <Text style={{ color: '#fff', fontSize: 13, fontWeight: '700' }}>
+              {getDiscountPercentage(offer.price, offer.sale_price ?? 0)}% OFF
+            </Text>
+          </View>
+        )}
+
+        {/* Favorite Button */}
         <TouchableOpacity
+          onPress={handleFavouriteToggle}
           style={{
-            backgroundColor: theme.primary,
-            width: 32,
-            height: 32,
-            borderRadius: 16,
+            position: 'absolute',
+            top: 12,
+            right: 12,
+            backgroundColor: theme.background + '40',
+            width: 40,
+            height: 40,
+            borderRadius: 20,
             justifyContent: 'center',
             alignItems: 'center',
-          }}
-          onPress={() => {
-            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-            onAdd(offer);
+            zIndex: 2,
+            shadowColor: '#000',
+            shadowOffset: { width: 0, height: 2 },
+            shadowOpacity: 0.2,
+            shadowRadius: 4,
           }}
         >
-          <Text style={{ color: '#fff', fontSize: 16, fontWeight: 'bold' }}>
-            +
-          </Text>
+          <Heart
+            size={20}
+            strokeWidth={isFavourite(offer.id) ? 0 : 2}
+            fill={isFavourite(offer.id) ? theme.primary : 'transparent'}
+            color={isFavourite(offer.id) ? theme.primary : theme.text}
+          />
         </TouchableOpacity>
-      </View>
-    </View>
-  </TouchableOpacity>
-);
 
+        {/* Provider Logo */}
+        {offer.provider && offer.provider.logo_path && (
+          <View
+            style={{
+              position: 'absolute',
+              bottom: 12,
+              left: 12,
+              backgroundColor: '#fff',
+              padding: 4,
+              borderRadius: 12,
+              zIndex: 2,
+              shadowColor: '#000',
+              shadowOffset: { width: 0, height: 2 },
+              shadowOpacity: 0.2,
+              shadowRadius: 4,
+            }}
+          >
+            <Image
+              source={{ uri: handleImageSrc(offer.provider.logo_path) }}
+              style={{
+                width: 48,
+                height: 48,
+                borderRadius: 8,
+              }}
+            />
+          </View>
+        )}
+      </View>
+
+      {/* Content Section */}
+      <View style={{ padding: 16 }}>
+        {/* Title */}
+        <Text
+          style={{
+            fontSize: 18,
+            fontWeight: '700',
+            color: theme.text,
+            marginBottom: 12,
+            lineHeight: 24,
+          }}
+          numberOfLines={2}
+        >
+          {offer.title}
+        </Text>
+
+        {/* Info Rows */}
+        <View style={{ gap: 8, marginBottom: 16 }}>
+          {/* Location */}
+          <View
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              gap: 8,
+            }}
+          >
+            <View
+              style={{
+                width: 32,
+                height: 32,
+                borderRadius: 16,
+                backgroundColor: theme.primary + '15',
+                justifyContent: 'center',
+                alignItems: 'center',
+              }}
+            >
+              <Map color={theme.primary} size={16} />
+            </View>
+            <Text
+              style={{
+                flex: 1,
+                fontSize: 13,
+                color: theme.textSecondary,
+                fontWeight: '500',
+              }}
+              numberOfLines={1}
+            >
+              {offer.provider?.addresses[0].street},{' '}
+              {offer.provider?.addresses[0].city}
+            </Text>
+            {offer.provider?.addresses &&
+              offer.provider.addresses.length > 1 && (
+                <TouchableOpacity
+                  onPress={() => setShowLocationsModal(true)}
+                  style={{
+                    paddingHorizontal: 8,
+                    paddingVertical: 4,
+                    borderRadius: 8,
+                    borderWidth: 1,
+                    borderColor: theme.primary,
+                    backgroundColor: theme.primary + '10',
+                  }}
+                >
+                  <Text
+                    style={{
+                      fontSize: 11,
+                      color: theme.primary,
+                      fontWeight: '600',
+                    }}
+                  >
+                    +{offer.provider.addresses.length - 1}
+                  </Text>
+                </TouchableOpacity>
+              )}
+          </View>
+
+          {/* Provider Name */}
+          {offer.provider && offer.provider.name && (
+            <View
+              style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                gap: 8,
+              }}
+            >
+              <View
+                style={{
+                  width: 32,
+                  height: 32,
+                  borderRadius: 16,
+                  backgroundColor: theme.primary + '15',
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                }}
+              >
+                <ChefHat color={theme.primary} size={16} />
+              </View>
+              <Text
+                style={{
+                  flex: 1,
+                  fontSize: 13,
+                  color: theme.textSecondary,
+                  fontWeight: '500',
+                }}
+                numberOfLines={1}
+              >
+                {offer.provider.name}
+              </Text>
+            </View>
+          )}
+
+          {/* Pickup Time */}
+
+          <View
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              gap: 8,
+            }}
+          >
+            <View
+              style={{
+                width: 32,
+                height: 32,
+                borderRadius: 16,
+                backgroundColor: theme.primary + '15',
+                justifyContent: 'center',
+                alignItems: 'center',
+              }}
+            >
+              <Clock10 color={theme.primary} size={16} />
+            </View>
+            <Text
+              style={{
+                flex: 1,
+                fontSize: 13,
+                color: theme.textSecondary,
+                fontWeight: '500',
+              }}
+              numberOfLines={2}
+            >
+              {formatDateRange([
+                offer.pickup_start_time ?? '',
+                offer.pickup_end_time ?? '',
+              ])}
+            </Text>
+          </View>
+        </View>
+
+        {/* Price and Add Button */}
+        <View
+          style={{
+            flexDirection: 'row',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            paddingTop: 16,
+            borderTopWidth: 1,
+            borderStyle: 'dashed',
+            borderTopColor: theme.border,
+          }}
+        >
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+            {offer.sale_price && (
+              <Text
+                style={{
+                  fontSize: 15,
+                  color: theme.textSecondary,
+                  textDecorationLine: 'line-through',
+                  fontWeight: '500',
+                }}
+              >
+                ${offer.price}
+              </Text>
+            )}
+            <Text
+              style={{
+                fontSize: 24,
+                fontWeight: '800',
+                color: theme.primary,
+                letterSpacing: -0.5,
+              }}
+            >
+              ${formatPrice(offer.sale_price ?? offer.price)}
+            </Text>
+          </View>
+
+          <TouchableOpacity
+            style={{
+              backgroundColor: theme.primary,
+              paddingHorizontal: 24,
+              paddingVertical: 12,
+              borderRadius: 16,
+              flexDirection: 'row',
+              alignItems: 'center',
+              gap: 6,
+              shadowColor: theme.primary,
+              shadowOffset: { width: 0, height: 4 },
+              shadowOpacity: 0.3,
+              shadowRadius: 8,
+              elevation: 4,
+            }}
+            onPress={() => {
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+              onAdd(offer);
+            }}
+          >
+            <Text style={{ color: '#fff', fontSize: 18, fontWeight: '700' }}>
+              +
+            </Text>
+            <Text style={{ color: '#fff', fontSize: 14, fontWeight: '600' }}>
+              Add
+            </Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+
+      {/* Locations Modal */}
+      <Modal
+        visible={showLocationsModal}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setShowLocationsModal(false)}
+      >
+        <TouchableOpacity
+          style={{
+            flex: 1,
+            backgroundColor: 'rgba(0,0,0,0.5)',
+            justifyContent: 'center',
+            alignItems: 'center',
+            padding: 20,
+          }}
+          activeOpacity={1}
+          onPress={() => setShowLocationsModal(false)}
+        >
+          <TouchableOpacity
+            activeOpacity={1}
+            onPress={(e) => e.stopPropagation()}
+            style={{
+              backgroundColor: theme.card,
+              borderRadius: 20,
+              padding: 20,
+              width: '100%',
+              maxWidth: 400,
+              maxHeight: '80%',
+              shadowColor: '#000',
+              shadowOffset: { width: 0, height: 4 },
+              shadowOpacity: 0.3,
+              shadowRadius: 12,
+              elevation: 8,
+            }}
+          >
+            <View
+              style={{
+                flexDirection: 'row',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                marginBottom: 16,
+                paddingBottom: 12,
+                borderBottomWidth: 1,
+                borderBottomColor: theme.border + '40',
+              }}
+            >
+              <Text
+                style={{
+                  fontSize: 20,
+                  fontWeight: '700',
+                  color: theme.text,
+                }}
+              >
+                All Locations
+              </Text>
+              <TouchableOpacity
+                onPress={() => setShowLocationsModal(false)}
+                style={{
+                  width: 32,
+                  height: 32,
+                  borderRadius: 16,
+                  backgroundColor: theme.border + '30',
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                }}
+              >
+                <Text
+                  style={{ fontSize: 18, color: theme.text, fontWeight: '600' }}
+                >
+                  ×
+                </Text>
+              </TouchableOpacity>
+            </View>
+
+            <ScrollView
+              showsVerticalScrollIndicator={false}
+              style={{ maxHeight: 400 }}
+            >
+              {offer.provider?.addresses.map((address, index) => (
+                <View
+                  key={index}
+                  style={{
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    gap: 12,
+                    paddingVertical: 14,
+                    paddingHorizontal: 12,
+                    borderRadius: 12,
+                    backgroundColor: theme.background,
+                    marginBottom: 10,
+                  }}
+                >
+                  <View
+                    style={{
+                      width: 40,
+                      height: 40,
+                      borderRadius: 20,
+                      backgroundColor: theme.primary + '15',
+                      justifyContent: 'center',
+                      alignItems: 'center',
+                    }}
+                  >
+                    <Map color={theme.primary} size={18} />
+                  </View>
+                  <Text
+                    style={{
+                      flex: 1,
+                      fontSize: 14,
+                      color: theme.text,
+                      fontWeight: '500',
+                      lineHeight: 20,
+                    }}
+                  >
+                    {address.street}, {address.city}
+                  </Text>
+                </View>
+              ))}
+            </ScrollView>
+          </TouchableOpacity>
+        </TouchableOpacity>
+      </Modal>
+    </TouchableOpacity>
+  );
+};
 export default function HomeScreen(): JSX.Element {
   const { theme, isDark, toggleTheme } = useTheme();
   const {
@@ -640,6 +1023,8 @@ export default function HomeScreen(): JSX.Element {
   const { isNewFavoritedAdded } = useFavoritesStore();
   const { user } = useAuthStore();
   const { showAlert } = useAlert();
+  const { addToFavorites, removeFromFavorites, isFavorite } =
+    useFavoritesStore();
   const [refreshing, setRefreshing] = useState(false);
   const hasFetched = useRef(false);
   const [filterVisible, setFilterVisible] = useState(false);
@@ -684,10 +1069,48 @@ export default function HomeScreen(): JSX.Element {
     [filteredOffers]
   );
 
-  const regularOffers = useMemo(
-    () => filteredOffers.filter((offer) => !offer.is_featured),
-    [filteredOffers]
-  );
+  const todaysOffers = useMemo(() => {
+    const today = new Date();
+    const yyyy = today.getFullYear();
+    const mm = today.getMonth();
+    const dd = today.getDate();
+
+    return filteredOffers.filter((offer) => {
+      if (!offer.pickup_start_time) return false;
+
+      const pickupDate = new Date(offer.pickup_start_time);
+      return (
+        pickupDate.getFullYear() === yyyy &&
+        pickupDate.getMonth() === mm &&
+        pickupDate.getDate() === dd
+      );
+    });
+  }, [filteredOffers]);
+  const tomorrowsOffers = useMemo(() => {
+    const today = new Date();
+
+    // Build tomorrow's date
+    const tomorrow = new Date(
+      today.getFullYear(),
+      today.getMonth(),
+      today.getDate() + 1
+    );
+
+    const yyyy = tomorrow.getFullYear();
+    const mm = tomorrow.getMonth();
+    const dd = tomorrow.getDate();
+
+    return filteredOffers.filter((offer) => {
+      if (!offer.pickup_start_time) return false;
+
+      const pickupDate = new Date(offer.pickup_start_time);
+      return (
+        pickupDate.getFullYear() === yyyy &&
+        pickupDate.getMonth() === mm &&
+        pickupDate.getDate() === dd
+      );
+    });
+  }, [filteredOffers]);
 
   // Auto-scroll featured offers
   useEffect(() => {
@@ -1024,9 +1447,14 @@ export default function HomeScreen(): JSX.Element {
           </View>
         )}
 
-        {/* Trending Offers Grid */}
-        {regularOffers.length > 0 && (
-          <View style={{ paddingHorizontal: 20, paddingBottom: 100 }}>
+        {/* Pickup Today Offers*/}
+        {todaysOffers.length > 0 && (
+          <View
+            style={{
+              paddingHorizontal: 20,
+              paddingBottom: tomorrowsOffers.length > 0 ? 0 : 100,
+            }}
+          >
             <View className="flex mb-4 flex-row items-center justify-between ">
               <View className="flex flex-row items-center gap-2">
                 <EarthIcon color={theme.textSecondary} />
@@ -1037,7 +1465,7 @@ export default function HomeScreen(): JSX.Element {
                     color: theme.text,
                   }}
                 >
-                  Trending Offers
+                  Pickup Today
                 </Text>
               </View>
               <TouchableOpacity
@@ -1049,22 +1477,69 @@ export default function HomeScreen(): JSX.Element {
                 </View>
               </TouchableOpacity>
             </View>
-            <View
-              style={{
-                flexDirection: 'row',
-                flexWrap: 'wrap',
-                justifyContent: 'space-between',
-              }}
-            >
-              {regularOffers.map((offer) => (
-                <TrendingOfferCard
+            <FlatList
+              data={todaysOffers}
+              keyExtractor={(offer) => offer.id}
+              renderItem={({ item: offer }) => (
+                <DefaultOfferCard
                   key={offer.id}
                   item={offer}
                   theme={theme}
                   onAdd={addToCart}
+                  onAddToFavourite={addToFavorites}
+                  onRemoveFromFavourite={removeFromFavorites}
+                  isFavourite={isFavorite}
                 />
-              ))}
+              )}
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={{ paddingHorizontal: 10, gap: 15 }}
+            />
+          </View>
+        )}
+        {/* Trending Offers Grid */}
+        {tomorrowsOffers.length > 0 && (
+          <View style={{ paddingHorizontal: 20, paddingBottom: 100 }}>
+            <View className="flex mb-4 flex-row items-center justify-between ">
+              <View className="flex flex-row items-center gap-2">
+                <EarthIcon color={theme.textSecondary} />
+                <Text
+                  style={{
+                    fontSize: 20,
+                    fontWeight: 'bold',
+                    color: theme.text,
+                  }}
+                >
+                  Pickup Tommorow
+                </Text>
+              </View>
+              <TouchableOpacity
+                onPress={() => router.push('/(tabs)/categories')}
+              >
+                <View className="flex flex-row items-center gap-1">
+                  <Text style={{ color: theme.textSecondary }}>see all</Text>
+                  <ArrowRight color={theme.textSecondary} size={16} />
+                </View>
+              </TouchableOpacity>
             </View>
+            <FlatList
+              data={tomorrowsOffers}
+              keyExtractor={(offer) => offer.id}
+              renderItem={({ item: offer }) => (
+                <DefaultOfferCard
+                  key={offer.id}
+                  item={offer}
+                  theme={theme}
+                  onAdd={addToCart}
+                  onAddToFavourite={addToFavorites}
+                  onRemoveFromFavourite={removeFromFavorites}
+                  isFavourite={isFavorite}
+                />
+              )}
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={{ paddingHorizontal: 20, gap: 15 }}
+            />
           </View>
         )}
 
