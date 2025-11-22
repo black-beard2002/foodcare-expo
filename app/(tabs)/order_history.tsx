@@ -100,7 +100,7 @@ export default function OrderHistoryScreen() {
   );
 
   const filteredOrders = useMemo(() => {
-    return orders.filter((order) => {
+    const filtered = orders.filter((order) => {
       const matchesSearch =
         order.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
         order.client_data?.first_name
@@ -115,10 +115,17 @@ export default function OrderHistoryScreen() {
 
       return matchesSearch && matchesStatus;
     });
+
+    // Sort by created_at descending
+    return filtered.sort(
+      (a, b) =>
+        new Date(b.created_at ?? '').getTime() -
+        new Date(a.created_at ?? '').getTime()
+    );
   }, [orders, searchQuery, statusFilter]);
 
   async function handleOrderCancel() {
-    const res = await updateOrder(selectedOrder?.id ?? '', {
+    await updateOrder(selectedOrder?.id ?? '', {
       status: 'CANCELLED',
       transaction_type: 'ORDER',
       user_id: user?.id!,
@@ -390,7 +397,7 @@ export default function OrderHistoryScreen() {
       <ScrollView
         className="flex-1"
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingBottom: 24 }}
+        contentContainerStyle={{ paddingBottom: 100 }}
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
@@ -424,28 +431,45 @@ export default function OrderHistoryScreen() {
 
           {/* Filter Buttons */}
           <View className="flex-row gap-2 flex-wrap md:gap-3">
-            {['all', 'pending', 'completed', 'cancelled'].map(
-              (status, index) => (
-                <TouchableOpacity
-                  key={status + index}
-                  onPress={() => setStatusFilter(status as TransactionStatus)}
-                  className="px-4 py-1.5 rounded-xl md:px-5 md:py-2"
-                  style={{
-                    backgroundColor:
-                      statusFilter === status
-                        ? theme.primaryLight
-                        : theme.backgroundSecondary,
-                  }}
+            <TouchableOpacity
+              onPress={() => setStatusFilter('all')}
+              className="px-4 py-1.5 rounded-xl md:px-5 md:py-2"
+              style={{
+                backgroundColor:
+                  statusFilter === 'all'
+                    ? theme.primaryLight
+                    : theme.backgroundSecondary,
+              }}
+            >
+              <Text
+                className="text-sm capitalize md:text-base"
+                style={{ color: theme.text, fontFamily: 'FredokaMedium' }}
+              >
+                All
+              </Text>
+            </TouchableOpacity>
+            {['pending', 'completed', 'cancelled'].map((status, index) => (
+              <TouchableOpacity
+                key={status + index}
+                onPress={() =>
+                  setStatusFilter(status.toUpperCase() as TransactionStatus)
+                }
+                className="px-4 py-1.5 rounded-xl md:px-5 md:py-2"
+                style={{
+                  backgroundColor:
+                    statusFilter === status.toUpperCase()
+                      ? theme.primaryLight
+                      : theme.backgroundSecondary,
+                }}
+              >
+                <Text
+                  className="text-sm capitalize md:text-base"
+                  style={{ color: theme.text, fontFamily: 'FredokaMedium' }}
                 >
-                  <Text
-                    className="text-sm capitalize md:text-base"
-                    style={{ color: theme.text, fontFamily: 'FredokaMedium' }}
-                  >
-                    {status.charAt(0).toUpperCase() + status.slice(1)}
-                  </Text>
-                </TouchableOpacity>
-              )
-            )}
+                  {status.charAt(0).toUpperCase() + status.slice(1)}
+                </Text>
+              </TouchableOpacity>
+            ))}
           </View>
         </View>
 
@@ -494,7 +518,7 @@ export default function OrderHistoryScreen() {
           </View>
         ) : (
           <View className="px-6 md:px-8 lg:px-12">
-            {filteredOrders.reverse().map((order: TransactionBase) => (
+            {filteredOrders.map((order: TransactionBase) => (
               <View key={order.id}>{renderOrder(order)}</View>
             ))}
           </View>

@@ -58,12 +58,10 @@ import * as Haptics from 'expo-haptics';
 import { ColorTheme } from '@/constants/theme';
 import {
   formatDateRange,
-  formatDateTime,
   formatPrice,
   getDiscountPercentage,
   handleImageSrc,
 } from '@/utils/helpers';
-import { useFonts } from '@expo-google-fonts/inter';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const HERO_CARD_WIDTH = SCREEN_WIDTH - 40;
