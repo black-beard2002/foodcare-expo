@@ -10,7 +10,6 @@ import {
 import { router } from 'expo-router';
 import {
   ArrowLeft,
-  Clock,
   MessageSquare,
   User,
   Phone,
@@ -128,7 +127,10 @@ export default function CheckoutScreen() {
   );
 
   const isReserveDisabled =
-    !customerInfo.name?.trim() || !customerInfo.phone?.trim() || isLoading;
+    !customerInfo.name?.trim() ||
+    !customerInfo.phone?.trim() ||
+    isLoading ||
+    cart.length === 0;
 
   return (
     <SafeAreaView

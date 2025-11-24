@@ -8,14 +8,17 @@ import {
   Linking,
   ColorValue,
 } from 'react-native';
-import { TransactionBase, OrderItem } from '@/types/appTypes';
+import {
+  TransactionBase,
+  OrderItem,
+  TransactionStatus,
+} from '@/types/appTypes';
 import { useTheme } from '@/hooks/useTheme';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { MotiView } from 'moti';
 import {
   ArrowLeft,
-  Package,
   MapPin,
   Phone,
   Mail,
@@ -41,11 +44,17 @@ import { formatPrice, handleImageSrc } from '@/utils/helpers';
 import * as images from '@/constants/images';
 import { useOrderStore } from '@/stores/orderStore';
 import { useCameraPermissions } from 'expo-camera';
+import { useAlert } from '@/providers/AlertProvider';
+import { useAuthStore } from '@/stores/authStore';
+import { TSX_WEBSOCKET_URL } from '@/constants/api_constants';
 
 export default function OrderDetailsScreen() {
   const { theme } = useTheme();
   const { id } = useLocalSearchParams<{ id: string }>();
   const { orders } = useOrderStore();
+  const { showAlert } = useAlert();
+  const { user } = useAuthStore();
+  const { updateLocalOrder } = useOrderStore();
   const [permission, requestPermission] = useCameraPermissions();
   const [codeHidden, setCodeHidden] = useState(true);
   const [order, setOrder] = useState<TransactionBase | null>(null);
@@ -95,6 +104,43 @@ export default function OrderDetailsScreen() {
         };
     }
   };
+  useEffect(() => {
+    console.log('Entering ws use effect');
+    const ws = new WebSocket(`${TSX_WEBSOCKET_URL}/ws/mobile/${user?.id}`);
+    ws.onopen = () => {
+      console.log('CONNECTED');
+    };
+    ws.onerror = (err) => {
+      console.log('connection err:', err);
+    };
+    ws.onclose = () => {
+      console.log('WS Closed');
+    };
+    ws.onmessage = (event) => {
+      const data: { transaction_id: string; status: string } = JSON.parse(
+        event.data
+      );
+      console.log('ws data', data);
+
+      if (data) {
+        const targetTrans = orders.find(
+          (trx) => trx.id === data.transaction_id
+        );
+
+        if (targetTrans) {
+          updateLocalOrder(data.transaction_id, {
+            status: data.status as TransactionStatus,
+          });
+        }
+      }
+
+      showAlert(`your order is ${data.status}`, '', 'success');
+    };
+
+    return () => {
+      ws.close();
+    };
+  }, [orders, updateLocalOrder, user?.tenant_id]);
 
   const getPaymentStatusConfig = (status?: string) => {
     switch (status) {
