@@ -34,7 +34,7 @@ import {
   TransactionStatus,
   TransactionType,
 } from '@/types/appTypes';
-import { handleImageSrc } from '@/utils/helpers';
+import { formatPrice, handleImageSrc } from '@/utils/helpers';
 
 export default function CheckoutScreen() {
   const { theme } = useTheme();
@@ -117,7 +117,7 @@ export default function CheckoutScreen() {
     }
   };
 
-  const deliveryFee = 2.99;
+  const deliveryFee = 0.0;
   const subtotal = getCartTotal();
   const total = subtotal + deliveryFee;
   const totalSavings = cart.reduce(
@@ -223,13 +223,46 @@ export default function CheckoutScreen() {
                 </View>
 
                 <View className="flex-1 ml-4 justify-between">
-                  <Text
-                    className="text-base leading-5 mb-2"
-                    style={{ color: theme.text, fontFamily: 'PoppinsMedium' }}
-                    numberOfLines={2}
-                  >
-                    {item.offer.title}
-                  </Text>
+                  <View>
+                    <Text
+                      className="text-base leading-5 mb-2"
+                      style={{ color: theme.text, fontFamily: 'PoppinsMedium' }}
+                      numberOfLines={2}
+                    >
+                      {item.offer.title}
+                    </Text>
+                    <View
+                      style={{
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        gap: 4,
+                      }}
+                    >
+                      {item.offer.sale_price && (
+                        <Text
+                          style={{
+                            fontSize: 11,
+                            color: theme.textSecondary,
+                            textDecorationLine: 'line-through',
+                            fontFamily: 'PoppinsMedium',
+                          }}
+                        >
+                          ${item.offer.price}
+                        </Text>
+                      )}
+                      <Text
+                        style={{
+                          fontSize: 15,
+                          fontFamily: 'PoppinsMedium',
+                          color: theme.primary,
+                          letterSpacing: -0.5,
+                        }}
+                      >
+                        $
+                        {formatPrice(item.offer.sale_price ?? item.offer.price)}
+                      </Text>
+                    </View>
+                  </View>
 
                   <View className="flex-row justify-between items-center">
                     <View
@@ -257,7 +290,7 @@ export default function CheckoutScreen() {
                               fontFamily: 'PoppinsMedium',
                             }}
                           >
-                            ${item.offer.price.toFixed(2)}
+                            ${(item.offer.price * item.quantity).toFixed(2)}
                           </Text>
                         )}
                       <Text
@@ -450,23 +483,25 @@ export default function CheckoutScreen() {
               </Text>
             </View>
 
-            <View className="flex-row justify-between items-center mb-3">
-              <Text
-                className="text-base"
-                style={{
-                  color: theme.textSecondary,
-                  fontFamily: 'FredokaMedium',
-                }}
-              >
-                Service Fee
-              </Text>
-              <Text
-                className="text-base "
-                style={{ color: theme.text, fontFamily: 'PoppinsMedium' }}
-              >
-                ${deliveryFee.toFixed(2)}
-              </Text>
-            </View>
+            {deliveryFee > 0 && (
+              <View className="flex-row justify-between items-center mb-3">
+                <Text
+                  className="text-base"
+                  style={{
+                    color: theme.textSecondary,
+                    fontFamily: 'FredokaMedium',
+                  }}
+                >
+                  Service Fee
+                </Text>
+                <Text
+                  className="text-base "
+                  style={{ color: theme.text, fontFamily: 'PoppinsMedium' }}
+                >
+                  ${deliveryFee.toFixed(2)}
+                </Text>
+              </View>
+            )}
 
             {totalSavings > 0 && (
               <View

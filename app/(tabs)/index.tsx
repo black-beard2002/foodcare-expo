@@ -34,8 +34,6 @@ import {
   Sun,
   Moon,
   Route,
-  ArrowRight,
-  EarthIcon,
   Heart,
   Clock10,
   Map,
@@ -352,7 +350,7 @@ const ModernCategoryChip = ({
             ? { uri: handleImageSrc(item.main_image) }
             : images.CATEGORY_PLACEHOLDER_IMAGE
         }
-        style={{ width: 50, height: 50 }}
+        style={{ width: 50, height: 50, borderRadius: 25 }}
         resizeMode="contain"
       />
     </View>
@@ -466,8 +464,8 @@ const EnhancedNearYouCard = ({
           <Heart
             size={20}
             strokeWidth={isFavourite(offer.id) ? 0 : 2}
-            fill={isFavourite(offer.id) ? theme.primary : 'transparent'}
-            color={isFavourite(offer.id) ? theme.primary : theme.text}
+            fill={isFavourite(offer.id) ? theme.error : 'transparent'}
+            color={isFavourite(offer.id) ? theme.errorLight : theme.text}
           />
         </TouchableOpacity>
         {offer.provider?.logo_path && (
@@ -588,10 +586,12 @@ const EnhancedNearYouCard = ({
             }}
             numberOfLines={2}
           >
-            {formatDateRange([
-              offer.pickup_start_time ?? '',
-              offer.pickup_end_time ?? '',
-            ])}
+            {offer.pickup_start_time && offer.pickup_end_time
+              ? formatDateRange([
+                  offer.pickup_start_time ?? '',
+                  offer.pickup_end_time ?? '',
+                ])
+              : 'open pickup time!'}
           </Text>
         </View>
 
@@ -800,7 +800,6 @@ const DefaultOfferCard = ({
   isFavourite: (offerId: string) => boolean;
 }) => {
   const isOfferFavourited = isFavourite(offer.id);
-  const { showAlert } = useAlert();
 
   const [showLocationsModal, setShowLocationsModal] = useState(false);
 
@@ -909,8 +908,8 @@ const DefaultOfferCard = ({
           <Heart
             size={20}
             strokeWidth={isFavourite(offer.id) ? 0 : 2}
-            fill={isFavourite(offer.id) ? theme.primary : 'transparent'}
-            color={isFavourite(offer.id) ? theme.primary : theme.text}
+            fill={isFavourite(offer.id) ? theme.error : 'transparent'}
+            color={isFavourite(offer.id) ? theme.errorLight : theme.text}
           />
         </TouchableOpacity>
 
@@ -1464,7 +1463,9 @@ export default function HomeScreen(): JSX.Element {
   );
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: theme.background }}>
+    <SafeAreaView
+      style={{ flex: 1, backgroundColor: theme.backgroundSecondary }}
+    >
       <NetworkStatusBanner
         isOffline={isOffline}
         syncStatus={syncStatus}
@@ -1477,7 +1478,6 @@ export default function HomeScreen(): JSX.Element {
           paddingHorizontal: 20,
           paddingTop: 8,
           paddingBottom: 16,
-          backgroundColor: theme.background,
         }}
       >
         <View
@@ -1681,7 +1681,7 @@ export default function HomeScreen(): JSX.Element {
 
         {/* Popular Near You */}
         {nearYouOffers.length > 0 && (
-          <View style={{ marginBottom: 32 }}>
+          <View style={{ paddingBottom: todaysOffers.length > 0 ? 20 : 100 }}>
             <View className="flex mb-4 flex-row items-center justify-between px-5">
               <View className="flex flex-row items-center gap-2">
                 <Route color={theme.textSecondary} />
@@ -1722,7 +1722,7 @@ export default function HomeScreen(): JSX.Element {
           <View
             style={{
               paddingHorizontal: 20,
-              paddingBottom: tomorrowsOffers.length > 0 ? 0 : 100,
+              paddingBottom: tomorrowsOffers.length > 0 ? 20 : 100,
             }}
           >
             <View className="flex mb-4 flex-row items-center justify-between ">
