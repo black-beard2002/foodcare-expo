@@ -19,15 +19,18 @@ import {
   ArrowRight,
   Map,
   AlertCircle,
+  PartyPopper,
 } from 'lucide-react-native';
 import * as Location from 'expo-location';
 import { useAuthStore } from '@/stores/authStore';
 import { useAlert } from '@/providers/AlertProvider';
 import { useTheme } from '@/hooks/useTheme';
 import { LinearGradient } from 'expo-linear-gradient';
+import { MotiView } from 'moti';
 
 export default function OnboardingStep2() {
   const [address, setAddress] = useState('');
+  const [isCompleting, setIsCompleting] = useState(false);
   const [coordinates, setCoordinates] = useState<{
     latitude: number;
     longitude: number;
@@ -35,7 +38,8 @@ export default function OnboardingStep2() {
   const [isGettingLocation, setIsGettingLocation] = useState(false);
   const [locationError, setLocationError] = useState<string | null>(null);
   const [focusedField, setFocusedField] = useState(false);
-  const { setUser, isLoading, user } = useAuthStore();
+  const { setUser, isLoading, user, updateProfile, setOnboardingComplete } =
+    useAuthStore();
   const { showAlert } = useAlert();
   const { theme, isDark } = useTheme();
 
@@ -173,34 +177,39 @@ export default function OnboardingStep2() {
     }
   }, [showAlert, reverseGeocode]);
 
-  const handleContinue = useCallback(async () => {
-    if (!isFormValid) {
-      showAlert(
-        'Invalid Address',
-        'Please enter a valid address (at least 5 characters)',
-        'error'
-      );
-      return;
-    }
+  const handleContinue = useCallback(
+    async (skip: boolean = false) => {
+      if (skip && !isFormValid) {
+        showAlert(
+          'Invalid Address',
+          'Please enter a valid address (at least 5 characters)',
+          'error'
+        );
+        return;
+      }
+      setIsCompleting(true);
+      const result = await updateProfile(user!);
 
-    console.log('user info', user);
+      if (result.success) {
+        setOnboardingComplete(true);
 
-    router.push('/auth/setup-security');
-  }, [address, coordinates, isFormValid, user, showAlert]);
+        await new Promise((resolve) => setTimeout(resolve, 1500));
 
-  const handleSkip = useCallback(() => {
-    Alert.alert(
-      'Skip Address',
-      'You can add your address later in settings. Continue without adding address?',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Skip',
-          onPress: () => router.push('/auth/setup-security'),
-        },
-      ]
-    );
-  }, []);
+        showAlert(
+          `Welcome ${user?.first_name}!`,
+          "Your account is ready. Let's start exploring!",
+          'success'
+        );
+        setTimeout(() => {
+          router.replace('/(tabs)');
+        }, 500);
+      } else {
+        setIsCompleting(false);
+        showAlert('Error', result.error || 'Failed to complete setup', 'error');
+      }
+    },
+    [address, coordinates, isFormValid, user, showAlert]
+  );
 
   const gradientColors: [ColorValue, ColorValue, ColorValue] = isDark
     ? ['rgba(15,23,42,1)', 'rgba(30,41,59,1)', 'rgba(15,23,42,1)']
@@ -209,6 +218,85 @@ export default function OnboardingStep2() {
   const accentGradient: [ColorValue, ColorValue] = isDark
     ? ['rgba(59,130,246,1)', 'rgba(147,51,234,1)']
     : ['rgba(99,102,241,1)', 'rgba(139,92,246,1)'];
+  const successGradient: [ColorValue, ColorValue] = isDark
+    ? (['rgba(34,197,94,1)', 'rgba(22,163,74,1)'] as const)
+    : (['rgba(34,197,94,1)', 'rgba(22,163,74,1)'] as const);
+
+  if (isCompleting) {
+    return (
+      <LinearGradient
+        colors={gradientColors}
+        style={{
+          position: 'absolute',
+          left: 0,
+          right: 0,
+          top: 0,
+          bottom: 0,
+          paddingTop: 80,
+        }}
+      >
+        <MotiView
+          from={{ scale: 0, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{
+            type: 'timing',
+            duration: 600,
+          }}
+        >
+          <LinearGradient
+            colors={successGradient}
+            style={{
+              borderRadius: 32,
+              marginTop: 32,
+              width: 128,
+              height: 128,
+              alignSelf: 'center',
+              justifyContent: 'center',
+              alignItems: 'center',
+              marginBottom: 24,
+            }}
+          >
+            <PartyPopper color="#fff" size={72} />
+          </LinearGradient>
+        </MotiView>
+
+        <MotiView
+          from={{ translateY: 20, opacity: 0 }}
+          animate={{ translateY: 0, opacity: 1 }}
+          transition={{
+            type: 'timing',
+            duration: 600,
+            delay: 300,
+          }}
+        >
+          <Text
+            className="text-4xl font-bold mb-4 text-center"
+            style={{ color: theme.text }}
+          >
+            Welcome Aboard!
+          </Text>
+          <Text
+            className="text-lg text-center leading-7 mb-8 px-8"
+            style={{ color: theme.textSecondary }}
+          >
+            Your account is all set up. Get ready to discover amazing food!
+          </Text>
+        </MotiView>
+
+        <MotiView
+          from={{ scale: 0.8, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{
+            type: 'timing',
+            duration: 600,
+            delay: 600,
+          }}
+        >
+          <ActivityIndicator size="large" color={theme.primary} />
+        </MotiView>
+      </LinearGradient>
+    );
+  }
 
   return (
     <LinearGradient
@@ -492,7 +580,7 @@ export default function OnboardingStep2() {
 
             {/* Continue Button */}
             <TouchableOpacity
-              onPress={handleContinue}
+              onPress={() => handleContinue()}
               disabled={!isFormValid || isLoading}
               activeOpacity={0.8}
               className="overflow-hidden rounded-2xl shadow-lg mb-4"
@@ -558,7 +646,7 @@ export default function OnboardingStep2() {
 
             {/* Skip Button */}
             <TouchableOpacity
-              onPress={handleSkip}
+              onPress={() => handleContinue(true)}
               disabled={isLoading}
               className="w-full py-4 items-center"
               activeOpacity={0.6}

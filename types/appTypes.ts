@@ -319,6 +319,7 @@ export type TransactionStatus =
   | 'PENDING'
   | 'COMPLETED'
   | 'CANCELLED'
+  | 'PROCESSING'
   | 'DELIVERED';
 
 export type PaymentMethod =

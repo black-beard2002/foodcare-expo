@@ -43,6 +43,9 @@ import {
   Building2,
   Globe,
   Mail,
+  Sprout,
+  BookCheck,
+  Flame,
 } from 'lucide-react-native';
 import { useAppStore } from '@/stores/appStore';
 import { Offer, Address } from '@/types/appTypes';
@@ -275,7 +278,7 @@ export default function OfferDetailsScreen() {
       `${offer.title} is added to your cart`,
       'success'
     );
-    router.replace('/(tabs)');
+    // router.replace('/(tabs)');
   }, [offer, addToCart, showAlert]);
 
   const renderRestaurantCard = useCallback(() => {
@@ -339,22 +342,15 @@ export default function OfferDetailsScreen() {
                 <View className="flex-row items-center gap-2 mb-1">
                   <Building2 color={theme.primary} size={16} />
                   <Text
-                    className="text-xs  uppercase tracking-wide"
+                    className="text-lg  uppercase tracking-wide"
                     style={{
-                      color: theme.textSecondary,
+                      color: theme.text,
                       fontFamily: 'FredokaMedium',
                     }}
                   >
-                    Restaurant
+                    {provider.name}
                   </Text>
                 </View>
-                <Text
-                  className="text-xl "
-                  style={{ color: theme.text, fontFamily: 'PoppinsMedium' }}
-                  numberOfLines={2}
-                >
-                  {provider.name}
-                </Text>
               </View>
             </View>
 
@@ -446,12 +442,23 @@ export default function OfferDetailsScreen() {
           >
             <Clock color={theme.primary} size={22} />
           </View>
-          <Text
-            className="text-lg "
-            style={{ color: theme.text, fontFamily: 'FredokaMedium' }}
-          >
-            Pickup Time Range
-          </Text>
+          <View className="flex ">
+            <Text
+              className="text-lg "
+              style={{ color: theme.text, fontFamily: 'FredokaMedium' }}
+            >
+              Pickup Time Range
+            </Text>
+            <Text
+              className="text-xs "
+              style={{
+                color: theme.textSecondary,
+                fontFamily: 'FredokaMedium',
+              }}
+            >
+              you can pick up and enjoy this offer within the below time
+            </Text>
+          </View>
         </View>
 
         <View className="flex-row items-center gap-2 ml-15">
@@ -732,15 +739,13 @@ export default function OfferDetailsScreen() {
                 {provider.name}
               </Text>
               <Text
-                className="text-base  mb-6"
+                className="text-base capitalize mb-6"
                 style={{
                   color: theme.textSecondary,
                   fontFamily: 'PoppinsMedium',
                 }}
               >
-                {provider.provider_type.charAt(0).toUpperCase() +
-                  provider.provider_type.slice(1)}{' '}
-                Restaurant
+                store type: {provider.provider_type}
               </Text>
 
               {/* Description */}
@@ -876,6 +881,17 @@ export default function OfferDetailsScreen() {
       return null;
     }
 
+    const getPropertyIcon = (key: string) => {
+      switch (key) {
+        case 'ingredients':
+          return <BookCheck size={15} color={theme.primary} />;
+        case 'nutrition_facts':
+          return <Sprout size={15} color={theme.primary} />;
+        case 'spice_level':
+          return <Flame size={15} color={theme.primary} />;
+      }
+    };
+
     const renderPropertyValue = (value: any, key: string) => {
       if (Array.isArray(value)) {
         return (
@@ -913,7 +929,7 @@ export default function OfferDetailsScreen() {
 
       if (typeof value === 'object' && value !== null) {
         return (
-          <View className="mt-3 gap-1">
+          <View className="mt-3 gap-3">
             {Object.entries(value).map(([subKey, subValue], subIndex) => (
               <View
                 key={subIndex}
@@ -1005,15 +1021,18 @@ export default function OfferDetailsScreen() {
                   }}
                 >
                   <View className="flex-row items-center justify-between mb-1">
-                    <Text
-                      className="text-sm  tracking-wide uppercase"
-                      style={{
-                        color: theme.textSecondary,
-                        fontFamily: 'PoppinsMedium',
-                      }}
-                    >
-                      {propertyTitle}
-                    </Text>
+                    <View className="flex flex-row items-center gap-2">
+                      {getPropertyIcon(key)}
+                      <Text
+                        className="text-sm  tracking-wide uppercase"
+                        style={{
+                          color: theme.textSecondary,
+                          fontFamily: 'PoppinsMedium',
+                        }}
+                      >
+                        {propertyTitle}
+                      </Text>
+                    </View>
                     <View
                       className="w-6 h-6 rounded-full items-center justify-center"
                       style={{ backgroundColor: `${theme.primary}10` }}
@@ -1269,7 +1288,7 @@ export default function OfferDetailsScreen() {
         <Animated.View
           className="flex-1 relative mt-[-24px] rounded-t-3xl px-6 pt-6 pb-32"
           style={{
-            backgroundColor: theme.background,
+            backgroundColor: theme.backgroundSecondary,
             opacity: contentOpacity,
             transform: [{ translateY: contentTranslateY }],
           }}
@@ -1333,21 +1352,24 @@ export default function OfferDetailsScreen() {
             </Text>
           </View>
 
-          {/* Provider Card */}
-          {renderRestaurantCard()}
-
           {/* Pickup Time */}
           {renderPickupTime()}
 
           {/* Description */}
           {offer.description && (
             <View className="mb-6">
-              <Text className="text-lg  mb-3" style={{ color: theme.text }}>
+              <Text
+                className="text-lg "
+                style={{ color: theme.text, fontFamily: 'FredokaMedium' }}
+              >
                 Description
               </Text>
               <Text
-                className="text-base  leading-6"
-                style={{ color: theme.textSecondary }}
+                className="text-base leading-6"
+                style={{
+                  color: theme.textSecondary,
+                  fontFamily: 'PoppinsMedium',
+                }}
               >
                 {offer.description}
               </Text>
@@ -1469,6 +1491,8 @@ export default function OfferDetailsScreen() {
           )}
 
           {renderCustomProperties()}
+          {/* Provider Card */}
+          {renderRestaurantCard()}
         </Animated.View>
       </ScrollView>
 

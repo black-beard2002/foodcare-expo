@@ -24,6 +24,7 @@ import {
   X,
 } from 'lucide-react-native';
 import { useAuthStore } from '@/stores/authStore';
+import DateTimePicker from '@react-native-community/datetimepicker';
 import { useTheme } from '@/hooks/useTheme';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAlert } from '@/providers/AlertProvider';
@@ -33,6 +34,8 @@ import { LinearGradient } from 'expo-linear-gradient';
 
 export default function PersonalInfoScreen() {
   const { theme, isDark } = useTheme();
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [dateOfBirth, setDateOfBirth] = useState<Date | null>(null);
   const { user, updateProfile, isLoading, loadUserFromStorage } =
     useAuthStore();
   const { showAlert } = useAlert();
@@ -53,14 +56,21 @@ export default function PersonalInfoScreen() {
 
   useEffect(() => {
     loadUserFromStorage();
+    setDateOfBirth(new Date(user?.birthdate ?? ''));
   }, []);
 
   const handleSave = async () => {
     try {
-      const res = await updateProfile(formData);
+      const year = dateOfBirth?.getFullYear();
+      const month =
+        dateOfBirth && String(dateOfBirth.getMonth() + 1).padStart(2, '0');
+      const day = dateOfBirth && String(dateOfBirth.getDate()).padStart(2, '0');
+      const isoDate = `${year}-${month}-${day}`;
+      const finalData = { ...formData, birthdate: isoDate };
+      const res = await updateProfile(finalData);
       setIsEditing(false);
       if (res.success) {
-        showAlert('Success', 'Profile updated successfully', 'success');
+        showAlert('Profile Updated', 'Profile updated successfully', 'success');
       } else {
         showAlert('Error', 'Failed to update profile', 'error');
       }
@@ -123,14 +133,6 @@ export default function PersonalInfoScreen() {
       editable: true,
       multiline: true,
       color: '#F59E0B',
-    },
-    {
-      icon: Calendar,
-      label: 'Date of Birth',
-      key: 'birthdate',
-      placeholder: 'YYYY-MM-DD',
-      editable: true,
-      color: '#EC4899',
     },
   ];
 
@@ -352,6 +354,44 @@ export default function PersonalInfoScreen() {
                     </View>
                   </View>
                 ))}
+                <View className="flex-row items-center gap-2 px-1">
+                  <View
+                    className="w-8 h-8 rounded-lg justify-center items-center"
+                    style={{ backgroundColor: '#EC489915' }}
+                  >
+                    <Calendar color="#EC4899" size={16} strokeWidth={2.5} />
+                  </View>
+                  <Text
+                    className="text-sm "
+                    style={{
+                      color: theme.text,
+                      fontFamily: 'FredokaMedium',
+                    }}
+                  >
+                    Date of Birth
+                  </Text>
+                </View>
+
+                <TouchableOpacity
+                  className="border-2 px-4 py-3.5 mx-1 rounded-2xl"
+                  disabled={!isEditing}
+                  style={{ borderColor: isEditing ? '#EC4899' : theme.border }}
+                  onPress={() => setShowDatePicker(true)}
+                >
+                  <Text>{dateOfBirth?.toLocaleDateString()}</Text>
+                </TouchableOpacity>
+                {showDatePicker && (
+                  <DateTimePicker
+                    value={new Date(formData.birthdate)}
+                    mode="date"
+                    display="default"
+                    onChange={(event, selected) => {
+                      setShowDatePicker(false);
+                      if (selected) if (selected) setDateOfBirth(selected);
+                    }}
+                    maximumDate={new Date()}
+                  />
+                )}
               </View>
 
               {/* Save Button */}

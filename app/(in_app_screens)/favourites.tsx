@@ -72,20 +72,10 @@ export default function FavouritesScreen() {
   return (
     <SafeAreaView
       className="flex-1"
-      style={{ backgroundColor: theme.background }}
+      style={{ backgroundColor: theme.backgroundSecondary }}
     >
       {/* HEADER */}
-      <View
-        className="px-6 py-5"
-        style={{
-          backgroundColor: theme.card,
-          shadowColor: theme.text,
-          shadowOpacity: 0.08,
-          shadowRadius: 12,
-          shadowOffset: { width: 0, height: 2 },
-          elevation: 4,
-        }}
-      >
+      <View className="px-6 py-5">
         <View className="flex-row items-center mb-3">
           <TouchableOpacity
             onPress={() => router.back()}
@@ -243,7 +233,7 @@ export default function FavouritesScreen() {
 
               const isAvailable = offers.some(
                 (off) =>
-                  off.id === favorite?.favorited?.id && off.status !== 'hidden'
+                  off.id === favorite.favorited.id && off.status !== 'hidden'
               );
 
               const discountPercent = favorite.favorited.sale_price

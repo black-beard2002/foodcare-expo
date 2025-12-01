@@ -20,16 +20,25 @@ import {
   CalendarClock,
   Search,
   ScanQrCode,
+  Timer,
+  RefreshCcw,
 } from 'lucide-react-native';
 import { useTheme } from '@/hooks/useTheme';
 import { useAlert } from '@/providers/AlertProvider';
-import { TransactionBase, TransactionStatus } from '@/types/appTypes';
+import {
+  PaymentMethod,
+  PaymentStatus,
+  TransactionBase,
+  TransactionStatus,
+  TransactionType,
+} from '@/types/appTypes';
 import OrderCancelModal from '@/components/OrderCancelModal';
+import OrderReorderModal from '@/components/OrderReorderModal';
 import { formatDateTime } from '@/utils/formatters';
 import { MotiView } from 'moti';
 import { Skeleton } from 'moti/skeleton';
 import * as Haptics from 'expo-haptics';
-import { router, useLocalSearchParams } from 'expo-router';
+import { router } from 'expo-router';
 import { useAuthStore } from '@/stores/authStore';
 import { TSX_WEBSOCKET_URL } from '@/constants/api_constants';
 
@@ -37,6 +46,7 @@ export default function OrderHistoryScreen() {
   const { theme, isDark } = useTheme();
   const [permission, requestPermission] = useCameraPermissions();
   const [confirmCancelModal, setConfirmCancelModal] = useState(false);
+  const [confirmReorderModal, setConfirmReorderModal] = useState(false);
   const { width: SCREEN_WIDTH } = Dimensions.get('window');
   const colorMode = isDark ? 'dark' : 'light';
   const [refreshing, setRefreshing] = useState(false);
@@ -49,6 +59,7 @@ export default function OrderHistoryScreen() {
     updateOrder,
     clearOrders,
     fetchOrders,
+    createOrder,
     isLoading,
   } = useOrderStore();
   const { showAlert } = useAlert();
@@ -56,6 +67,7 @@ export default function OrderHistoryScreen() {
   useEffect(() => {
     fetchOrders();
   }, []);
+
   useEffect(() => {
     console.log('Entering ws use effect');
     const ws = new WebSocket(`${TSX_WEBSOCKET_URL}/ws/mobile/${user?.id}`);
@@ -124,6 +136,65 @@ export default function OrderHistoryScreen() {
     );
   }, [orders, searchQuery, statusFilter]);
 
+  const handleOrderReCreate = async () => {
+    if (!selectedOrder) return;
+
+    console.log('Reordering:', selectedOrder);
+
+    // Create the new order with the exact structure as a new order
+    const reOrder = {
+      transaction_type: 'ORDER' as TransactionType,
+      user_id: user?.id,
+      status: 'PENDING' as TransactionStatus,
+      currency: selectedOrder.currency || 'USD',
+      total_price: selectedOrder.total_price,
+      total_items: selectedOrder.items?.length || 0,
+      items: selectedOrder.items || [],
+      payment_status: 'PENDING' as PaymentStatus,
+      payment_method: selectedOrder.payment_method || ('CASH' as PaymentMethod),
+      client_data: {
+        first_name: selectedOrder.client_data?.first_name || '',
+        last_name: selectedOrder.client_data?.last_name || '',
+        phone_number: selectedOrder.client_data?.phone_number || '',
+        email: selectedOrder.client_data?.email || user?.email_address || '',
+        address: selectedOrder.client_data?.address || user?.address || '',
+      },
+      created_by: user?.id,
+      provider_id:
+        selectedOrder.items?.[0]?.item.provider_id ||
+        selectedOrder.provider_id ||
+        '',
+      tenant_id:
+        selectedOrder.items?.[0]?.item.tenant_id ||
+        selectedOrder.tenant_id ||
+        '',
+    };
+
+    const res = await createOrder(reOrder);
+    console.log('Reorder response:', res);
+
+    setConfirmReorderModal(false);
+    setSelectedOrder(null);
+
+    if (res.success) {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      showAlert(
+        'Re-Ordered Successfully!',
+        'Your order has been created successfully',
+        'success'
+      );
+      // Refresh orders to show the new one
+      await fetchOrders();
+    } else {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      showAlert(
+        'Failed',
+        'Failed to create your order. Please try again.',
+        'error'
+      );
+    }
+  };
+
   async function handleOrderCancel() {
     await updateOrder(selectedOrder?.id ?? '', {
       status: 'CANCELLED',
@@ -132,6 +203,7 @@ export default function OrderHistoryScreen() {
     });
     setConfirmCancelModal(false);
     setSelectedOrder(null);
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
     showAlert(
       'Cancelled',
       `Order ${selectedOrder?.id} cancelled successfully`,
@@ -144,6 +216,11 @@ export default function OrderHistoryScreen() {
     setSelectedOrder(null);
   }
 
+  function handleConfirmReorder() {
+    setConfirmReorderModal(false);
+    setSelectedOrder(null);
+  }
+
   function handleQrScan() {
     requestPermission();
     const isPermissionGranted = Boolean(permission?.granted);
@@ -153,6 +230,7 @@ export default function OrderHistoryScreen() {
       router.replace('/(in_app_screens)/qrScan');
     }
   }
+
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -204,6 +282,8 @@ export default function OrderHistoryScreen() {
             className="md:w-5 md:h-5"
           />
         );
+      case 'PROCESSING':
+        return <Timer color={theme.info} size={16} className="md:w-5 md:h-5" />;
       default:
         return null;
     }
@@ -218,8 +298,12 @@ export default function OrderHistoryScreen() {
       style={{
         backgroundColor: theme.card,
         borderColor:
-          order.status === 'PENDING' || order.status === 'CANCELLED'
+          order.status === 'PENDING'
             ? theme.warning
+            : order.status === 'PROCESSING'
+            ? theme.info
+            : order.status === 'CANCELLED'
+            ? theme.error
             : theme.success,
       }}
     >
@@ -249,10 +333,12 @@ export default function OrderHistoryScreen() {
             </Text>
           </View>
         </View>
-        {order.status === 'PENDING' && (
-          <View className="flex-row gap-2">
+
+        <View className="flex-row gap-2">
+          {order.status === 'PENDING' && (
             <TouchableOpacity
               onPress={() => {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
                 setSelectedOrder(order);
                 setConfirmCancelModal(true);
               }}
@@ -265,22 +351,44 @@ export default function OrderHistoryScreen() {
                 className="md:w-4 md:h-4"
               />
             </TouchableOpacity>
+          )}
+          {order.status === 'CANCELLED' && (
             <TouchableOpacity
               onPress={() => {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
                 setSelectedOrder(order);
-                handleQrScan();
+                setConfirmReorderModal(true);
               }}
               className="w-8 h-8 rounded-lg items-center justify-center md:w-9 md:h-9"
               style={{ backgroundColor: theme.successLight }}
             >
-              <ScanQrCode
+              <RefreshCcw
                 color={theme.success}
                 size={14}
                 className="md:w-4 md:h-4"
               />
             </TouchableOpacity>
-          </View>
-        )}
+          )}
+          {order.status !== 'COMPLETED' &&
+            order.status !== 'DELIVERED' &&
+            order.status !== 'CANCELLED' && (
+              <TouchableOpacity
+                onPress={() => {
+                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                  setSelectedOrder(order);
+                  handleQrScan();
+                }}
+                className="w-8 h-8 rounded-lg items-center justify-center md:w-9 md:h-9"
+                style={{ backgroundColor: theme.successLight }}
+              >
+                <ScanQrCode
+                  color={theme.success}
+                  size={14}
+                  className="md:w-4 md:h-4"
+                />
+              </TouchableOpacity>
+            )}
+        </View>
       </View>
 
       {/* Compact Info Grid */}
@@ -377,6 +485,7 @@ export default function OrderHistoryScreen() {
         {orders.length > 0 && (
           <TouchableOpacity
             onPress={() => {
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
               clearOrders();
               showAlert('Cleared', 'All orders have been cleared', 'success');
             }}
@@ -448,28 +557,30 @@ export default function OrderHistoryScreen() {
                 All
               </Text>
             </TouchableOpacity>
-            {['pending', 'completed', 'cancelled'].map((status, index) => (
-              <TouchableOpacity
-                key={status + index}
-                onPress={() =>
-                  setStatusFilter(status.toUpperCase() as TransactionStatus)
-                }
-                className="px-4 py-1.5 rounded-xl md:px-5 md:py-2"
-                style={{
-                  backgroundColor:
-                    statusFilter === status.toUpperCase()
-                      ? theme.primaryLight
-                      : theme.backgroundSecondary,
-                }}
-              >
-                <Text
-                  className="text-sm capitalize md:text-base"
-                  style={{ color: theme.text, fontFamily: 'FredokaMedium' }}
+            {['pending', 'completed', 'cancelled', 'processing'].map(
+              (status, index) => (
+                <TouchableOpacity
+                  key={status + index}
+                  onPress={() =>
+                    setStatusFilter(status.toUpperCase() as TransactionStatus)
+                  }
+                  className="px-4 py-1.5 rounded-xl md:px-5 md:py-2"
+                  style={{
+                    backgroundColor:
+                      statusFilter === status.toUpperCase()
+                        ? theme.primaryLight
+                        : theme.backgroundSecondary,
+                  }}
                 >
-                  {status.charAt(0).toUpperCase() + status.slice(1)}
-                </Text>
-              </TouchableOpacity>
-            ))}
+                  <Text
+                    className="text-sm capitalize md:text-base"
+                    style={{ color: theme.text, fontFamily: 'FredokaMedium' }}
+                  >
+                    {status.charAt(0).toUpperCase() + status.slice(1)}
+                  </Text>
+                </TouchableOpacity>
+              )
+            )}
           </View>
         </View>
 
@@ -532,6 +643,16 @@ export default function OrderHistoryScreen() {
           onConfirm={handleOrderCancel}
           onCancel={handleConfirmCancel}
           orderNumber={selectedOrder?.id ?? ''}
+        />
+      )}
+
+      {/* Reorder Confirmation Modal */}
+      {confirmReorderModal && (
+        <OrderReorderModal
+          visible={confirmReorderModal}
+          onConfirm={handleOrderReCreate}
+          onCancel={handleConfirmReorder}
+          order={selectedOrder!}
         />
       )}
     </SafeAreaView>

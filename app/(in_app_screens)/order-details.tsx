@@ -7,7 +7,9 @@ import {
   TouchableOpacity,
   Linking,
   ColorValue,
+  Share,
 } from 'react-native';
+import * as Sharing from 'expo-sharing';
 import {
   TransactionBase,
   OrderItem,
@@ -37,6 +39,8 @@ import {
   Eye,
   LockKeyholeIcon,
   EyeClosed,
+  TimerIcon,
+  CalendarCheck,
 } from 'lucide-react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import * as Haptics from 'expo-haptics';
@@ -47,6 +51,7 @@ import { useCameraPermissions } from 'expo-camera';
 import { useAlert } from '@/providers/AlertProvider';
 import { useAuthStore } from '@/stores/authStore';
 import { TSX_WEBSOCKET_URL } from '@/constants/api_constants';
+import { formatDateTime } from '@/utils/formatters';
 
 export default function OrderDetailsScreen() {
   const { theme } = useTheme();
@@ -94,6 +99,13 @@ export default function OrderDetailsScreen() {
           icon: XCircle,
           bgColor: theme.errorLight,
           label: 'Cancelled',
+        };
+      case 'PROCESSING':
+        return {
+          color: theme.info,
+          icon: TimerIcon,
+          bgColor: theme.infoLight,
+          label: 'Processing',
         };
       default:
         return {
@@ -163,17 +175,6 @@ export default function OrderDetailsScreen() {
   const paymentConfig = getPaymentStatusConfig(order?.payment_status);
   const StatusIcon = statusConfig.icon;
 
-  const formatDate = (dateString?: string) => {
-    if (!dateString) return 'N/A';
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    });
-  };
   function handleQrScan() {
     requestPermission();
     const isPermissionGranted = Boolean(permission?.granted);
@@ -181,6 +182,49 @@ export default function OrderDetailsScreen() {
       requestPermission();
     } else {
       router.replace('/(in_app_screens)/qrScan');
+    }
+  }
+
+  async function handleShareOrder() {
+    if (!order) return;
+
+    const itemLines = order.items
+      ?.map(
+        (i) =>
+          `• ${i.item.title} (x${i.quantity}) — ${formatPrice(i.total)} ${
+            order.currency
+          }`
+      )
+      .join('\n');
+
+    const message = `
+🧾 *Order Details*
+━━━━━━━━━━━━━━
+📦 *Order ID:* ${order.id.toUpperCase()}
+🔖 *Status:* ${order.status}
+💰 *Total:* ${formatPrice(order.total_price ?? 0)} ${order.currency}
+⏱ *Created At:* ${formatDateTime(order.created_at ?? '')}
+
+🛍 *Items*
+${itemLines}
+
+🔑 *Confirmation Code:* ${
+      order.confirmation_code || order.id.slice(0, 8).toUpperCase()
+    }
+
+👤 *Customer*
+${order.client_data?.first_name} ${order.client_data?.last_name}
+📞 ${order.client_data?.phone_number}
+📍 ${order.client_data?.address}
+
+━━━━━━━━━━━━━━
+Shared from FoodForLess App
+  `.trim();
+
+    try {
+      await Share.share({ message });
+    } catch (error) {
+      console.log('Share Error:', error);
     }
   }
 
@@ -250,12 +294,14 @@ export default function OrderDetailsScreen() {
                 justifyContent: 'center',
                 alignItems: 'center',
               }}
-              onPress={() =>
-                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
-              }
+              onPress={() => {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                handleShareOrder();
+              }}
             >
               <Share2 color={theme.text} size={20} />
             </TouchableOpacity>
+
             {order?.status === 'PENDING' && (
               <TouchableOpacity
                 style={{
@@ -365,7 +411,7 @@ export default function OrderDetailsScreen() {
               </View>
             </View>
 
-            {order?.delivered_at && (
+            {order?.updated_at && (
               <View
                 style={{
                   marginTop: 16,
@@ -377,7 +423,7 @@ export default function OrderDetailsScreen() {
                   gap: 8,
                 }}
               >
-                <Calendar color={theme.textSecondary} size={16} />
+                <CalendarCheck color={theme.textSecondary} size={16} />
                 <Text
                   style={{
                     color: theme.textSecondary,
@@ -385,7 +431,7 @@ export default function OrderDetailsScreen() {
                     fontFamily: 'PoppinsMedium',
                   }}
                 >
-                  Delivered: {formatDate(order?.delivered_at)}
+                  Confirmed: {formatDateTime(order?.updated_at)}
                 </Text>
               </View>
             )}
@@ -965,7 +1011,7 @@ export default function OrderDetailsScreen() {
                       color: theme.text,
                     }}
                   >
-                    {formatDate(order?.created_at)}
+                    {formatDateTime(order?.created_at)}
                   </Text>
                 </View>
               </View>
@@ -1000,13 +1046,13 @@ export default function OrderDetailsScreen() {
                       color: theme.text,
                     }}
                   >
-                    {formatDate(order?.date_trx)}
+                    {formatDateTime(order?.date_trx)}
                   </Text>
                 </View>
               </View>
             )}
 
-            {order?.delivered_at && (
+            {order?.updated_at && (
               <View
                 style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}
               >
@@ -1026,7 +1072,7 @@ export default function OrderDetailsScreen() {
                       fontFamily: 'FredokaMedium',
                     }}
                   >
-                    Delivered
+                    Delivered/Completed
                   </Text>
                   <Text
                     style={{
@@ -1035,7 +1081,7 @@ export default function OrderDetailsScreen() {
                       color: theme.text,
                     }}
                   >
-                    {formatDate(order?.delivered_at)}
+                    {formatDateTime(order?.updated_at)}
                   </Text>
                 </View>
               </View>
@@ -1070,7 +1116,7 @@ export default function OrderDetailsScreen() {
                       color: theme.text,
                     }}
                   >
-                    {formatDate(order?.expiry)}
+                    {formatDateTime(order?.expiry)}
                   </Text>
                 </View>
               </View>

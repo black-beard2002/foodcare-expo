@@ -170,8 +170,8 @@ const CartItemComponent = ({
 
             <View className="px-4 py-1.5 rounded-lg mx-1">
               <Text
-                className="text-base text-white"
-                style={{ fontFamily: 'PoppinsMedium' }}
+                className="text-base"
+                style={{ fontFamily: 'PoppinsMedium', color: theme.text }}
               >
                 {item.quantity}
               </Text>
