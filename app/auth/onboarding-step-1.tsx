@@ -280,7 +280,7 @@ export default function OnboardingStep1() {
                   Date of Birth
                 </Text>
                 <TouchableOpacity
-                  onPress={() => setShowDatePicker(true)}
+                  onPress={() => setShowDatePicker((prev) => !prev)}
                   activeOpacity={0.7}
                 >
                   <View
@@ -317,7 +317,7 @@ export default function OnboardingStep1() {
                   <DateTimePicker
                     value={dateOfBirth || new Date(2000, 0, 1)}
                     mode="date"
-                    display="default"
+                    display="inline"
                     onChange={(event, selected) => {
                       setShowDatePicker(false);
                       if (selected) setDateOfBirth(selected);
