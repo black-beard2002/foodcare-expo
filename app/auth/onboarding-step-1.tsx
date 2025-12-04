@@ -317,6 +317,7 @@ export default function OnboardingStep1() {
                   <DateTimePicker
                     value={dateOfBirth || new Date(2000, 0, 1)}
                     mode="date"
+                    style={{ backgroundColor: theme.inputBackground }}
                     display="inline"
                     onChange={(event, selected) => {
                       setShowDatePicker(false);

@@ -34,7 +34,7 @@ interface AuthState {
   verifyOtp: (
     otp: string,
     phoneNumber: string
-  ) => Promise<{ success: boolean; message?: string }>;
+  ) => Promise<{ success: boolean; message?: string; attempts?: number }>;
   updateProfile: (
     userData: Partial<User>
   ) => Promise<{ success: boolean; error?: string }>;
@@ -181,7 +181,11 @@ export const useAuthStore = create<AuthState>()(
               error: null,
             });
 
-            return { success: true, message: response.message };
+            return {
+              success: true,
+              message: response.message,
+              attempts: response.data.attempts,
+            };
           } else {
             set({ error: response.error });
             return { success: false, message: response.error };

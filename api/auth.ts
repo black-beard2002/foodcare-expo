@@ -13,6 +13,7 @@ export interface AuthApi {
       user: Partial<User>;
       access_token: string;
       refresh_token: string;
+      attempts: number;
     }>
   >;
   // signInWithEmail: (
@@ -72,6 +73,7 @@ class AuthApiImpl implements AuthApi {
       user: Partial<User>;
       access_token: string;
       refresh_token: string;
+      attempts: number;
     }>
   > {
     try {
@@ -89,10 +91,11 @@ class AuthApiImpl implements AuthApi {
         };
         const access_token: string = responseBody.data.token.access_token;
         const refresh_token: string = responseBody.data.token.refresh_token;
+        const attempts = responseBody.data.attempts;
         console.log('otp res:', responseBody);
         return {
           success: true,
-          data: { user, access_token, refresh_token },
+          data: { user, access_token, refresh_token, attempts },
           message: responseBody.message ?? 'OTP verified successfully',
         };
       } else {

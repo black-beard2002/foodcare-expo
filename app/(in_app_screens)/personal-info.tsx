@@ -388,7 +388,6 @@ export default function PersonalInfoScreen() {
                   <DateTimePicker
                     value={new Date(formData.birthdate)}
                     mode="date"
-                    className="bg-white"
                     style={{ backgroundColor: theme.inputBackground }}
                     display="inline"
                     onChange={(event, selected) => {

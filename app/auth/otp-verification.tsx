@@ -29,13 +29,14 @@ export default function OTPVerificationScreen(): JSX.Element {
   const [timer, setTimer] = useState<number>(60);
   const [isResending, setIsResending] = useState<boolean>(false);
   const [hasVerified, setHasVerified] = useState<boolean>(false);
+  const { user } = useAuthStore();
   const { phoneNumber } = useLocalSearchParams<{
     phoneNumber: string;
   }>();
   const { verifyOtp, signInWithPhone, isLoading } = useAuthStore();
   const { showAlert } = useAlert();
   const inputRefs = useRef<(TextInput | null)[]>([]);
-  const { theme, isDark } = useTheme();
+  const { theme } = useTheme();
 
   // Timer countdown
   useEffect(() => {
@@ -76,7 +77,11 @@ export default function OTPVerificationScreen(): JSX.Element {
 
   const simulateOtpVerification = async (otpCode: string) => {
     const result = await verifyOtp(otpCode, phoneNumber);
-    return { success: result.success, message: result.message };
+    return {
+      success: result.success,
+      message: result.message,
+      attempts: result.attempts,
+    };
   };
 
   const handleAutoVerify = useCallback(async () => {
@@ -92,7 +97,11 @@ export default function OTPVerificationScreen(): JSX.Element {
           response.message || 'Phone number verified successfully.',
           'success'
         );
-        router.push('/auth/onboarding-step-1');
+        if (response.attempts && response.attempts > 1) {
+          router.push('/');
+        } else {
+          router.push('/auth/onboarding-step-1');
+        }
       } else {
         setHasVerified(false);
         setOtp(['', '', '', '']);
