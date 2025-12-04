@@ -376,15 +376,21 @@ export default function PersonalInfoScreen() {
                   className="border-2 px-4 py-3.5 mx-1 rounded-2xl"
                   disabled={!isEditing}
                   style={{ borderColor: isEditing ? '#EC4899' : theme.border }}
-                  onPress={() => setShowDatePicker(true)}
+                  onPress={() => setShowDatePicker((prev) => !prev)}
                 >
-                  <Text>{dateOfBirth?.toLocaleDateString()}</Text>
+                  <Text
+                    style={{ color: theme.text, fontFamily: 'PoppinsMedium' }}
+                  >
+                    {dateOfBirth?.toLocaleDateString()}
+                  </Text>
                 </TouchableOpacity>
                 {showDatePicker && (
                   <DateTimePicker
                     value={new Date(formData.birthdate)}
                     mode="date"
-                    display="default"
+                    className="bg-white"
+                    style={{ backgroundColor: theme.inputBackground }}
+                    display="inline"
                     onChange={(event, selected) => {
                       setShowDatePicker(false);
                       if (selected) if (selected) setDateOfBirth(selected);

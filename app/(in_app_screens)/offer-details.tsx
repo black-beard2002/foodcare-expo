@@ -167,17 +167,18 @@ export default function OfferDetailsScreen() {
       message
     )}`;
 
-    Linking.canOpenURL(url)
-      .then((supported) => {
-        if (supported) {
-          return Linking.openURL(url);
-        } else {
-          showAlert('Error', 'WhatsApp is not installed', 'error');
-        }
-      })
-      .catch(() => showAlert('Error', 'Failed to open WhatsApp', 'error'));
-  };
+    // Try to open WhatsApp directly
+    Linking.openURL(url).catch(() => {
+      // If it fails, try the web fallback
+      const webUrl = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(
+        message
+      )}`;
 
+      Linking.openURL(webUrl).catch(() => {
+        showAlert('Error', 'Failed to open WhatsApp', 'error');
+      });
+    });
+  };
   // Carousel handlers
   const handleImageSelect = useCallback((index: number) => {
     setSelectedImageIndex(index);
@@ -1239,7 +1240,7 @@ export default function OfferDetailsScreen() {
       style={{ backgroundColor: theme.background }}
     >
       <Animated.View
-        className="absolute top-14 left-0 right-0 z-10 flex-row justify-between items-center px-6"
+        className="absolute top-16 left-0 right-0 z-10 flex-row justify-between items-center px-6"
         style={{ opacity: headerOpacity }}
       >
         <TouchableOpacity
