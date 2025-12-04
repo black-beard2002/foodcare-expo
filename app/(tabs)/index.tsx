@@ -350,7 +350,7 @@ const ModernCategoryChip = ({
             ? { uri: handleImageSrc(item.main_image) }
             : images.CATEGORY_PLACEHOLDER_IMAGE
         }
-        style={{ width: 50, height: 50, borderRadius: 25 }}
+        style={{ width: 55, height: 55, borderRadius: 25 }}
         resizeMode="contain"
       />
     </View>

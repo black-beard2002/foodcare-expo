@@ -23,14 +23,14 @@ import { useTheme } from '@/hooks/useTheme';
 import { useAppStore } from '@/stores/appStore';
 import { useRecentlyViewedStore } from '@/stores/recentlyViewedStore';
 import { useSearchHistoryStore } from '@/stores/searchHistoryStore';
-import { SearchHistory } from '@/types/appTypes';
+import { Offer, SearchHistory } from '@/types/appTypes';
 import { handleImageSrc } from '@/utils/helpers';
 
 export default function SearchScreen() {
   const { theme } = useTheme();
   const { offers, restaurants } = useAppStore();
   const [searchQuery, setSearchQuery] = useState('');
-  const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [searchResults, setSearchResults] = useState<Offer[]>([]);
   const { clearRecentlyViewed, recentlyViewed } = useRecentlyViewedStore();
   const {
     addSearchQuery,
@@ -64,14 +64,6 @@ export default function SearchScreen() {
               recent.description.toLowerCase().includes(lowerQuery)
           )
           .map((recent: any) => ({ ...recent, type: 'recent' }));
-
-        // const restaurantResults = restaurants
-        //   .filter(
-        //     (restaurant: any) =>
-        //       restaurant.name.toLowerCase().includes(lowerQuery) ||
-        //       restaurant.cuisine.toLowerCase().includes(lowerQuery)
-        //   )
-        //   .map((restaurant: any) => ({ ...restaurant, type: 'restaurant' }));
 
         setSearchResults([...recentResults]);
         setIsSearching(false);
@@ -151,18 +143,20 @@ export default function SearchScreen() {
               className="text-sm mb-2"
               style={{ color: theme.textSecondary }}
             >
-              {'restaurant_name'}
+              {item.provider?.name}
             </Text>
             <View className="flex-row justify-between items-center">
-              <View className="flex-row items-center gap-1">
-                <Star color="#F59E0B" size={12} fill="#F59E0B" />
-                <Text
-                  className="text-sm font-semibold"
-                  style={{ color: theme.text }}
-                >
-                  {item.rating}
-                </Text>
-              </View>
+              {item.rating && (
+                <View className="flex-row items-center gap-1">
+                  <Star color="#F59E0B" size={12} fill="#F59E0B" />
+                  <Text
+                    className="text-sm font-semibold"
+                    style={{ color: theme.text }}
+                  >
+                    {item.rating}
+                  </Text>
+                </View>
+              )}
               <Text
                 className="text-base font-bold"
                 style={{ color: theme.primary }}
@@ -367,7 +361,7 @@ export default function SearchScreen() {
                           className="text-xs"
                           style={{ color: theme.textSecondary }}
                         >
-                          {'restaurant_name'}
+                          {recent.offer.provider?.name}
                         </Text>
                       </View>
                     </View>
@@ -400,9 +394,7 @@ export default function SearchScreen() {
               <FlatList
                 data={searchResults}
                 renderItem={renderSearchResult}
-                keyExtractor={(item, index) =>
-                  `${item.type}-${item.id}-${index}`
-                }
+                keyExtractor={(item, index) => `${item.id}-${index}`}
                 showsVerticalScrollIndicator={false}
                 contentContainerStyle={{
                   paddingHorizontal: 16,
