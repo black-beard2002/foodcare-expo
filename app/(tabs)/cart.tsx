@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   Image,
   Animated,
+  ScrollView,
 } from 'react-native';
 import { router } from 'expo-router';
 import {
@@ -14,12 +15,15 @@ import {
   Trash2,
   ShoppingBag,
   ArrowRight,
+  X,
+  Check,
+  Info,
 } from 'lucide-react-native';
 import { useAppStore } from '@/stores/appStore';
 import { useTheme } from '@/hooks/useTheme';
 
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { CartItem } from '@/types/appTypes';
+import { CartItem, AddOn } from '@/types/appTypes';
 import { formatPrice, handleImageSrc } from '@/utils/helpers';
 import * as images from '@/constants/images';
 import { ColorTheme } from '@/constants/theme';
@@ -55,14 +59,173 @@ const CartItemComponent = ({
   });
 
   const discountPercent = Math.round(
-    ((item.offer.price - (item.offer.sale_price ?? item.offer.price)) /
-      item.offer.price) *
+    ((item.item.price - (item.item.sale_price ?? item.item.price)) /
+      item.item.price) *
       100
   );
 
+  // Calculate item total including addons
+  const calculateItemTotal = () => {
+    const basePrice = item.item.sale_price ?? item.item.price;
+    let addonTotal = 0;
+
+    if (item.selectedProperties) {
+      Object.values(item.selectedProperties).forEach((value) => {
+        if (Array.isArray(value)) {
+          value.forEach((v) => {
+            if (typeof v === 'object' && v !== null && 'price' in v) {
+              addonTotal += (v as AddOn).price;
+            }
+          });
+        }
+      });
+    }
+
+    return (basePrice + addonTotal) * item.quantity;
+  };
+
+  // Render selected properties
+  const renderSelectedProperties = () => {
+    if (
+      !item.selectedProperties ||
+      Object.keys(item.selectedProperties).length === 0
+    ) {
+      return null;
+    }
+
+    const properties = item.item.custom_properties;
+    if (!properties) return null;
+
+    const elements: React.ReactNode[] = [];
+
+    Object.entries(item.selectedProperties).forEach(([key, value]) => {
+      const property = properties[key];
+      if (!property) return;
+
+      // Handle different property types
+      if (property.type === 'exclude' || property.type === 'multiexclude') {
+        // Show excluded items
+        if (Array.isArray(value) && value.length > 0) {
+          elements.push(
+            <View
+              key={key}
+              className="flex-row flex-wrap items-center gap-1 mt-2"
+            >
+              <Text
+                className="text-xs"
+                style={{
+                  color: theme.textSecondary,
+                  fontFamily: 'PoppinsMedium',
+                }}
+              >
+                No:
+              </Text>
+              {(value as string[]).map((excluded, idx) => (
+                <View
+                  key={idx}
+                  className="flex-row items-center gap-1 px-2 py-0.5 rounded-md"
+                  style={{ backgroundColor: theme.error + '15' }}
+                >
+                  <X size={10} color={theme.error} strokeWidth={3} />
+                  <Text
+                    className="text-xs capitalize"
+                    style={{ color: theme.error, fontFamily: 'PoppinsMedium' }}
+                  >
+                    {excluded}
+                  </Text>
+                </View>
+              ))}
+            </View>
+          );
+        }
+      } else if (property.type === 'addon') {
+        // Show addons
+        if (Array.isArray(value) && value.length > 0) {
+          elements.push(
+            <View
+              key={key}
+              className="flex-row flex-wrap items-center gap-1 mt-2"
+            >
+              <Text
+                className="text-xs"
+                style={{
+                  color: theme.textSecondary,
+                  fontFamily: 'PoppinsMedium',
+                }}
+              >
+                Add-ons:
+              </Text>
+              {(value as AddOn[]).map((addon, idx) => (
+                <View
+                  key={idx}
+                  className="flex-row items-center gap-1 px-2 py-0.5 rounded-md"
+                  style={{ backgroundColor: theme.success + '15' }}
+                >
+                  <Plus size={10} color={theme.success} strokeWidth={3} />
+                  <Text
+                    className="text-xs"
+                    style={{
+                      color: theme.success,
+                      fontFamily: 'PoppinsMedium',
+                    }}
+                  >
+                    {addon.name} (+${addon.price.toFixed(2)})
+                  </Text>
+                </View>
+              ))}
+            </View>
+          );
+        }
+      } else if (
+        property.type === 'select' ||
+        property.type === 'multiselect'
+      ) {
+        // Show selected options
+        const displayValue = Array.isArray(value)
+          ? (value as string[]).join(', ')
+          : String(value);
+
+        if (displayValue) {
+          elements.push(
+            <View key={key} className="flex-row items-center gap-1 mt-2">
+              <View
+                className="flex-row items-center gap-1 px-2 py-0.5 rounded-md"
+                style={{ backgroundColor: theme.primary + '15' }}
+              >
+                <Text
+                  className="text-xs"
+                  style={{ color: theme.primary, fontFamily: 'PoppinsMedium' }}
+                >
+                  {property.label}:
+                </Text>
+                <Text
+                  className="text-xs capitalize"
+                  style={{ color: theme.primary, fontFamily: 'PoppinsMedium' }}
+                >
+                  {displayValue}
+                </Text>
+              </View>
+            </View>
+          );
+        }
+      }
+    });
+
+    if (elements.length === 0) return null;
+
+    return (
+      <View
+        className="mt-2 border-t pt-2"
+        style={{ borderTopColor: theme.border + '30' }}
+      >
+        <View className="flex-row flex-wrap gap-1">{elements}</View>
+      </View>
+    );
+  };
+
   return (
     <Animated.View
-      className="flex-row p-4 rounded-2xl border shadow-lg"
+      className="p-4 rounded-2xl border shadow-lg"
       style={{
         backgroundColor: theme.card,
         borderColor: theme.border,
@@ -70,123 +233,153 @@ const CartItemComponent = ({
         transform: [{ translateY }],
       }}
     >
-      <View className="relative mr-4">
-        <Image
-          source={
-            item.offer.main_image
-              ? { uri: handleImageSrc(item.offer.main_image) }
-              : images.OFFER_PLACEHOLDER_IMAGE
-          }
-          className="w-[100px] h-[100px] rounded-2xl"
-        />
-        {discountPercent > 0 && (
+      <View className="flex-row">
+        <View className="relative mr-4">
+          <Image
+            source={
+              item.item.main_image
+                ? { uri: handleImageSrc(item.item.main_image) }
+                : images.OFFER_PLACEHOLDER_IMAGE
+            }
+            className="w-[100px] h-[100px] rounded-2xl"
+          />
+          {discountPercent > 0 && (
+            <View
+              className="absolute -top-1.5 -right-1.5 px-2 py-1 rounded-lg shadow-md"
+              style={{ backgroundColor: theme.primary }}
+            >
+              <Text
+                className="text-white text-[11px]"
+                style={{ fontFamily: 'fredokaMedium' }}
+              >
+                -{discountPercent}%
+              </Text>
+            </View>
+          )}
+        </View>
+
+        <View className="flex-1 justify-between">
+          <View className="flex-row justify-between items-start">
+            <View className="flex-1 mr-2">
+              <Text
+                className="text-[17px] leading-6 mb-1.5"
+                style={{ color: theme.text, fontFamily: 'PoppinsMedium' }}
+                numberOfLines={2}
+              >
+                {item.item.title}
+              </Text>
+              <View
+                className="self-start px-2.5 py-1 rounded-lg"
+                style={{
+                  backgroundColor: `${theme.primary}15`,
+                }}
+              >
+                <Text
+                  className="text-xs"
+                  style={{ color: theme.primary, fontFamily: 'PoppinsMedium' }}
+                >
+                  {item.item.provider?.name}
+                </Text>
+              </View>
+            </View>
+
+            <TouchableOpacity
+              onPress={() => {
+                removeFromCart(item.id);
+              }}
+              className="w-9 h-9 rounded-xl justify-center items-center"
+              style={{ backgroundColor: `${theme.error}15` }}
+              activeOpacity={0.7}
+            >
+              <Trash2 color={theme.error} size={18} />
+            </TouchableOpacity>
+          </View>
+
+          <View className="flex-row justify-between items-center">
+            <View className="flex-row items-center gap-2">
+              {item.item.sale_price &&
+                item.item.sale_price < item.item.price && (
+                  <Text
+                    className="text-sm line-through"
+                    style={{
+                      color: theme.textSecondary,
+                      fontFamily: 'PoppinsMedium',
+                    }}
+                  >
+                    ${formatPrice(item.item.price)}
+                  </Text>
+                )}
+              <Text
+                className="text-xl"
+                style={{ color: theme.primary, fontFamily: 'PoppinsMedium' }}
+              >
+                ${formatPrice(item.item.sale_price ?? item.item.price)}
+              </Text>
+            </View>
+
+            <View
+              className="flex-row items-center rounded-xl border "
+              style={{
+                backgroundColor: `${theme.primary}10`,
+                borderColor: `${theme.primary}30`,
+              }}
+            >
+              <TouchableOpacity
+                onPress={() => updateCartItem(item.id, item.quantity - 1)}
+                className="w-9 h-9 justify-center items-center"
+                activeOpacity={0.7}
+              >
+                <Minus color={theme.primary} size={16} strokeWidth={2.5} />
+              </TouchableOpacity>
+
+              <View className="px-4 py-1.5 rounded-lg mx-1">
+                <Text
+                  className="text-base"
+                  style={{ fontFamily: 'PoppinsMedium', color: theme.text }}
+                >
+                  {item.quantity}
+                </Text>
+              </View>
+
+              <TouchableOpacity
+                onPress={() => updateCartItem(item.id, item.quantity + 1)}
+                className="w-9 h-9 justify-center items-center"
+                activeOpacity={0.7}
+              >
+                <Plus color={theme.primary} size={16} strokeWidth={2.5} />
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </View>
+
+      {/* Selected Properties */}
+      {renderSelectedProperties()}
+
+      {/* Item Total (if has addons) */}
+      {item.selectedProperties &&
+        Object.keys(item.selectedProperties).length > 0 && (
           <View
-            className="absolute -top-1.5 -right-1.5 px-2 py-1 rounded-lg shadow-md"
-            style={{ backgroundColor: theme.primary }}
+            className="mt-3 pt-3 flex-row justify-between items-center"
+            style={{ borderTopColor: theme.border + '30', borderTopWidth: 1 }}
           >
             <Text
-              className="text-white text-[11px]"
-              style={{ fontFamily: 'fredokaMedium' }}
+              className="text-sm"
+              style={{
+                color: theme.textSecondary,
+                fontFamily: 'PoppinsMedium',
+              }}
             >
-              -{discountPercent}%
+              Item Total
+            </Text>
+            <Text
+              className="text-lg"
+              style={{ color: theme.text, fontFamily: 'PoppinsMedium' }}
+            >
+              ${calculateItemTotal().toFixed(2)}
             </Text>
           </View>
         )}
-      </View>
-
-      <View className="flex-1 justify-between">
-        <View className="flex-row justify-between items-start">
-          <View className="flex-1 mr-2">
-            <Text
-              className="text-[17px] leading-6 mb-1.5"
-              style={{ color: theme.text, fontFamily: 'PoppinsMedium' }}
-              numberOfLines={2}
-            >
-              {item.offer.title}
-            </Text>
-            <View
-              className="self-start px-2.5 py-1 rounded-lg"
-              style={{
-                backgroundColor: `${theme.primary}15`,
-              }}
-            >
-              <Text
-                className="text-xs"
-                style={{ color: theme.primary, fontFamily: 'PoppinsMedium' }}
-              >
-                {item.offer.provider?.name}
-              </Text>
-            </View>
-          </View>
-
-          <TouchableOpacity
-            onPress={() => {
-              removeFromCart(item.id);
-            }}
-            className="w-9 h-9 rounded-xl justify-center items-center"
-            style={{ backgroundColor: `${theme.error}15` }}
-            activeOpacity={0.7}
-          >
-            <Trash2 color={theme.error} size={18} />
-          </TouchableOpacity>
-        </View>
-
-        <View className="flex-row justify-between items-center">
-          <View className="flex-row items-center gap-2">
-            {item.offer.sale_price &&
-              item.offer.sale_price < item.offer.price && (
-                <Text
-                  className="text-sm line-through"
-                  style={{
-                    color: theme.textSecondary,
-                    fontFamily: 'PoppinsMedium',
-                  }}
-                >
-                  ${formatPrice(item.offer.price)}
-                </Text>
-              )}
-            <Text
-              className="text-xl"
-              style={{ color: theme.primary, fontFamily: 'PoppinsMedium' }}
-            >
-              ${formatPrice(item.offer.sale_price ?? item.offer.price)}
-            </Text>
-          </View>
-
-          <View
-            className="flex-row items-center rounded-xl border "
-            style={{
-              backgroundColor: `${theme.primary}10`,
-              borderColor: `${theme.primary}30`,
-            }}
-          >
-            <TouchableOpacity
-              onPress={() => updateCartItem(item.id, item.quantity - 1)}
-              className="w-9 h-9 justify-center items-center"
-              activeOpacity={0.7}
-            >
-              <Minus color={theme.primary} size={16} strokeWidth={2.5} />
-            </TouchableOpacity>
-
-            <View className="px-4 py-1.5 rounded-lg mx-1">
-              <Text
-                className="text-base"
-                style={{ fontFamily: 'PoppinsMedium', color: theme.text }}
-              >
-                {item.quantity}
-              </Text>
-            </View>
-
-            <TouchableOpacity
-              onPress={() => updateCartItem(item.id, item.quantity + 1)}
-              className="w-9 h-9 justify-center items-center"
-              activeOpacity={0.7}
-            >
-              <Plus color={theme.primary} size={16} strokeWidth={2.5} />
-            </TouchableOpacity>
-          </View>
-        </View>
-      </View>
     </Animated.View>
   );
 };
@@ -316,7 +509,6 @@ export default function CartScreen() {
         className="fixed bottom-24 left-0 rounded-2xl right-0 px-6 pt-5 pb-6 shadow-2xl"
         style={{
           backgroundColor: theme.card,
-
           width: '90%',
           alignSelf: 'center',
         }}

@@ -14,6 +14,7 @@ import {
   TransactionBase,
   OrderItem,
   TransactionStatus,
+  AddOn,
 } from '@/types/appTypes';
 import { useTheme } from '@/hooks/useTheme';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -41,6 +42,8 @@ import {
   EyeClosed,
   TimerIcon,
   CalendarCheck,
+  Plus,
+  X,
 } from 'lucide-react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import * as Haptics from 'expo-haptics';
@@ -174,6 +177,144 @@ export default function OrderDetailsScreen() {
   const statusConfig = getStatusConfig(order?.status);
   const paymentConfig = getPaymentStatusConfig(order?.payment_status);
   const StatusIcon = statusConfig.icon;
+  // Render selected properties for an item
+  const renderSelectedProperties = (item: OrderItem) => {
+    if (
+      !item.selectedProperties ||
+      Object.keys(item.selectedProperties).length === 0
+    ) {
+      return null;
+    }
+
+    const properties = item.item.custom_properties;
+    if (!properties) return null;
+
+    const elements: React.ReactNode[] = [];
+
+    Object.entries(item.selectedProperties).forEach(([key, value]) => {
+      const property = properties[key];
+      if (!property) return;
+
+      // Handle different property types
+      if (property.type === 'exclude' || property.type === 'multiexclude') {
+        // Show excluded items
+        if (Array.isArray(value) && value.length > 0) {
+          elements.push(
+            <View
+              key={key}
+              className="flex-row flex-wrap items-center gap-1 mt-2"
+            >
+              <Text
+                className="text-xs"
+                style={{
+                  color: theme.textSecondary,
+                  fontFamily: 'PoppinsMedium',
+                }}
+              >
+                No:
+              </Text>
+              {(value as string[]).map((excluded, idx) => (
+                <View
+                  key={idx}
+                  className="flex-row items-center gap-0.5 px-1.5 py-0.5 rounded"
+                  style={{ backgroundColor: theme.error + '15' }}
+                >
+                  <X size={8} color={theme.error} strokeWidth={3} />
+                  <Text
+                    className="text-[10px] capitalize"
+                    style={{ color: theme.error, fontFamily: 'PoppinsMedium' }}
+                  >
+                    {excluded}
+                  </Text>
+                </View>
+              ))}
+            </View>
+          );
+        }
+      } else if (property.type === 'addon') {
+        // Show addons
+        if (Array.isArray(value) && value.length > 0) {
+          elements.push(
+            <View
+              key={key}
+              className="flex-row flex-wrap items-center gap-1 mt-2"
+            >
+              <Text
+                className="text-xs"
+                style={{
+                  color: theme.textSecondary,
+                  fontFamily: 'PoppinsMedium',
+                }}
+              >
+                Add-ons:
+              </Text>
+              {(value as AddOn[]).map((addon, idx) => (
+                <View
+                  key={idx}
+                  className="flex-row items-center gap-0.5 px-1.5 py-0.5 rounded"
+                  style={{ backgroundColor: theme.success + '15' }}
+                >
+                  <Plus size={8} color={theme.success} strokeWidth={3} />
+                  <Text
+                    className="text-[10px]"
+                    style={{
+                      color: theme.success,
+                      fontFamily: 'PoppinsMedium',
+                    }}
+                  >
+                    {addon.name} (+${addon.price.toFixed(2)})
+                  </Text>
+                </View>
+              ))}
+            </View>
+          );
+        }
+      } else if (
+        property.type === 'select' ||
+        property.type === 'multiselect'
+      ) {
+        // Show selected options
+        const displayValue = Array.isArray(value)
+          ? (value as string[]).join(', ')
+          : String(value);
+
+        if (displayValue) {
+          elements.push(
+            <View key={key} className="flex-row items-center gap-1 mt-2">
+              <View
+                className="flex-row items-center gap-1 px-1.5 py-0.5 rounded"
+                style={{ backgroundColor: theme.primary + '15' }}
+              >
+                <Text
+                  className="text-[10px]"
+                  style={{ color: theme.primary, fontFamily: 'PoppinsMedium' }}
+                >
+                  {property.label}:
+                </Text>
+                <Text
+                  className="text-[10px] capitalize"
+                  style={{ color: theme.primary, fontFamily: 'PoppinsMedium' }}
+                >
+                  {displayValue}
+                </Text>
+              </View>
+            </View>
+          );
+        }
+      }
+    });
+
+    if (elements.length === 0) return null;
+
+    return (
+      <View
+        className="mt-2 pt-2 border-t"
+        style={{ borderTopColor: theme.border + '20' }}
+      >
+        <View className="flex-row flex-wrap gap-1">{elements}</View>
+      </View>
+    );
+  };
 
   function handleQrScan() {
     requestPermission();
@@ -509,25 +650,29 @@ Shared from FoodForLess App
                 color: theme.text,
               }}
             >
-              Order Items{' '}
-              {order?.items && order.items.length > 0
-                ? `(${order.items.length})`
-                : ''}
+              Order Items {order?.items ? `(${order.items.length})` : ''}
             </Text>
           </View>
 
           <View
             style={{
-              backgroundColor: theme.card,
-              borderRadius: 16,
               overflow: 'hidden',
-              borderWidth: 1,
-              borderColor: theme.border,
             }}
           >
             {order?.items?.map((orderItem: OrderItem, index: number) => (
-              <View key={index}>
-                <View style={{ flexDirection: 'row', padding: 16, gap: 12 }}>
+              <View
+                key={index}
+                style={{
+                  backgroundColor: theme.card,
+                  marginVertical: 6,
+                  borderRadius: 16,
+                  borderColor: theme.border,
+                  padding: 14,
+                }}
+              >
+                {/* ITEM ROW */}
+                <View style={{ flexDirection: 'row', gap: 14 }}>
+                  {/* Image */}
                   <Image
                     source={
                       orderItem.item.main_image
@@ -535,56 +680,65 @@ Shared from FoodForLess App
                         : images.OFFER_PLACEHOLDER_IMAGE
                     }
                     style={{
-                      width: 80,
-                      height: 80,
-                      borderRadius: 12,
+                      width: 90,
+                      height: 90,
+                      borderRadius: 14,
                       backgroundColor: theme.backgroundSecondary,
                     }}
                     resizeMode="cover"
                   />
-                  <View style={{ flex: 1, justifyContent: 'space-between' }}>
-                    <View>
-                      <Text
-                        style={{
-                          fontSize: 16,
-                          fontFamily: 'PoppinsMedium',
-                          color: theme.text,
-                          marginBottom: 4,
-                        }}
-                        numberOfLines={2}
-                      >
-                        {orderItem.item.title}
-                      </Text>
-                      <Text
-                        style={{
-                          fontSize: 13,
-                          color: theme.textSecondary,
-                          fontFamily: 'PoppinsMedium',
-                        }}
-                      >
-                        Qty: {orderItem.quantity}
-                      </Text>
-                    </View>
+
+                  {/* Content */}
+                  <View style={{ flex: 1 }}>
                     <Text
                       style={{
-                        fontSize: 18,
+                        fontSize: 16,
                         fontFamily: 'PoppinsMedium',
-                        color: theme.primary,
+                        color: theme.text,
+                        marginBottom: 2,
+                      }}
+                      numberOfLines={2}
+                    >
+                      {orderItem.item.title}
+                    </Text>
+
+                    <Text
+                      style={{
+                        color: theme.textSecondary,
+                        fontSize: 13,
+                        fontFamily: 'PoppinsMedium',
+                        marginBottom: 6,
                       }}
                     >
-                      ${formatPrice(orderItem.total)}
+                      Quantity: {orderItem.quantity}
                     </Text>
+
+                    {/* Price */}
+                    <View
+                      style={{
+                        alignSelf: 'flex-start',
+                        backgroundColor: theme.primary + '20',
+                        paddingHorizontal: 10,
+                        paddingVertical: 4,
+                        borderRadius: 10,
+                        marginTop: 'auto',
+                      }}
+                    >
+                      <Text
+                        style={{
+                          fontSize: 17,
+                          fontFamily: 'PoppinsMedium',
+                          color: theme.primary,
+                        }}
+                      >
+                        ${formatPrice(orderItem.total)}
+                      </Text>
+                    </View>
                   </View>
                 </View>
-                {index < (order?.items?.length || 0) - 1 && (
-                  <View
-                    style={{
-                      height: 1,
-                      backgroundColor: theme.border,
-                      marginHorizontal: 16,
-                    }}
-                  />
-                )}
+
+                {/* Properties */}
+                <View>{renderSelectedProperties(orderItem)}</View>
               </View>
             ))}
           </View>

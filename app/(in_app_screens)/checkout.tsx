@@ -18,6 +18,8 @@ import {
   Percent,
   CheckCircle2,
   Package,
+  X,
+  Plus,
 } from 'lucide-react-native';
 import { useAppStore } from '@/stores/appStore';
 import * as images from '@/constants/images';
@@ -33,6 +35,8 @@ import {
   PaymentStatus,
   TransactionStatus,
   TransactionType,
+  CartItem,
+  AddOn,
 } from '@/types/appTypes';
 import { formatPrice, handleImageSrc } from '@/utils/helpers';
 
@@ -51,6 +55,165 @@ export default function CheckoutScreen() {
   });
   const [showOrderModal, setShowOrderModal] = useState(false);
 
+  // Calculate item total including addons
+  const calculateItemTotal = (item: CartItem) => {
+    const basePrice = item.item.sale_price ?? item.item.price;
+    let addonTotal = 0;
+
+    if (item.selectedProperties) {
+      Object.values(item.selectedProperties).forEach((value) => {
+        if (Array.isArray(value)) {
+          value.forEach((v) => {
+            if (typeof v === 'object' && v !== null && 'price' in v) {
+              addonTotal += (v as AddOn).price;
+            }
+          });
+        }
+      });
+    }
+
+    return (basePrice + addonTotal) * item.quantity;
+  };
+
+  // Render selected properties for an item
+  const renderSelectedProperties = (item: CartItem) => {
+    if (
+      !item.selectedProperties ||
+      Object.keys(item.selectedProperties).length === 0
+    ) {
+      return null;
+    }
+
+    const properties = item.item.custom_properties;
+    if (!properties) return null;
+
+    const elements: React.ReactNode[] = [];
+
+    Object.entries(item.selectedProperties).forEach(([key, value]) => {
+      const property = properties[key];
+      if (!property) return;
+
+      // Handle different property types
+      if (property.type === 'exclude' || property.type === 'multiexclude') {
+        // Show excluded items
+        if (Array.isArray(value) && value.length > 0) {
+          elements.push(
+            <View
+              key={key}
+              className="flex-row flex-wrap items-center gap-1 mt-2"
+            >
+              <Text
+                className="text-xs"
+                style={{
+                  color: theme.textSecondary,
+                  fontFamily: 'PoppinsMedium',
+                }}
+              >
+                No:
+              </Text>
+              {(value as string[]).map((excluded, idx) => (
+                <View
+                  key={idx}
+                  className="flex-row items-center gap-0.5 px-1.5 py-0.5 rounded"
+                  style={{ backgroundColor: theme.error + '15' }}
+                >
+                  <X size={8} color={theme.error} strokeWidth={3} />
+                  <Text
+                    className="text-[10px] capitalize"
+                    style={{ color: theme.error, fontFamily: 'PoppinsMedium' }}
+                  >
+                    {excluded}
+                  </Text>
+                </View>
+              ))}
+            </View>
+          );
+        }
+      } else if (property.type === 'addon') {
+        // Show addons
+        if (Array.isArray(value) && value.length > 0) {
+          elements.push(
+            <View
+              key={key}
+              className="flex-row flex-wrap items-center gap-1 mt-2"
+            >
+              <Text
+                className="text-xs"
+                style={{
+                  color: theme.textSecondary,
+                  fontFamily: 'PoppinsMedium',
+                }}
+              >
+                Add-ons:
+              </Text>
+              {(value as AddOn[]).map((addon, idx) => (
+                <View
+                  key={idx}
+                  className="flex-row items-center gap-0.5 px-1.5 py-0.5 rounded"
+                  style={{ backgroundColor: theme.success + '15' }}
+                >
+                  <Plus size={8} color={theme.success} strokeWidth={3} />
+                  <Text
+                    className="text-[10px]"
+                    style={{
+                      color: theme.success,
+                      fontFamily: 'PoppinsMedium',
+                    }}
+                  >
+                    {addon.name} (+${addon.price.toFixed(2)})
+                  </Text>
+                </View>
+              ))}
+            </View>
+          );
+        }
+      } else if (
+        property.type === 'select' ||
+        property.type === 'multiselect'
+      ) {
+        // Show selected options
+        const displayValue = Array.isArray(value)
+          ? (value as string[]).join(', ')
+          : String(value);
+
+        if (displayValue) {
+          elements.push(
+            <View key={key} className="flex-row items-center gap-1 mt-2">
+              <View
+                className="flex-row items-center gap-1 px-1.5 py-0.5 rounded"
+                style={{ backgroundColor: theme.primary + '15' }}
+              >
+                <Text
+                  className="text-[10px]"
+                  style={{ color: theme.primary, fontFamily: 'PoppinsMedium' }}
+                >
+                  {property.label}:
+                </Text>
+                <Text
+                  className="text-[10px] capitalize"
+                  style={{ color: theme.primary, fontFamily: 'PoppinsMedium' }}
+                >
+                  {displayValue}
+                </Text>
+              </View>
+            </View>
+          );
+        }
+      }
+    });
+
+    if (elements.length === 0) return null;
+
+    return (
+      <View
+        className="mt-2 pt-2 border-t"
+        style={{ borderTopColor: theme.border + '20' }}
+      >
+        <View className="flex-row flex-wrap gap-1">{elements}</View>
+      </View>
+    );
+  };
+
   const handleReserveOrder = async () => {
     if (!customerInfo.name?.trim() || !customerInfo.phone?.trim()) {
       showAlert(
@@ -61,11 +224,10 @@ export default function CheckoutScreen() {
       return;
     }
     const items = cart.map((cart_item) => ({
-      item: cart_item.offer,
+      item: cart_item.item,
       quantity: cart_item.quantity,
-      total:
-        (cart_item.offer.sale_price ?? cart_item.offer.price) *
-        cart_item.quantity,
+      selectedProperties: cart_item.selectedProperties,
+      total: calculateItemTotal(cart_item),
     }));
 
     const orderData = {
@@ -88,6 +250,8 @@ export default function CheckoutScreen() {
       created_by: user?.id,
       provider_id: items[0]?.item.provider_id || '',
       tenant_id: items[0]?.item.tenant_id || '',
+      special_instructions:
+        customerInfo.specialInstructions || 'no instructions',
     };
 
     const result = await createOrder(orderData);
@@ -97,9 +261,9 @@ export default function CheckoutScreen() {
       // Update budget store with the new expense according to each cart item category
       cart.forEach(async (item) => {
         await addExpense(
-          categories.find((cat) => cat.id === item.offer.category_id)?.name ||
+          categories.find((cat) => cat.id === item.item.category_id)?.name ||
             'Uncategorized',
-          item.offer.sale_price ?? item.offer.price * item.quantity
+          calculateItemTotal(item)
         );
       });
       clearCart();
@@ -120,11 +284,12 @@ export default function CheckoutScreen() {
   const deliveryFee = 0.0;
   const subtotal = getCartTotal();
   const total = subtotal + deliveryFee;
-  const totalSavings = cart.reduce(
-    (sum, item) =>
-      sum + (item.offer.price - (item.offer.sale_price ?? 0)) * item.quantity,
-    0
-  );
+  const totalSavings = cart.reduce((sum, item) => {
+    const baseDiscount =
+      (item.item.price - (item.item.sale_price ?? item.item.price)) *
+      item.quantity;
+    return sum + baseDiscount;
+  }, 0);
 
   const isReserveDisabled =
     !customerInfo.name?.trim() ||
@@ -188,129 +353,143 @@ export default function CheckoutScreen() {
           </View>
 
           <View className="gap-3">
-            {cart.map((item) => (
-              <View
-                key={item.id}
-                className="flex-row p-4 rounded-2xl border shadow-sm"
-                style={{
-                  backgroundColor: theme.card,
-                  borderColor: theme.border,
-                }}
-              >
-                <View className="relative">
-                  <Image
-                    source={
-                      item.offer.main_image
-                        ? { uri: handleImageSrc(item.offer.main_image) }
-                        : images.OFFER_PLACEHOLDER_IMAGE
-                    }
-                    className="w-[70px] h-[70px] rounded-xl"
-                  />
-                  {item.offer.sale_price &&
-                    item.offer.sale_price < item.offer.price && (
-                      <View
-                        className="absolute -top-1 -right-1 px-1.5 py-0.5 rounded-md"
-                        style={{ backgroundColor: theme.success }}
-                      >
-                        <Text
-                          className="text-white text-[10px]"
-                          style={{ fontFamily: 'FredokaMedium' }}
-                        >
-                          SALE
-                        </Text>
-                      </View>
-                    )}
-                </View>
+            {cart.map((item) => {
+              const itemTotal = calculateItemTotal(item);
+              const hasCustomizations =
+                item.selectedProperties &&
+                Object.keys(item.selectedProperties).length > 0;
 
-                <View className="flex-1 ml-4 justify-between">
-                  <View>
-                    <Text
-                      className="text-base leading-5 mb-2"
-                      style={{ color: theme.text, fontFamily: 'PoppinsMedium' }}
-                      numberOfLines={2}
-                    >
-                      {item.offer.title}
-                    </Text>
-                    <View
-                      style={{
-                        flexDirection: 'row',
-                        alignItems: 'center',
-                        gap: 4,
-                      }}
-                    >
-                      {item.offer.sale_price && (
+              return (
+                <View
+                  key={item.id}
+                  className="p-4 rounded-2xl border shadow-sm"
+                  style={{
+                    backgroundColor: theme.card,
+                    borderColor: theme.border,
+                  }}
+                >
+                  <View className="flex-row">
+                    <View className="relative">
+                      <Image
+                        source={
+                          item.item.main_image
+                            ? { uri: handleImageSrc(item.item.main_image) }
+                            : images.OFFER_PLACEHOLDER_IMAGE
+                        }
+                        className="w-[70px] h-[70px] rounded-xl"
+                      />
+                      {item.item.sale_price &&
+                        item.item.sale_price < item.item.price && (
+                          <View
+                            className="absolute -top-1 -right-1 px-1.5 py-0.5 rounded-md"
+                            style={{ backgroundColor: theme.success }}
+                          >
+                            <Text
+                              className="text-white text-[10px]"
+                              style={{ fontFamily: 'FredokaMedium' }}
+                            >
+                              SALE
+                            </Text>
+                          </View>
+                        )}
+                    </View>
+
+                    <View className="flex-1 ml-4 justify-between">
+                      <View>
                         <Text
+                          className="text-base leading-5 mb-2"
                           style={{
-                            fontSize: 11,
-                            color: theme.textSecondary,
-                            textDecorationLine: 'line-through',
+                            color: theme.text,
                             fontFamily: 'PoppinsMedium',
                           }}
+                          numberOfLines={2}
                         >
-                          ${item.offer.price}
+                          {item.item.title}
                         </Text>
-                      )}
-                      <Text
-                        style={{
-                          fontSize: 15,
-                          fontFamily: 'PoppinsMedium',
-                          color: theme.primary,
-                          letterSpacing: -0.5,
-                        }}
-                      >
-                        $
-                        {formatPrice(item.offer.sale_price ?? item.offer.price)}
-                      </Text>
-                    </View>
-                  </View>
-
-                  <View className="flex-row justify-between items-center">
-                    <View
-                      className="px-2 py-1 rounded-lg"
-                      style={{ backgroundColor: theme.backgroundSecondary }}
-                    >
-                      <Text
-                        className="text-xs"
-                        style={{
-                          color: theme.textSecondary,
-                          fontFamily: 'PoppinsMedium',
-                        }}
-                      >
-                        Qty: {item.quantity}
-                      </Text>
-                    </View>
-
-                    <View className="items-end">
-                      {item.offer.sale_price &&
-                        item.offer.sale_price < item.offer.price && (
+                        <View
+                          style={{
+                            flexDirection: 'row',
+                            alignItems: 'center',
+                            gap: 4,
+                          }}
+                        >
+                          {item.item.sale_price && (
+                            <Text
+                              style={{
+                                fontSize: 11,
+                                color: theme.textSecondary,
+                                textDecorationLine: 'line-through',
+                                fontFamily: 'PoppinsMedium',
+                              }}
+                            >
+                              ${item.item.price}
+                            </Text>
+                          )}
                           <Text
-                            className="text-xs line-through"
                             style={{
-                              color: theme.textTertiary,
+                              fontSize: 15,
+                              fontFamily: 'PoppinsMedium',
+                              color: theme.primary,
+                              letterSpacing: -0.5,
+                            }}
+                          >
+                            $
+                            {formatPrice(
+                              item.item.sale_price ?? item.item.price
+                            )}
+                          </Text>
+                        </View>
+                      </View>
+
+                      <View className="flex-row justify-between items-center">
+                        <View
+                          className="px-2 py-1 rounded-lg"
+                          style={{ backgroundColor: theme.backgroundSecondary }}
+                        >
+                          <Text
+                            className="text-xs"
+                            style={{
+                              color: theme.textSecondary,
                               fontFamily: 'PoppinsMedium',
                             }}
                           >
-                            ${(item.offer.price * item.quantity).toFixed(2)}
+                            Qty: {item.quantity}
                           </Text>
-                        )}
-                      <Text
-                        className="text-lg "
-                        style={{
-                          color: theme.primary,
-                          fontFamily: 'PoppinsMedium',
-                        }}
-                      >
-                        $
-                        {(
-                          (item.offer.sale_price ?? item.offer.price) *
-                          item.quantity
-                        ).toFixed(2)}
-                      </Text>
+                        </View>
+
+                        <View className="items-end">
+                          {!hasCustomizations &&
+                            item.item.sale_price &&
+                            item.item.sale_price < item.item.price && (
+                              <Text
+                                className="text-xs line-through"
+                                style={{
+                                  color: theme.textTertiary,
+                                  fontFamily: 'PoppinsMedium',
+                                }}
+                              >
+                                ${(item.item.price * item.quantity).toFixed(2)}
+                              </Text>
+                            )}
+                          <Text
+                            className="text-lg"
+                            style={{
+                              color: theme.primary,
+                              fontFamily: 'PoppinsMedium',
+                            }}
+                          >
+                            ${itemTotal.toFixed(2)}
+                          </Text>
+                        </View>
+                      </View>
                     </View>
                   </View>
+
+                  {/* Selected Properties */}
+                  {renderSelectedProperties(item)}
                 </View>
-              </View>
-            ))}
+              );
+            })}
           </View>
         </View>
 
@@ -383,31 +562,6 @@ export default function CheckoutScreen() {
               />
             </View>
 
-            {/* <View
-              className="flex-row items-center rounded-2xl border px-4 py-3 gap-3 shadow-sm"
-              style={{
-                backgroundColor: theme.card,
-                borderColor: theme.border,
-              }}
-            >
-              <View
-                className="w-11 h-11 rounded-xl justify-center items-center"
-                style={{ backgroundColor: `${theme.info}15` }}
-              >
-                <Clock color={theme.info} size={20} />
-              </View>
-              <TextInput
-                className="flex-1 text-base py-2"
-                style={{ color: theme.text, fontFamily: 'Inter-Regular' }}
-                placeholder="Preferred Pickup Time (Optional)"
-                placeholderTextColor={theme.inputPlaceholder}
-                value={customerInfo.pickupTime}
-                onChangeText={(text) =>
-                  setCustomerInfo({ ...customerInfo, pickupTime: text })
-                }
-              />
-            </View> */}
-
             <View
               className="flex-row items-start rounded-2xl border px-4 py-4 gap-3 shadow-sm"
               style={{
@@ -476,7 +630,7 @@ export default function CheckoutScreen() {
                 Subtotal
               </Text>
               <Text
-                className="text-base "
+                className="text-base"
                 style={{ color: theme.text, fontFamily: 'PoppinsMedium' }}
               >
                 ${subtotal.toFixed(2)}
@@ -495,7 +649,7 @@ export default function CheckoutScreen() {
                   Service Fee
                 </Text>
                 <Text
-                  className="text-base "
+                  className="text-base"
                   style={{ color: theme.text, fontFamily: 'PoppinsMedium' }}
                 >
                   ${deliveryFee.toFixed(2)}
@@ -521,7 +675,7 @@ export default function CheckoutScreen() {
                   You're saving
                 </Text>
                 <Text
-                  className="text-lg "
+                  className="text-lg"
                   style={{ color: theme.success, fontFamily: 'PoppinsMedium' }}
                 >
                   ${totalSavings.toFixed(2)}
@@ -540,7 +694,7 @@ export default function CheckoutScreen() {
                 Total Amount
               </Text>
               <Text
-                className="text-3xl "
+                className="text-3xl"
                 style={{ color: theme.primary, fontFamily: 'PoppinsMedium' }}
               >
                 ${total.toFixed(2)}
@@ -577,7 +731,7 @@ export default function CheckoutScreen() {
               <CheckCircle2 color="#FFFFFF" size={20} />
             )}
             <Text
-              className="text-lg "
+              className="text-lg"
               style={{
                 color: isReserveDisabled ? theme.textSecondary : '#FFFFFF',
                 fontFamily: 'FredokaMedium',

@@ -79,7 +79,7 @@ class OrdersApiImpl implements OrdersApi {
         '/transaction/order',
         orderData
       );
-      console.log('createOrder response_api:', response_api);
+
       const responseBody = response_api.data;
       if (responseBody.success) {
         return {
@@ -103,8 +103,6 @@ class OrdersApiImpl implements OrdersApi {
   }
   async confirmOrder(transaction_id: string, tenant_id: string) {
     try {
-      console.log('t_id', tenant_id);
-      console.log('trx_id', transaction_id);
       const response_api = await this.transaction_api.post(
         `/transaction/${transaction_id}/confirm`,
         {},

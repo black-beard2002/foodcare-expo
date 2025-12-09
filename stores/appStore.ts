@@ -1,8 +1,13 @@
-import { CartItem, Category, Offer, Restaurant } from '@/types/appTypes';
+import {
+  CartItem,
+  Category,
+  Offer,
+  Restaurant,
+  SelectedProperties,
+} from '@/types/appTypes';
 import { categoriesApi, offersApi } from '@/api';
 import { create } from 'zustand';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useAuthStore } from './authStore';
 import NetInfo from '@react-native-community/netinfo';
 
 const STORAGE_KEYS = {
@@ -58,7 +63,11 @@ interface AppState {
   ) => Promise<{ success: boolean; data?: Category; message?: string }>;
 
   // Optimistic Cart Actions with offline queue
-  addToCart: (offer: Offer, quantity?: number) => Promise<void>;
+  addToCart: (
+    offer: Offer,
+    quantity?: number,
+    selectedProperties?: SelectedProperties
+  ) => Promise<void>;
   updateCartItem: (itemId: string, quantity: number) => Promise<void>;
   removeFromCart: (itemId: string) => Promise<void>;
   clearCart: () => Promise<void>;
@@ -66,6 +75,14 @@ interface AppState {
   // Cart utilities
   getCartTotal: () => number;
   getCartItemCount: () => number;
+  findCartItem: (
+    offerId: string,
+    selectedProperties?: SelectedProperties
+  ) => CartItem | undefined;
+  generateCartItemId: (
+    offerId: string,
+    selectedProperties?: SelectedProperties
+  ) => string;
 
   // Offline queue management
   addPendingAction: (
@@ -80,6 +97,68 @@ interface AppState {
   isCacheValid: () => boolean;
   clearCache: () => Promise<void>;
 }
+
+// Helper to generate unique cart item ID based on offer and selected properties
+const generateCartItemId = (
+  offerId: string,
+  selectedProperties?: SelectedProperties
+): string => {
+  if (!selectedProperties || Object.keys(selectedProperties).length === 0) {
+    return `${offerId}-default`;
+  }
+
+  // Sort keys to ensure consistent ordering
+  const sortedKeys = Object.keys(selectedProperties).sort();
+  const propertiesString = sortedKeys
+    .map((key) => {
+      const value = selectedProperties[key];
+      // Handle different value types
+      if (Array.isArray(value)) {
+        // Sort arrays for consistent comparison
+        const sortedArray = [...value].sort((a, b) => {
+          if (typeof a === 'object' && typeof b === 'object') {
+            return JSON.stringify(a).localeCompare(JSON.stringify(b));
+          }
+          return String(a).localeCompare(String(b));
+        });
+        return `${key}:${JSON.stringify(sortedArray)}`;
+      }
+      return `${key}:${JSON.stringify(value)}`;
+    })
+    .join('|');
+
+  // Create a simple hash from the properties string
+  let hash = 0;
+  for (let i = 0; i < propertiesString.length; i++) {
+    const char = propertiesString.charCodeAt(i);
+    hash = (hash << 5) - hash + char;
+    hash = hash & hash; // Convert to 32bit integer
+  }
+
+  return `${offerId}-${Math.abs(hash).toString(36)}`;
+};
+
+// Helper to compare selected properties
+const arePropertiesEqual = (
+  props1?: SelectedProperties,
+  props2?: SelectedProperties
+): boolean => {
+  if (!props1 && !props2) return true;
+  if (!props1 || !props2) return false;
+
+  const keys1 = Object.keys(props1).sort();
+  const keys2 = Object.keys(props2).sort();
+
+  if (keys1.length !== keys2.length) return false;
+
+  return keys1.every((key) => {
+    const val1 = props1[key];
+    const val2 = props2[key];
+
+    // Deep comparison
+    return JSON.stringify(val1) === JSON.stringify(val2);
+  });
+};
 
 export const useAppStore = create<AppState>()((set, get) => ({
   offers: [],
@@ -103,14 +182,29 @@ export const useAppStore = create<AppState>()((set, get) => ({
   setError: (error) => set({ error }),
   setOffline: (isOffline) => set({ isOffline }),
 
+  // Generate unique cart item ID
+  generateCartItemId: (offerId, selectedProperties) =>
+    generateCartItemId(offerId, selectedProperties),
+
+  // Find cart item with matching offer and properties
+  findCartItem: (offerId, selectedProperties) => {
+    const { cart } = get();
+    return cart.find(
+      (item) =>
+        item.item.id === offerId &&
+        arePropertiesEqual(item.selectedProperties, selectedProperties)
+    );
+  },
+
   // Smart data persistence with batching
   persistData: async () => {
-    const { offers, categories, lastSync, pendingActions } = get();
+    const { offers, categories, cart, lastSync, pendingActions } = get();
 
     try {
       const dataToStore: [string, string][] = [
         [STORAGE_KEYS.OFFERS, JSON.stringify(offers)],
         [STORAGE_KEYS.CATEGORIES, JSON.stringify(categories)],
+        [STORAGE_KEYS.CART, JSON.stringify(cart)],
         [STORAGE_KEYS.LAST_SYNC, String(lastSync || Date.now())],
         [STORAGE_KEYS.PENDING_ACTIONS, JSON.stringify(pendingActions)],
       ];
@@ -127,21 +221,20 @@ export const useAppStore = create<AppState>()((set, get) => ({
       const keys = [
         STORAGE_KEYS.OFFERS,
         STORAGE_KEYS.CATEGORIES,
+        STORAGE_KEYS.CART,
         STORAGE_KEYS.LAST_SYNC,
         STORAGE_KEYS.PENDING_ACTIONS,
       ];
 
       const data = await AsyncStorage.multiGet(keys);
-
-      // Convert to a proper map
       const dataMap = new Map(data);
 
       const cachedOffers = dataMap.get(STORAGE_KEYS.OFFERS);
       const cachedCategories = dataMap.get(STORAGE_KEYS.CATEGORIES);
+      const cachedCart = dataMap.get(STORAGE_KEYS.CART);
       const lastSyncStr = dataMap.get(STORAGE_KEYS.LAST_SYNC);
       const pendingActionsStr = dataMap.get(STORAGE_KEYS.PENDING_ACTIONS);
 
-      // Parse with error handling for each item
       if (cachedOffers) {
         try {
           set({ offers: JSON.parse(cachedOffers) });
@@ -155,6 +248,14 @@ export const useAppStore = create<AppState>()((set, get) => ({
           set({ categories: JSON.parse(cachedCategories) });
         } catch (e) {
           console.error('Error parsing cached categories:', e);
+        }
+      }
+
+      if (cachedCart) {
+        try {
+          set({ cart: JSON.parse(cachedCart) });
+        } catch (e) {
+          console.error('Error parsing cached cart:', e);
         }
       }
 
@@ -174,14 +275,13 @@ export const useAppStore = create<AppState>()((set, get) => ({
       return false;
     }
   },
-  // Check if cache is still valid
+
   isCacheValid: () => {
     const { lastSync } = get();
     if (!lastSync) return false;
     return Date.now() - lastSync < CACHE_DURATION;
   },
 
-  // Clear all cached data
   clearCache: async () => {
     try {
       await AsyncStorage.multiRemove([
@@ -195,6 +295,7 @@ export const useAppStore = create<AppState>()((set, get) => ({
       console.error('Error clearing cache:', error);
     }
   },
+
   fetchCategory: async (id: string) => {
     try {
       const response = await categoriesApi.getCategoryById(id);
@@ -209,7 +310,6 @@ export const useAppStore = create<AppState>()((set, get) => ({
       }
     } catch (error) {
       console.log('Failed to fetch category');
-
       set({
         error: 'Failed to fetch category',
         isLoading: false,
@@ -219,11 +319,9 @@ export const useAppStore = create<AppState>()((set, get) => ({
     }
   },
 
-  // Network-aware category fetching
   fetchCategories: async (forceRefresh = false) => {
     const { isCacheValid, loadCachedData, persistData } = get();
 
-    // Use cache if valid and not forcing refresh
     if (!forceRefresh && isCacheValid()) {
       console.log('Using cached categories');
       return;
@@ -256,7 +354,6 @@ export const useAppStore = create<AppState>()((set, get) => ({
     }
   },
 
-  // Network-aware offers fetching
   fetchOffers: async (forceRefresh = false) => {
     const { isCacheValid, loadCachedData, persistData } = get();
 
@@ -269,7 +366,7 @@ export const useAppStore = create<AppState>()((set, get) => ({
 
     try {
       const response = await offersApi.getOffers();
-      console.log('Fetched offers from network', response);
+
       if (response.success && response.data) {
         set({
           offers: response.data,
@@ -291,44 +388,50 @@ export const useAppStore = create<AppState>()((set, get) => ({
     }
   },
 
-  // Smart refresh with parallel fetching
   refreshData: async (forceRefresh = false) => {
     const { fetchCategories, fetchOffers, syncPendingActions, isOffline } =
       get();
     console.log('Refreshing data...');
-    // Sync pending actions first if coming back online
+
     if (!isOffline) {
       await syncPendingActions();
     }
 
-    // Fetch data in parallel for better performance
     await Promise.allSettled([
       fetchCategories(forceRefresh),
       fetchOffers(forceRefresh),
     ]);
   },
 
-  // Optimistic cart updates with offline support
-  addToCart: async (offer, quantity = 1) => {
-    const { cart, isOffline, addPendingAction, persistData } = get();
-    const existingItem = cart.find((item) => item.offer.id === offer.id);
+  // Updated addToCart with selectedProperties support
+  addToCart: async (offer, quantity = 1, selectedProperties) => {
+    const { cart, isOffline, addPendingAction, persistData, findCartItem } =
+      get();
+
+    // Find existing cart item with same offer and properties
+    const existingItem = findCartItem(offer.id, selectedProperties);
 
     if (existingItem) {
+      // Update quantity of existing item
       set({
         cart: cart.map((item) =>
-          item.offer.id === offer.id
+          item.item.id === offer.id &&
+          arePropertiesEqual(item.selectedProperties, selectedProperties)
             ? { ...item, quantity: item.quantity + quantity }
             : item
         ),
       });
     } else {
+      // Create new cart item with unique ID
+      const cartItemId = generateCartItemId(offer.id, selectedProperties);
       set({
         cart: [
           ...cart,
           {
-            id: `${offer.id}-${Date.now()}`,
-            offer,
+            id: cartItemId,
+            item: offer,
             quantity,
+            selectedProperties,
           },
         ],
       });
@@ -336,11 +439,10 @@ export const useAppStore = create<AppState>()((set, get) => ({
 
     await persistData();
 
-    // Queue action if offline
     if (isOffline) {
       await addPendingAction({
         type: 'ADD_TO_CART',
-        payload: { offerId: offer.id, quantity },
+        payload: { offerId: offer.id, quantity, selectedProperties },
       });
     }
   },
@@ -393,10 +495,25 @@ export const useAppStore = create<AppState>()((set, get) => ({
 
   getCartTotal: () => {
     const { cart } = get();
-    return cart.reduce(
-      (total, item) => total + (item.offer.sale_price ?? 0) * item.quantity,
-      0
-    );
+    return cart.reduce((total, item) => {
+      const itemPrice = item.item.sale_price ?? item.item.price;
+
+      // Calculate addon prices if present
+      let addonTotal = 0;
+      if (item.selectedProperties) {
+        Object.values(item.selectedProperties).forEach((value) => {
+          if (Array.isArray(value)) {
+            value.forEach((v) => {
+              if (typeof v === 'object' && 'price' in v) {
+                addonTotal += v.price;
+              }
+            });
+          }
+        });
+      }
+
+      return total + (itemPrice + addonTotal) * item.quantity;
+    }, 0);
   },
 
   getCartItemCount: () => {
@@ -404,7 +521,6 @@ export const useAppStore = create<AppState>()((set, get) => ({
     return cart.reduce((count, item) => count + item.quantity, 0);
   },
 
-  // Pending actions management
   addPendingAction: async (action) => {
     const { pendingActions } = get();
     const newAction: PendingAction = {
@@ -429,16 +545,12 @@ export const useAppStore = create<AppState>()((set, get) => ({
 
     try {
       // Process pending actions here
-      // This would typically involve API calls
-
       set({
         pendingActions: [],
         syncStatus: 'success',
       });
 
       await AsyncStorage.removeItem(STORAGE_KEYS.PENDING_ACTIONS);
-
-      // Reset status after delay
       setTimeout(() => set({ syncStatus: 'idle' }), 2000);
     } catch (error) {
       console.error('Error syncing pending actions:', error);
@@ -447,7 +559,6 @@ export const useAppStore = create<AppState>()((set, get) => ({
     }
   },
 
-  // Initialize network listener
   initNetworkListener: () => {
     NetInfo.addEventListener((state) => {
       const isOnline = state.isConnected && state.isInternetReachable;
@@ -455,7 +566,6 @@ export const useAppStore = create<AppState>()((set, get) => ({
 
       set({ isOffline: !isOnline });
 
-      // If coming back online, sync data
       if (wasOffline && isOnline) {
         console.log('Back online, syncing data...');
         get().refreshData(true);
