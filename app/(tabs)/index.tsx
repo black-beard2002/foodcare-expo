@@ -325,7 +325,7 @@ const ModernCategoryChip = ({
     activeOpacity={0.7}
     onPress={() => {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-      router.push(`/(tabs)/categories?categoryId=${item.id}`);
+      router.push(`/categories?categoryId=${item.id}`);
     }}
   >
     <View
@@ -411,7 +411,7 @@ const EnhancedNearYouCard = ({
       activeOpacity={0.9}
       onPress={() => {
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-        router.push(`/(in_app_screens)/offer-details?id=${offer.id}`);
+        router.push(`/offer-details?id=${offer.id}`);
       }}
     >
       <View style={{ position: 'relative' }}>
@@ -508,13 +508,13 @@ const EnhancedNearYouCard = ({
         </Text>
         <View className="flex flex-row mb-2 items-center justify-center gap-1">
           <ChefHat fill={theme.primary} color={theme.primary} size={16} />
-          <View className="flex flex-row items-center justify-center gap-4">
+          <View className="flex flex-row items-center justify-center gap-4 overflow-hidden">
             <Text
               style={{
                 color: theme.textSecondary,
                 fontFamily: 'PoppinsMedium',
               }}
-              className="line-clamp-2 text-sm font-semibold"
+              className="line-clamp-1 truncate text-sm font-semibold"
             >
               {offer.provider?.name}
             </Text>
@@ -548,7 +548,7 @@ const EnhancedNearYouCard = ({
                         ? 'underline'
                         : 'none',
                   }}
-                  className="line-clamp-2 text-sm font-semibold"
+                  className="line-clamp-1 truncate text-sm font-semibold"
                 >
                   {offer.provider?.addresses[0].street.concat(
                     `, ${offer.provider?.addresses[0].city}`
@@ -825,9 +825,7 @@ const DefaultOfferCard = ({
         shadowRadius: 12,
         elevation: 5,
       }}
-      onPress={() =>
-        router.push(`/(in_app_screens)/offer-details?id=${offer.id}`)
-      }
+      onPress={() => router.push(`/offer-details?id=${offer.id}`)}
       activeOpacity={0.95}
     >
       {/* Image Section with Enhanced Overlay */}

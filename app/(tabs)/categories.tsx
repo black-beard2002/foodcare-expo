@@ -5,7 +5,7 @@ import { useAppStore } from '@/stores/appStore';
 import { useTheme } from '@/hooks/useTheme';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Sparkles } from 'lucide-react-native';
-import { Offer } from '@/types/appTypes';
+import { Category, Offer } from '@/types/appTypes';
 import {
   formatPrice,
   getDiscountPercentage,
@@ -45,14 +45,20 @@ export default function CategoriesScreen() {
     ? offers.filter((offer) => offer.category_id === selectedCategory)
     : offers;
 
-  const renderCategoryItem = ({ item: category }: { item: any }) => (
+  const renderCategoryItem = ({ item: category }: { item: Category }) => (
     <TouchableOpacity
       className="w-28 h-28 rounded-2xl p-1 border-2"
       style={{
         backgroundColor:
-          selectedCategory === category.id ? theme.primaryLight : theme.card,
+          selectedCategory === category.id ||
+          (category.id === 'all' && selectedCategory === null)
+            ? theme.primaryLight
+            : theme.card,
         borderColor:
-          selectedCategory === category.id ? theme.primary : theme.border,
+          selectedCategory === category.id ||
+          (category.id === 'all' && selectedCategory === null)
+            ? theme.primary
+            : theme.border,
         shadowColor: theme.shadow,
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.08,
@@ -60,9 +66,11 @@ export default function CategoriesScreen() {
         elevation: 3,
       }}
       onPress={() =>
-        setSelectedCategory(
-          selectedCategory === category.id ? null : category.id
-        )
+        category.id === 'all'
+          ? setSelectedCategory(null)
+          : setSelectedCategory(
+              selectedCategory === category.id ? null : category.id
+            )
       }
       activeOpacity={0.7}
     >
@@ -77,7 +85,7 @@ export default function CategoriesScreen() {
       />
       <View className="flex-1 justify-start">
         <Text
-          className="text-sm  text-center mb-0.5"
+          className="text-sm text-center mb-0.5"
           style={{ color: theme.text, fontFamily: 'PoppinsMedium' }}
         >
           {category.name}
@@ -210,7 +218,7 @@ export default function CategoriesScreen() {
 
       <View className="mb-6">
         <FlatList
-          data={categories}
+          data={[{ id: 'all', name: 'All' }, ...categories]}
           renderItem={renderCategoryItem}
           keyExtractor={(item) => item.id}
           horizontal

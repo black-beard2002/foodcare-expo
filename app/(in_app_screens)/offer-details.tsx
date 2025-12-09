@@ -46,9 +46,17 @@ import {
   Sprout,
   BookCheck,
   Flame,
+  Check,
+  ChevronDown,
 } from 'lucide-react-native';
 import { useAppStore } from '@/stores/appStore';
-import { Offer, Address } from '@/types/appTypes';
+import {
+  Offer,
+  Address,
+  SelectedProperties,
+  CustomProperty,
+  AddOn,
+} from '@/types/appTypes';
 import { useTheme } from '@/hooks/useTheme';
 import { useFavoritesStore } from '@/stores/favoritesStore';
 import { useRecentlyViewedStore } from '@/stores/recentlyViewedStore';
@@ -71,8 +79,15 @@ export default function OfferDetailsScreen() {
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [showLocationsModal, setShowLocationsModal] = useState(false);
   const [showProviderModal, setShowProviderModal] = useState(false);
+  const [selectedProperties, setSelectedProperties] =
+    useState<SelectedProperties>({});
+  const [showPropertyModal, setShowPropertyModal] = useState(false);
+  const [activeProperty, setActiveProperty] = useState<CustomProperty | null>(
+    null
+  );
 
-  const { addToCart, updateCartItem, cart, offers } = useAppStore();
+  const { addToCart, updateCartItem, cart, offers, findCartItem } =
+    useAppStore();
   const { addToRecentlyViewed } = useRecentlyViewedStore();
   const { showAlert } = useAlert();
   const {
@@ -95,31 +110,55 @@ export default function OfferDetailsScreen() {
 
   const carouselRef = useRef<FlatList>(null);
 
-  // Get all images (main image + additional images)
+  // Get all images
   const allImages = useMemo(() => {
     if (!offer) return [];
     const imageList = [];
-
-    if (offer.main_image) {
-      imageList.push(offer.main_image);
-    }
-
-    if (offer.images && Array.isArray(offer.images)) {
+    if (offer.main_image) imageList.push(offer.main_image);
+    if (offer.images && Array.isArray(offer.images))
       imageList.push(...offer.images);
-    }
-
     return imageList;
   }, [offer]);
 
-  const item = useMemo(
-    () =>
-      cart.find((cartItem) => cartItem.offer.id === id) || {
-        id: `${offer?.id}-${Date.now()}`,
-        offer: offer!,
-        quantity: 0,
-      },
-    [cart, id, offer]
-  );
+  // Find current cart item with matching properties
+  const currentCartItem = useMemo(() => {
+    if (!offer) return null;
+    return findCartItem(offer.id, selectedProperties);
+  }, [offer, selectedProperties, findCartItem, cart]);
+
+  // Calculate total price including addons
+  const calculateTotalPrice = useCallback(() => {
+    if (!offer) return 0;
+
+    const basePrice = offer.sale_price ?? offer.price;
+    let addonPrice = 0;
+
+    Object.values(selectedProperties).forEach((value) => {
+      if (Array.isArray(value)) {
+        value.forEach((v) => {
+          if (typeof v === 'object' && 'price' in v) {
+            addonPrice += (v as AddOn).price;
+          }
+        });
+      }
+    });
+
+    return basePrice + addonPrice;
+  }, [offer, selectedProperties]);
+
+  // Handle property selection
+  const handlePropertySelect = useCallback((property: CustomProperty) => {
+    setActiveProperty(property);
+    setShowPropertyModal(true);
+  }, []);
+
+  // Update selected property value
+  const updatePropertyValue = useCallback((propertyId: string, value: any) => {
+    setSelectedProperties((prev) => ({
+      ...prev,
+      [propertyId]: value,
+    }));
+  }, []);
 
   // Format pickup time
   const formatPickupTime = (dateString?: string) => {
@@ -167,18 +206,16 @@ export default function OfferDetailsScreen() {
       message
     )}`;
 
-    // Try to open WhatsApp directly
     Linking.openURL(url).catch(() => {
-      // If it fails, try the web fallback
       const webUrl = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(
         message
       )}`;
-
       Linking.openURL(webUrl).catch(() => {
         showAlert('Error', 'Failed to open WhatsApp', 'error');
       });
     });
   };
+
   // Carousel handlers
   const handleImageSelect = useCallback((index: number) => {
     setSelectedImageIndex(index);
@@ -202,11 +239,32 @@ export default function OfferDetailsScreen() {
 
   useEffect(() => {
     const foundOffer = offers.find((o) => o.id === id);
-    if (foundOffer) addToRecentlyViewed(foundOffer);
-    setOffer(foundOffer || null);
-
-    // Trigger animations when offer is found
     if (foundOffer) {
+      addToRecentlyViewed(foundOffer);
+      setOffer(foundOffer);
+
+      // Initialize default property selections
+      if (foundOffer.custom_properties) {
+        const defaults: SelectedProperties = {};
+        Object.entries(foundOffer.custom_properties).forEach(([key, prop]) => {
+          if (prop.type === 'select' && prop.options) {
+            if (Array.isArray(prop.options) && prop.options.length > 0) {
+              const firstOption = prop.options[0];
+              if (
+                typeof firstOption === 'string' ||
+                typeof firstOption === 'number'
+              ) {
+                defaults[key] = firstOption;
+              }
+            }
+          } else if (prop.type === 'addon' && prop.options) {
+            defaults[key] = [];
+          }
+        });
+        setSelectedProperties(defaults);
+      }
+
+      // Trigger animations
       Animated.parallel([
         Animated.sequence([
           Animated.timing(imageOpacity, {
@@ -273,14 +331,519 @@ export default function OfferDetailsScreen() {
 
   const handleAddToCart = useCallback(() => {
     if (!offer) return;
-    addToCart(offer);
+    addToCart(offer, 1, selectedProperties);
     showAlert(
       'Added to cart',
       `${offer.title} is added to your cart`,
       'success'
     );
-    // router.replace('/(tabs)');
-  }, [offer, addToCart, showAlert]);
+  }, [offer, selectedProperties, addToCart, showAlert]);
+
+  const handleUpdateQuantity = useCallback(
+    (newQuantity: number) => {
+      if (!currentCartItem) return;
+      updateCartItem(currentCartItem.id, newQuantity);
+    },
+    [currentCartItem, updateCartItem]
+  );
+
+  // Render custom properties selection UI
+  const renderCustomPropertiesSelector = useCallback(() => {
+    if (
+      !offer?.custom_properties ||
+      Object.keys(offer.custom_properties).length === 0
+    ) {
+      return null;
+    }
+
+    return (
+      <View className="mb-6">
+        <View className="flex-row items-center gap-2 mb-4">
+          <View
+            className="w-8 h-8 rounded-full items-center justify-center"
+            style={{ backgroundColor: `${theme.primary}15` }}
+          >
+            <Sparkles color={theme.primary} size={18} />
+          </View>
+          <Text
+            className="text-xl"
+            style={{ color: theme.text, fontFamily: 'FredokaMedium' }}
+          >
+            Customize Your Order
+          </Text>
+        </View>
+
+        <View className="gap-3">
+          {Object.entries(offer.custom_properties).map(([key, property]) => {
+            if (
+              property.type === 'readonly' ||
+              property.type === 'multireadonly'
+            ) {
+              return null; // Skip readonly properties
+            }
+
+            const selectedValue = selectedProperties[key];
+            let displayValue = 'Tap to customize';
+            let excludedCount = 0;
+
+            if (selectedValue !== undefined) {
+              if (Array.isArray(selectedValue)) {
+                if (selectedValue.length > 0) {
+                  if (
+                    typeof selectedValue[0] === 'object' &&
+                    'name' in selectedValue[0]
+                  ) {
+                    displayValue = selectedValue
+                      .map((v: any) => v.name)
+                      .join(', ');
+                  } else {
+                    // For exclude types, show excluded items
+                    if (
+                      property.type === 'exclude' ||
+                      property.type === 'multiexclude'
+                    ) {
+                      excludedCount = selectedValue.length;
+                      if (excludedCount > 0) {
+                        displayValue = `${excludedCount} item${
+                          excludedCount > 1 ? 's' : ''
+                        } excluded`;
+                      } else {
+                        displayValue = 'All included';
+                      }
+                    } else {
+                      displayValue = selectedValue.join(', ');
+                    }
+                  }
+                } else {
+                  if (
+                    property.type === 'exclude' ||
+                    property.type === 'multiexclude'
+                  ) {
+                    displayValue = 'All included';
+                  }
+                }
+              } else if (
+                typeof selectedValue === 'object' &&
+                'name' in selectedValue
+              ) {
+                displayValue = (selectedValue as any).name;
+              } else {
+                displayValue = String(selectedValue);
+              }
+            }
+
+            return (
+              <TouchableOpacity
+                key={key}
+                onPress={() => handlePropertySelect(property)}
+                className="rounded-2xl p-4"
+                style={{
+                  backgroundColor: theme.card,
+                  borderWidth: 1,
+                  borderColor:
+                    excludedCount > 0
+                      ? theme.error
+                      : selectedValue
+                      ? theme.primary
+                      : theme.border,
+                }}
+              >
+                <View className="flex-row items-center justify-between">
+                  <View className="flex-1">
+                    <View className="flex-row items-center gap-2 mb-1">
+                      {property.icon && (
+                        <Text style={{ fontSize: 18 }}>{property.icon}</Text>
+                      )}
+                      <Text
+                        className="text-sm uppercase tracking-wide"
+                        style={{
+                          color: theme.textSecondary,
+                          fontFamily: 'PoppinsMedium',
+                        }}
+                      >
+                        {property.label}
+                      </Text>
+                    </View>
+                    <Text
+                      className="text-base"
+                      style={{
+                        color: theme.text,
+                        fontFamily: 'PoppinsMedium',
+                      }}
+                    >
+                      {displayValue}
+                    </Text>
+                  </View>
+                  <ChevronDown color={theme.textSecondary} size={20} />
+                </View>
+              </TouchableOpacity>
+            );
+          })}
+        </View>
+      </View>
+    );
+  }, [offer, selectedProperties, theme, handlePropertySelect]);
+
+  // Render property selection modal
+  const renderPropertyModal = () => {
+    if (!activeProperty) return null;
+
+    const currentValue = selectedProperties[activeProperty.id];
+    const options = activeProperty.options;
+    const isExcludeType =
+      activeProperty.type === 'exclude' ||
+      activeProperty.type === 'multiexclude';
+
+    return (
+      <Modal
+        visible={showPropertyModal}
+        transparent={true}
+        animationType="slide"
+        onRequestClose={() => setShowPropertyModal(false)}
+      >
+        <View className="flex-1" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
+          <TouchableOpacity
+            className="flex-1"
+            activeOpacity={1}
+            onPress={() => setShowPropertyModal(false)}
+          />
+
+          <View
+            className="rounded-t-3xl p-6 max-h-[80%]"
+            style={{
+              backgroundColor: theme.background,
+              shadowColor: theme.text,
+              shadowOffset: { width: 0, height: -4 },
+              shadowOpacity: 0.2,
+              shadowRadius: 12,
+              elevation: 8,
+            }}
+          >
+            <View
+              className="flex-row justify-between items-center mb-3 pb-4"
+              style={{
+                borderBottomWidth: 1,
+                borderBottomColor: theme.border + '40',
+              }}
+            >
+              <View className="flex-1">
+                <View className="flex-row items-center gap-2">
+                  {activeProperty.icon && (
+                    <Text style={{ fontSize: 24 }}>{activeProperty.icon}</Text>
+                  )}
+                  <Text
+                    className="text-2xl"
+                    style={{ color: theme.text, fontFamily: 'FredokaMedium' }}
+                  >
+                    {activeProperty.label}
+                  </Text>
+                </View>
+                {isExcludeType && (
+                  <Text
+                    className="text-sm mt-1"
+                    style={{
+                      color: theme.textSecondary,
+                      fontFamily: 'PoppinsMedium',
+                    }}
+                  >
+                    Tap to exclude items you don't want
+                  </Text>
+                )}
+              </View>
+              <TouchableOpacity
+                onPress={() => setShowPropertyModal(false)}
+                className="w-10 h-10 rounded-2xl items-center justify-center"
+                style={{ backgroundColor: theme.card }}
+              >
+                <X color={theme.text} size={22} />
+              </TouchableOpacity>
+            </View>
+
+            <ScrollView showsVerticalScrollIndicator={false}>
+              {activeProperty.type === 'addon' && Array.isArray(options) ? (
+                // Addon selection (multiselect)
+                <View className="gap-3">
+                  {(options as AddOn[]).map((addon) => {
+                    const isSelected =
+                      Array.isArray(currentValue) &&
+                      currentValue.some((v: any) => v.id === addon.id);
+
+                    return (
+                      <TouchableOpacity
+                        key={addon.id}
+                        onPress={() => {
+                          let newValue: AddOn[] = [];
+                          if (Array.isArray(currentValue)) {
+                            const addonValues = currentValue.filter(
+                              (v: any): v is AddOn =>
+                                typeof v === 'object' && 'id' in v
+                            );
+                            if (isSelected) {
+                              newValue = addonValues.filter(
+                                (v: AddOn) => v.id !== addon.id
+                              );
+                            } else {
+                              newValue = [...addonValues, addon];
+                            }
+                          } else {
+                            newValue = [addon];
+                          }
+                          updatePropertyValue(activeProperty.id, newValue);
+                        }}
+                        className="rounded-2xl p-4"
+                        style={{
+                          backgroundColor: theme.card,
+                          borderWidth: 2,
+                          borderColor: isSelected
+                            ? theme.primary
+                            : theme.border,
+                        }}
+                      >
+                        <View className="flex-row items-center justify-between">
+                          <View className="flex-1">
+                            <Text
+                              className="text-base mb-1"
+                              style={{
+                                color: theme.text,
+                                fontFamily: 'PoppinsMedium',
+                              }}
+                            >
+                              {addon.name}
+                            </Text>
+                            {addon.description && (
+                              <Text
+                                className="text-sm"
+                                style={{
+                                  color: theme.textSecondary,
+                                  fontFamily: 'PoppinsMedium',
+                                }}
+                              >
+                                {addon.description}
+                              </Text>
+                            )}
+                            <Text
+                              className="text-sm mt-1"
+                              style={{
+                                color: theme.primary,
+                                fontFamily: 'PoppinsMedium',
+                              }}
+                            >
+                              +${addon.price.toFixed(2)}
+                            </Text>
+                          </View>
+                          {isSelected && (
+                            <View
+                              className="w-6 h-6 rounded-full items-center justify-center"
+                              style={{ backgroundColor: theme.primary }}
+                            >
+                              <Check color="white" size={16} />
+                            </View>
+                          )}
+                        </View>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
+              ) : (activeProperty.type === 'multiselect' ||
+                  activeProperty.type === 'multiexclude') &&
+                Array.isArray(options) ? (
+                // Multiselect or multiexclude options
+                <View className="gap-3">
+                  {(options as string[]).map((option) => {
+                    const isExcluded =
+                      Array.isArray(currentValue) &&
+                      currentValue.every(
+                        (v): v is string => typeof v === 'string'
+                      ) &&
+                      currentValue.includes(option);
+                    const showAsExcluded = isExcludeType && isExcluded;
+
+                    return (
+                      <TouchableOpacity
+                        key={option}
+                        onPress={() => {
+                          let newValue: string[] = [];
+                          if (Array.isArray(currentValue)) {
+                            const stringValues = currentValue.filter(
+                              (v): v is string => typeof v === 'string'
+                            );
+                            if (isExcluded) {
+                              newValue = stringValues.filter(
+                                (v) => v !== option
+                              );
+                            } else {
+                              newValue = [...stringValues, option];
+                            }
+                          } else {
+                            newValue = [option];
+                          }
+                          updatePropertyValue(activeProperty.id, newValue);
+                        }}
+                        className="rounded-2xl p-4"
+                        style={{
+                          backgroundColor: showAsExcluded
+                            ? theme.error + '10'
+                            : theme.card,
+                          borderWidth: 2,
+                          borderColor: showAsExcluded
+                            ? theme.error
+                            : !isExcludeType && isExcluded
+                            ? theme.primary
+                            : theme.border,
+                        }}
+                      >
+                        <View className="flex-row items-center justify-between">
+                          <Text
+                            className="text-base capitalize"
+                            style={{
+                              color: showAsExcluded ? theme.error : theme.text,
+                              fontFamily: 'PoppinsMedium',
+                              textDecorationLine: showAsExcluded
+                                ? 'line-through'
+                                : 'none',
+                            }}
+                          >
+                            {option}
+                          </Text>
+                          {showAsExcluded ? (
+                            <View
+                              className="w-6 h-6 rounded-full items-center justify-center"
+                              style={{ backgroundColor: theme.error }}
+                            >
+                              <X color="white" size={16} />
+                            </View>
+                          ) : !isExcludeType && isExcluded ? (
+                            <View
+                              className="w-6 h-6 rounded-full items-center justify-center"
+                              style={{ backgroundColor: theme.primary }}
+                            >
+                              <Check color="white" size={16} />
+                            </View>
+                          ) : null}
+                        </View>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
+              ) : (activeProperty.type === 'select' ||
+                  activeProperty.type === 'exclude') &&
+                Array.isArray(options) ? (
+                // Single select or single exclude
+                <View className="gap-3">
+                  {(options as string[]).map((option) => {
+                    const isSelected = currentValue === option;
+
+                    return (
+                      <TouchableOpacity
+                        key={option}
+                        onPress={() => {
+                          updatePropertyValue(activeProperty.id, option);
+                          setShowPropertyModal(false);
+                        }}
+                        className="rounded-2xl p-4"
+                        style={{
+                          backgroundColor: theme.card,
+                          borderWidth: 2,
+                          borderColor: isSelected
+                            ? theme.primary
+                            : theme.border,
+                        }}
+                      >
+                        <View className="flex-row items-center justify-between">
+                          <Text
+                            className="text-base capitalize"
+                            style={{
+                              color: theme.text,
+                              fontFamily: 'PoppinsMedium',
+                            }}
+                          >
+                            {option}
+                          </Text>
+                          {isSelected && (
+                            <View
+                              className="w-6 h-6 rounded-full items-center justify-center"
+                              style={{ backgroundColor: theme.primary }}
+                            >
+                              <Check color="white" size={16} />
+                            </View>
+                          )}
+                        </View>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
+              ) : null}
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
+    );
+  };
+
+  // Render readonly custom properties (for display only)
+  const renderReadonlyProperties = useCallback(() => {
+    if (!offer?.custom_properties) return null;
+
+    const readonlyProps = Object.entries(offer.custom_properties).filter(
+      ([_, prop]) => prop.type === 'readonly' || prop.type === 'multireadonly'
+    );
+
+    if (readonlyProps.length === 0) return null;
+
+    return (
+      <View className="mb-6">
+        <View className="flex-row items-center gap-2 mb-4">
+          <View
+            className="w-8 h-8 rounded-full items-center justify-center"
+            style={{ backgroundColor: `${theme.primary}15` }}
+          >
+            <Info color={theme.primary} size={18} />
+          </View>
+          <Text
+            className="text-xl"
+            style={{ color: theme.text, fontFamily: 'FredokaMedium' }}
+          >
+            Additional Information
+          </Text>
+        </View>
+
+        <View className="gap-3">
+          {readonlyProps.map(([key, property]) => (
+            <View
+              key={key}
+              className="rounded-2xl p-4"
+              style={{
+                backgroundColor: theme.card,
+                borderWidth: 1,
+                borderColor: theme.border,
+              }}
+            >
+              <Text
+                className="text-sm uppercase tracking-wide mb-2"
+                style={{
+                  color: theme.textSecondary,
+                  fontFamily: 'PoppinsMedium',
+                }}
+              >
+                {property.label}
+              </Text>
+              <Text
+                className="text-base"
+                style={{
+                  color: theme.text,
+                  fontFamily: 'PoppinsMedium',
+                }}
+              >
+                {Array.isArray(property.options)
+                  ? property.options.join(', ')
+                  : String(property.options)}
+              </Text>
+            </View>
+          ))}
+        </View>
+      </View>
+    );
+  }, [offer, theme]);
 
   const renderRestaurantCard = useCallback(() => {
     if (!offer?.provider) return null;
@@ -404,7 +967,10 @@ export default function OfferDetailsScreen() {
             {/* View Details */}
             <View
               className="mt-3 py-2 items-center"
-              style={{ borderTopWidth: 1, borderTopColor: theme.border + '40' }}
+              style={{
+                borderTopWidth: 1,
+                borderTopColor: theme.border + '40',
+              }}
             >
               <Text
                 className="text-xs "
@@ -813,7 +1379,10 @@ export default function OfferDetailsScreen() {
                     <Mail color={theme.primary} size={20} />
                     <Text
                       className="flex-1 text-sm "
-                      style={{ color: theme.text, fontFamily: 'PoppinsMedium' }}
+                      style={{
+                        color: theme.text,
+                        fontFamily: 'PoppinsMedium',
+                      }}
                     >
                       {provider.primary_email}
                     </Text>
@@ -833,7 +1402,10 @@ export default function OfferDetailsScreen() {
                     <Globe color={theme.primary} size={20} />
                     <Text
                       className="flex-1 text-sm "
-                      style={{ color: theme.text, fontFamily: 'PoppinsMedium' }}
+                      style={{
+                        color: theme.text,
+                        fontFamily: 'PoppinsMedium',
+                      }}
                     >
                       {provider.website}
                     </Text>
@@ -860,7 +1432,10 @@ export default function OfferDetailsScreen() {
                     </Text>
                     <Text
                       className="text-sm "
-                      style={{ color: theme.text, fontFamily: 'PoppinsMedium' }}
+                      style={{
+                        color: theme.text,
+                        fontFamily: 'PoppinsMedium',
+                      }}
                     >
                       {provider.founded_year}
                     </Text>
@@ -873,183 +1448,6 @@ export default function OfferDetailsScreen() {
       </Modal>
     );
   };
-
-  const renderCustomProperties = useCallback(() => {
-    if (
-      !offer?.custom_properties ||
-      Object.keys(offer.custom_properties).length === 0
-    ) {
-      return null;
-    }
-
-    const getPropertyIcon = (key: string) => {
-      switch (key) {
-        case 'ingredients':
-          return <BookCheck size={15} color={theme.primary} />;
-        case 'nutrition_facts':
-          return <Sprout size={15} color={theme.primary} />;
-        case 'spice_level':
-          return <Flame size={15} color={theme.primary} />;
-      }
-    };
-
-    const renderPropertyValue = (value: any, key: string) => {
-      if (Array.isArray(value)) {
-        return (
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            className="mt-3"
-          >
-            <View className="flex-row gap-2 pr-4">
-              {value.map((v, i) => (
-                <View
-                  key={i}
-                  className="px-4 py-2.5 rounded-xl"
-                  style={{
-                    backgroundColor: `${theme.primary}10`,
-                    borderWidth: 1,
-                    borderColor: `${theme.primary}30`,
-                  }}
-                >
-                  <Text
-                    className="text-sm "
-                    style={{
-                      color: theme.primary,
-                      fontFamily: 'PoppinsMedium',
-                    }}
-                  >
-                    {String(v)}
-                  </Text>
-                </View>
-              ))}
-            </View>
-          </ScrollView>
-        );
-      }
-
-      if (typeof value === 'object' && value !== null) {
-        return (
-          <View className="mt-3 gap-3">
-            {Object.entries(value).map(([subKey, subValue], subIndex) => (
-              <View
-                key={subIndex}
-                className="flex-row justify-between items-center py-3 px-4 rounded-xl"
-                style={{
-                  backgroundColor: theme.inputBackground,
-                  borderLeftWidth: 3,
-                  borderLeftColor: theme.primary,
-                }}
-              >
-                <Text
-                  className="text-sm  flex-1"
-                  style={{
-                    color: theme.textSecondary,
-                    fontFamily: 'PoppinsMedium',
-                  }}
-                >
-                  {subKey.charAt(0).toUpperCase() +
-                    subKey.slice(1).replace(/_/g, ' ')}
-                </Text>
-                <Text
-                  className="text-sm "
-                  style={{ color: theme.text, fontFamily: 'PoppinsMedium' }}
-                >
-                  {String(subValue)}
-                </Text>
-              </View>
-            ))}
-          </View>
-        );
-      }
-
-      return (
-        <Text
-          className="text-base  mt-2"
-          style={{ color: theme.text, fontFamily: 'PoppinsMedium' }}
-        >
-          {String(value)}
-        </Text>
-      );
-    };
-
-    return (
-      <View className="mb-6">
-        <View className="flex-row items-center gap-2 mb-4">
-          <View
-            className="w-8 h-8 rounded-full items-center justify-center"
-            style={{ backgroundColor: `${theme.primary}15` }}
-          >
-            <Sparkles color={theme.primary} size={18} />
-          </View>
-          <Text
-            className="text-xl "
-            style={{ color: theme.text, fontFamily: 'FredokaMedium' }}
-          >
-            Additional Details
-          </Text>
-        </View>
-
-        <View className="gap-4">
-          {Object.entries(offer.custom_properties).map(
-            ([key, value], index) => {
-              if (
-                value === null ||
-                value === undefined ||
-                (typeof value === 'object' &&
-                  !Array.isArray(value) &&
-                  Object.keys(value).length === 0)
-              ) {
-                return null;
-              }
-
-              const propertyTitle =
-                key.charAt(0).toUpperCase() + key.slice(1).replace(/_/g, ' ');
-
-              return (
-                <View
-                  key={index}
-                  className="rounded-2xl p-5 overflow-hidden"
-                  style={{
-                    backgroundColor: theme.card,
-                    borderWidth: 1,
-                    borderColor: theme.border,
-                    shadowColor: theme.text,
-                    shadowOffset: { width: 0, height: 2 },
-                    shadowOpacity: 0.05,
-                    shadowRadius: 8,
-                    elevation: 2,
-                  }}
-                >
-                  <View className="flex-row items-center justify-between mb-1">
-                    <View className="flex flex-row items-center gap-2">
-                      {getPropertyIcon(key)}
-                      <Text
-                        className="text-sm  tracking-wide uppercase"
-                        style={{
-                          color: theme.textSecondary,
-                          fontFamily: 'PoppinsMedium',
-                        }}
-                      >
-                        {propertyTitle}
-                      </Text>
-                    </View>
-                    <View
-                      className="w-6 h-6 rounded-full items-center justify-center"
-                      style={{ backgroundColor: `${theme.primary}10` }}
-                    >
-                      <Info color={theme.primary} size={14} />
-                    </View>
-                  </View>
-                  {renderPropertyValue(value, key)}
-                </View>
-              );
-            }
-          )}
-        </View>
-      </View>
-    );
-  }, [offer, theme]);
 
   const renderImageCarousel = useCallback(() => {
     if (allImages.length === 0) {
@@ -1098,21 +1496,17 @@ export default function OfferDetailsScreen() {
           )}
         />
 
-        {/* Image Counter Badge */}
         {allImages.length > 1 && (
           <View
             className="absolute bottom-4 right-4 px-4 py-2 rounded-full"
-            style={{
-              backgroundColor: 'rgba(0, 0, 0, 0.7)',
-            }}
+            style={{ backgroundColor: 'rgba(0, 0, 0, 0.7)' }}
           >
-            <Text className="text-white text-sm ">
+            <Text className="text-white text-sm">
               {selectedImageIndex + 1} / {allImages.length}
             </Text>
           </View>
         )}
 
-        {/* Navigation Arrows for multiple images */}
         {allImages.length > 1 && (
           <>
             <TouchableOpacity
@@ -1160,64 +1554,6 @@ export default function OfferDetailsScreen() {
     handleImageSelect,
   ]);
 
-  const renderThumbnails = useCallback(() => {
-    if (allImages.length <= 1) return null;
-
-    return (
-      <Animated.View className="mb-6" style={{ opacity: thumbnailOpacity }}>
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={{ paddingHorizontal: 4 }}
-        >
-          <View className="flex-row gap-3">
-            {allImages.map((img, index) => (
-              <TouchableOpacity
-                key={index}
-                onPress={() => handleImageSelect(index)}
-                activeOpacity={0.7}
-                style={{
-                  width: THUMBNAIL_SIZE,
-                  height: THUMBNAIL_SIZE,
-                  borderRadius: 16,
-                  overflow: 'hidden',
-                  borderWidth: 3,
-                  borderColor:
-                    selectedImageIndex === index
-                      ? theme.primary
-                      : 'transparent',
-                  shadowColor: theme.text,
-                  shadowOffset: { width: 0, height: 2 },
-                  shadowOpacity: selectedImageIndex === index ? 0.3 : 0.1,
-                  shadowRadius: 4,
-                  elevation: selectedImageIndex === index ? 4 : 2,
-                }}
-              >
-                <Image
-                  source={{ uri: handleImageSrc(img) }}
-                  className="w-full h-full"
-                  resizeMode="cover"
-                />
-                {selectedImageIndex === index && (
-                  <View
-                    className="absolute inset-0"
-                    style={{ backgroundColor: 'rgba(0, 0, 0, 0.2)' }}
-                  />
-                )}
-              </TouchableOpacity>
-            ))}
-          </View>
-        </ScrollView>
-      </Animated.View>
-    );
-  }, [
-    allImages,
-    thumbnailOpacity,
-    selectedImageIndex,
-    handleImageSelect,
-    theme,
-  ]);
-
   if (!offer) {
     return (
       <View
@@ -1225,7 +1561,7 @@ export default function OfferDetailsScreen() {
         style={{ backgroundColor: theme.background }}
       >
         <Text
-          className="text-lg "
+          className="text-lg"
           style={{ color: theme.text, fontFamily: 'FredokaMedium' }}
         >
           Offer not found
@@ -1233,6 +1569,9 @@ export default function OfferDetailsScreen() {
       </View>
     );
   }
+
+  const totalPrice = calculateTotalPrice();
+  const currentQuantity = currentCartItem?.quantity || 0;
 
   return (
     <SafeAreaView
@@ -1280,12 +1619,9 @@ export default function OfferDetailsScreen() {
         </TouchableOpacity>
       </Animated.View>
 
-      {/* Content */}
       <ScrollView showsVerticalScrollIndicator={false}>
-        {/* Image Carousel */}
         {renderImageCarousel()}
 
-        {/* Details Container */}
         <Animated.View
           className="flex-1 relative mt-[-24px] rounded-t-3xl px-6 pt-6 pb-32"
           style={{
@@ -1294,7 +1630,6 @@ export default function OfferDetailsScreen() {
             transform: [{ translateY: contentTranslateY }],
           }}
         >
-          {/* Discount Badge */}
           {offer.sale_price && (
             <View
               className="absolute -top-5 right-6 px-5 py-3 rounded-2xl shadow-xl"
@@ -1305,7 +1640,7 @@ export default function OfferDetailsScreen() {
               }}
             >
               <Text
-                className="text-white text-base "
+                className="text-white text-base"
                 style={{ fontFamily: 'FredokaMedium' }}
               >
                 {getDiscountPercentage(offer.price, offer.sale_price ?? 0)}% OFF
@@ -1313,186 +1648,59 @@ export default function OfferDetailsScreen() {
             </View>
           )}
 
-          {/* Thumbnails */}
-          {renderThumbnails()}
-
-          {/* Title */}
           <Text
-            className="text-3xl  leading-tight mb-2"
+            className="text-3xl leading-tight mb-2"
             style={{ color: theme.text, fontFamily: 'PoppinsMedium' }}
           >
             {offer.title}
           </Text>
 
-          {/* Rating Row */}
           <View className="flex-row items-center gap-4 mb-6">
             <View className="flex-row items-center gap-1">
               <Star color={theme.warning} fill={theme.warning} size={18} />
               <Text
-                className="text-base "
+                className="text-base"
                 style={{ color: theme.text, fontFamily: 'PoppinsMedium' }}
               >
                 {offer.rating || '5.0'}
               </Text>
             </View>
-            <View
-              className="w-1 h-1 rounded-full"
-              style={{ backgroundColor: theme.textSecondary }}
-            />
-            <Text
-              className="text-sm "
-              style={{
-                color: theme.textSecondary,
-                fontFamily: 'PoppinsMedium',
-              }}
-            >
-              {offer.stock_status === 'in_stock' ||
-              offer.stock_status === 'low_stock'
-                ? `${offer.qty} available`
-                : 'OUT OF STOCK'}
-            </Text>
           </View>
-
-          {/* Pickup Time */}
           {renderPickupTime()}
 
-          {/* Description */}
-          {offer.description && (
-            <View className="mb-6">
-              <Text
-                className="text-lg "
-                style={{ color: theme.text, fontFamily: 'FredokaMedium' }}
-              >
-                Description
-              </Text>
-              <Text
-                className="text-base leading-6"
-                style={{
-                  color: theme.textSecondary,
-                  fontFamily: 'PoppinsMedium',
-                }}
-              >
-                {offer.description}
-              </Text>
-            </View>
-          )}
+          {/* Custom Properties Selector */}
+          {renderCustomPropertiesSelector()}
 
-          {/* Price Card */}
+          {/* Readonly Properties */}
+          {renderReadonlyProperties()}
+
+          {/* Price Card with addons */}
           <View
-            className="rounded-2xl p-6 mb-6 overflow-hidden"
+            className="rounded-2xl p-6 mb-6"
             style={{
               backgroundColor: theme.card,
               borderWidth: 1,
               borderColor: theme.border,
             }}
           >
-            <View className="flex-row justify-between items-start mb-4">
-              <View className="flex-1">
-                <Text
-                  className="text-xs  mb-1 uppercase tracking-wider"
-                  style={{
-                    color: theme.textSecondary,
-                    fontFamily: 'FredokaMedium',
-                  }}
-                >
-                  Original Price
-                </Text>
-                <Text
-                  className="text-2xl line-through "
-                  style={{
-                    color: theme.textSecondary,
-                    fontFamily: 'PoppinsMedium',
-                  }}
-                >
-                  ${formatPrice(offer.price)}
-                </Text>
-              </View>
-
-              {offer.sale_price && (
-                <View className="items-end">
-                  <Text
-                    className="text-xs  mb-1 uppercase tracking-wider"
-                    style={{
-                      color: theme.success,
-                      fontFamily: 'FredokaMedium',
-                    }}
-                  >
-                    You Save
-                  </Text>
-                  <View className="flex-row items-center gap-1">
-                    <Coins color={theme.success} size={20} />
-                    <Text
-                      className="text-xl "
-                      style={{
-                        color: theme.success,
-                        fontFamily: 'PoppinsMedium',
-                      }}
-                    >
-                      ${(offer.price - offer.sale_price).toFixed(2)}
-                    </Text>
-                  </View>
-                </View>
-              )}
-            </View>
-
-            {offer.sale_price && (
-              <View
-                className="rounded-xl p-4"
-                style={{ backgroundColor: `${theme.primary}10` }}
-              >
-                <Text
-                  className="text-xs  mb-1 uppercase tracking-wider"
-                  style={{ color: theme.primary, fontFamily: 'FredokaMedium' }}
-                >
-                  Special Price
-                </Text>
-                <Text
-                  className="text-4xl "
-                  style={{ color: theme.primary, fontFamily: 'PoppinsMedium' }}
-                >
-                  ${formatPrice(offer.sale_price)}
-                </Text>
-              </View>
-            )}
-          </View>
-
-          {/* Tags */}
-          {offer.tags && offer.tags.length > 0 && (
-            <View className="mb-6">
+            <View className="flex-row justify-between items-center">
               <Text
-                className="text-lg  mb-3"
-                style={{ color: theme.text, fontFamily: 'FredokaMedium' }}
+                className="text-sm uppercase tracking-wide"
+                style={{
+                  color: theme.textSecondary,
+                  fontFamily: 'FredokaMedium',
+                }}
               >
-                Features
+                Total Price
               </Text>
-              <View className="flex-row flex-wrap gap-2">
-                {offer.tags.map((tag, i) => (
-                  <View
-                    key={i}
-                    className="px-4 py-2.5 rounded-xl"
-                    style={{
-                      backgroundColor: `${theme.success}15`,
-                      borderWidth: 1,
-                      borderColor: `${theme.success}30`,
-                    }}
-                  >
-                    <Text
-                      className="text-sm "
-                      style={{
-                        color: theme.success,
-                        fontFamily: 'PoppinsMedium',
-                      }}
-                    >
-                      {tag}
-                    </Text>
-                  </View>
-                ))}
-              </View>
+              <Text
+                className="text-3xl"
+                style={{ color: theme.primary, fontFamily: 'PoppinsMedium' }}
+              >
+                ${totalPrice.toFixed(2)}
+              </Text>
             </View>
-          )}
-
-          {renderCustomProperties()}
-          {/* Provider Card */}
+          </View>
           {renderRestaurantCard()}
         </Animated.View>
       </ScrollView>
@@ -1512,7 +1720,7 @@ export default function OfferDetailsScreen() {
         }}
       >
         <View className="flex-row items-center gap-3 px-6 py-4">
-          {item.quantity > 0 && (
+          {currentQuantity > 0 && (
             <View
               className="flex-row items-center rounded-2xl p-1"
               style={{
@@ -1522,7 +1730,7 @@ export default function OfferDetailsScreen() {
               }}
             >
               <TouchableOpacity
-                onPress={() => updateCartItem(item.id, item.quantity - 1)}
+                onPress={() => handleUpdateQuantity(currentQuantity - 1)}
                 className="w-10 h-10 justify-center items-center rounded-xl"
                 activeOpacity={0.7}
                 style={{ backgroundColor: theme.card }}
@@ -1532,15 +1740,15 @@ export default function OfferDetailsScreen() {
 
               <View className="px-4">
                 <Text
-                  className="text-base "
+                  className="text-base"
                   style={{ color: theme.text, fontFamily: 'PoppinsMedium' }}
                 >
-                  {item.quantity}
+                  {currentQuantity}
                 </Text>
               </View>
 
               <TouchableOpacity
-                onPress={() => updateCartItem(item.id, item.quantity + 1)}
+                onPress={() => handleUpdateQuantity(currentQuantity + 1)}
                 className="w-10 h-10 justify-center items-center rounded-xl"
                 activeOpacity={0.7}
                 style={{ backgroundColor: theme.card }}
@@ -1563,20 +1771,18 @@ export default function OfferDetailsScreen() {
             }}
             activeOpacity={0.8}
           >
-            <Text className="text-white text-base ">Add to Cart</Text>
-            {offer.sale_price && (
-              <Text
-                className="text-white text-sm "
-                style={{ fontFamily: 'PoppinsMedium' }}
-              >
-                • ${formatPrice(offer.sale_price)}
-              </Text>
-            )}
+            <Text className="text-white text-base">Add to Cart</Text>
+            <Text
+              className="text-white text-sm"
+              style={{ fontFamily: 'PoppinsMedium' }}
+            >
+              • ${totalPrice.toFixed(2)}
+            </Text>
           </TouchableOpacity>
         </View>
       </View>
 
-      {/* Modals */}
+      {renderPropertyModal()}
       {renderLocationsModal()}
       {renderProviderModal()}
     </SafeAreaView>

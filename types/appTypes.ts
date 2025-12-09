@@ -18,11 +18,11 @@ export interface Restaurant {
 export interface Category {
   id: string;
   name: string;
-  description: string;
-  main_image: string;
-  icon: string;
-  color: string;
-  created_at: string;
+  description?: string;
+  main_image?: string;
+  icon?: string;
+  color?: string;
+  created_at?: string;
 }
 
 export interface Item {
@@ -51,7 +51,31 @@ export interface Item {
   };
   created_at: string;
 }
+export type PropertyType =
+  | 'select'
+  | 'multiselect'
+  | 'exclude'
+  | 'multiexclude'
+  | 'addon'
+  | 'readonly'
+  | 'multireadonly';
 
+export type AddOn = {
+  id: string;
+  name: string;
+  price: number;
+  description?: string;
+  available?: boolean;
+};
+
+export type CustomProperty = {
+  id: string;
+  label: string;
+  type: PropertyType;
+  options?: string | string[] | number | number[] | boolean | AddOn[];
+  available?: boolean;
+  icon?: string;
+};
 export interface Offer {
   id: string;
   name?: string;
@@ -89,10 +113,7 @@ export interface Offer {
   start_date?: string;
   end_date?: string;
   item_type?: string;
-  custom_properties?: Record<
-    string,
-    number | string | string[] | number[] | object
-  >;
+  custom_properties?: Record<string, CustomProperty>;
   category_id: string;
   type_id?: string;
   brand_id?: string;
@@ -145,14 +166,22 @@ export type Provider = {
   cover_image: string;
   whatsapp_number: string;
 };
+export type SelectedPropertyValue =
+  | string
+  | string[]
+  | number
+  | number[]
+  | boolean
+  | AddOn[];
 
-export interface CartItem {
+export type SelectedProperties = Record<string, SelectedPropertyValue>;
+
+export type CartItem = {
   id: string;
-  offer: Offer;
+  item: Offer;
   quantity: number;
-  customizations?: string[];
-  special_instructions?: string;
-}
+  selectedProperties?: SelectedProperties;
+};
 export interface Order {
   id: string; // unique order id
   customerName: string;
@@ -349,6 +378,7 @@ export type OrderItem = {
   item: Partial<Offer>;
   quantity: number;
   total: number;
+  selectedProperties?: SelectedProperties;
 };
 // TransactionBase model
 export type TransactionBase = {

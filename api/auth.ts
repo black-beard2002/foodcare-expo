@@ -92,7 +92,7 @@ class AuthApiImpl implements AuthApi {
         const access_token: string = responseBody.data.token.access_token;
         const refresh_token: string = responseBody.data.token.refresh_token;
         const attempts = responseBody.data.attempts;
-        console.log('otp res:', responseBody);
+
         return {
           success: true,
           data: { user, access_token, refresh_token, attempts },
@@ -242,7 +242,6 @@ class AuthApiImpl implements AuthApi {
         userData
       );
 
-      console.log('res', api_response);
       const responseBody = api_response.data;
       console.log('update response:', responseBody);
       if (responseBody.success) {
