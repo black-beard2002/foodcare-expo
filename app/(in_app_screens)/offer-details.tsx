@@ -1647,15 +1647,13 @@ export default function OfferDetailsScreen() {
               </Text>
             </View>
           )}
-
-          <Text
-            className="text-3xl leading-tight mb-2"
-            style={{ color: theme.text, fontFamily: 'PoppinsMedium' }}
-          >
-            {offer.title}
-          </Text>
-
           <View className="flex-row items-center gap-4 mb-6">
+            <Text
+              className="text-3xl leading-tight mb-2"
+              style={{ color: theme.text, fontFamily: 'PoppinsMedium' }}
+            >
+              {offer.title}
+            </Text>
             <View className="flex-row items-center gap-1">
               <Star color={theme.warning} fill={theme.warning} size={18} />
               <Text
@@ -1666,6 +1664,10 @@ export default function OfferDetailsScreen() {
               </Text>
             </View>
           </View>
+          <Text style={{ color: theme.text, fontFamily: 'PoppinsMedium' }}>
+            {offer.description}
+          </Text>
+
           {renderPickupTime()}
 
           {/* Custom Properties Selector */}
