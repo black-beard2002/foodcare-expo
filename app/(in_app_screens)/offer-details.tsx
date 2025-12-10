@@ -1671,6 +1671,96 @@ export default function OfferDetailsScreen() {
           </Text>
 
           {renderPickupTime()}
+          {/* Price Card */}
+          <View
+            className="rounded-2xl p-6 mb-6 overflow-hidden"
+            style={{
+              backgroundColor: theme.card,
+              borderWidth: 1,
+              borderColor: theme.border,
+            }}
+          >
+            <View className="flex-row justify-between items-start mb-4">
+              <View className="flex-1">
+                <Text
+                  className="text-xs  mb-1 uppercase tracking-wider"
+                  style={{
+                    color: theme.textSecondary,
+                    fontFamily: 'FredokaMedium',
+                  }}
+                >
+                  Original Price
+                </Text>
+                {offer.sale_price ? (
+                  <Text
+                    className="text-2xl line-through "
+                    style={{
+                      color: theme.textSecondary,
+                      fontFamily: 'PoppinsMedium',
+                    }}
+                  >
+                    ${formatPrice(offer.price)}
+                  </Text>
+                ) : (
+                  <Text
+                    className="text-2xl "
+                    style={{
+                      color: theme.primary,
+                      fontFamily: 'PoppinsMedium',
+                    }}
+                  >
+                    ${formatPrice(offer.price)}
+                  </Text>
+                )}
+              </View>
+
+              {offer.sale_price && (
+                <View className="items-end">
+                  <Text
+                    className="text-xs  mb-1 uppercase tracking-wider"
+                    style={{
+                      color: theme.success,
+                      fontFamily: 'FredokaMedium',
+                    }}
+                  >
+                    You Save
+                  </Text>
+                  <View className="flex-row items-center gap-1">
+                    <Coins color={theme.success} size={20} />
+                    <Text
+                      className="text-xl "
+                      style={{
+                        color: theme.success,
+                        fontFamily: 'PoppinsMedium',
+                      }}
+                    >
+                      ${(offer.price - offer.sale_price).toFixed(2)}
+                    </Text>
+                  </View>
+                </View>
+              )}
+            </View>
+
+            {offer.sale_price && (
+              <View
+                className="rounded-xl p-4"
+                style={{ backgroundColor: `${theme.primary}10` }}
+              >
+                <Text
+                  className="text-xs  mb-1 uppercase tracking-wider"
+                  style={{ color: theme.primary, fontFamily: 'FredokaMedium' }}
+                >
+                  Special Price
+                </Text>
+                <Text
+                  className="text-4xl "
+                  style={{ color: theme.primary, fontFamily: 'PoppinsMedium' }}
+                >
+                  ${formatPrice(offer.sale_price)}
+                </Text>
+              </View>
+            )}
+          </View>
 
           {/* Custom Properties Selector */}
           {renderCustomPropertiesSelector()}
