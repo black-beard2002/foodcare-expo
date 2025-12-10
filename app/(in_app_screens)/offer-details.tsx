@@ -1647,13 +1647,13 @@ export default function OfferDetailsScreen() {
               </Text>
             </View>
           )}
+          <Text
+            className="text-3xl leading-tight mb-2"
+            style={{ color: theme.text, fontFamily: 'PoppinsMedium' }}
+          >
+            {offer.title}
+          </Text>
           <View className="flex-row items-center gap-4 mb-6">
-            <Text
-              className="text-3xl leading-tight mb-2"
-              style={{ color: theme.text, fontFamily: 'PoppinsMedium' }}
-            >
-              {offer.title}
-            </Text>
             <View className="flex-row items-center gap-1">
               <Star color={theme.warning} fill={theme.warning} size={18} />
               <Text
@@ -1663,7 +1663,9 @@ export default function OfferDetailsScreen() {
                 {offer.rating || '5.0'}
               </Text>
             </View>
+            <Text>Remaining offers ({offer.qty})</Text>
           </View>
+
           <Text style={{ color: theme.text, fontFamily: 'PoppinsMedium' }}>
             {offer.description}
           </Text>
