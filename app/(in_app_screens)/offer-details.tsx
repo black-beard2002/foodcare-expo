@@ -1648,7 +1648,7 @@ export default function OfferDetailsScreen() {
             </View>
           )}
           <Text
-            className="text-3xl leading-tight mb-2"
+            className="text-3xl leading-tight my-4"
             style={{ color: theme.text, fontFamily: 'PoppinsMedium' }}
           >
             {offer.title}
@@ -1663,10 +1663,18 @@ export default function OfferDetailsScreen() {
                 {offer.rating || '5.0'}
               </Text>
             </View>
-            <Text>Remaining offers ({offer.qty})</Text>
+            <Text style={{ color: theme.text, fontFamily: 'PoppinsLight' }}>
+              Remaining offers ({offer.qty})
+            </Text>
           </View>
 
-          <Text style={{ color: theme.text, fontFamily: 'PoppinsMedium' }}>
+          <Text
+            style={{
+              color: theme.text,
+              fontFamily: 'PoppinsMedium',
+              marginBottom: 22,
+            }}
+          >
             {offer.description}
           </Text>
 
@@ -1768,33 +1776,6 @@ export default function OfferDetailsScreen() {
           {/* Readonly Properties */}
           {renderReadonlyProperties()}
 
-          {/* Price Card with addons */}
-          <View
-            className="rounded-2xl p-6 mb-6"
-            style={{
-              backgroundColor: theme.card,
-              borderWidth: 1,
-              borderColor: theme.border,
-            }}
-          >
-            <View className="flex-row justify-between items-center">
-              <Text
-                className="text-sm uppercase tracking-wide"
-                style={{
-                  color: theme.textSecondary,
-                  fontFamily: 'FredokaMedium',
-                }}
-              >
-                Total Price
-              </Text>
-              <Text
-                className="text-3xl"
-                style={{ color: theme.primary, fontFamily: 'PoppinsMedium' }}
-              >
-                ${totalPrice.toFixed(2)}
-              </Text>
-            </View>
-          </View>
           {renderRestaurantCard()}
         </Animated.View>
       </ScrollView>

@@ -27,6 +27,7 @@ import { useAlert } from '@/providers/AlertProvider';
 import { useTheme } from '@/hooks/useTheme';
 import { LinearGradient } from 'expo-linear-gradient';
 import { MotiView } from 'moti';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function OnboardingStep2() {
   const [address, setAddress] = useState('');
@@ -211,21 +212,10 @@ export default function OnboardingStep2() {
     [address, coordinates, isFormValid, user, showAlert]
   );
 
-  const gradientColors: [ColorValue, ColorValue, ColorValue] = isDark
-    ? ['rgba(15,23,42,1)', 'rgba(30,41,59,1)', 'rgba(15,23,42,1)']
-    : ['rgba(255,255,255,1)', 'rgba(248,250,252,1)', 'rgba(241,245,249,1)'];
-
-  const accentGradient: [ColorValue, ColorValue] = isDark
-    ? ['rgba(59,130,246,1)', 'rgba(147,51,234,1)']
-    : ['rgba(99,102,241,1)', 'rgba(139,92,246,1)'];
-  const successGradient: [ColorValue, ColorValue] = isDark
-    ? (['rgba(34,197,94,1)', 'rgba(22,163,74,1)'] as const)
-    : (['rgba(34,197,94,1)', 'rgba(22,163,74,1)'] as const);
-
   if (isCompleting) {
     return (
       <LinearGradient
-        colors={gradientColors}
+        colors={[theme.background, theme.backgroundSecondary]}
         style={{
           position: 'absolute',
           left: 0,
@@ -244,7 +234,7 @@ export default function OnboardingStep2() {
           }}
         >
           <LinearGradient
-            colors={successGradient}
+            colors={[theme.primary, theme.primaryDark]}
             style={{
               borderRadius: 32,
               marginTop: 32,
@@ -299,14 +289,12 @@ export default function OnboardingStep2() {
   }
 
   return (
-    <LinearGradient
-      colors={gradientColors}
+    <SafeAreaView
       style={{
-        position: 'absolute',
-        left: 0,
-        right: 0,
-        top: 0,
-        bottom: 0,
+        flex: 1,
+        width: '100%',
+        height: '100%',
+        backgroundColor: theme.background,
       }}
     >
       <ScrollView
@@ -335,7 +323,7 @@ export default function OnboardingStep2() {
           <View className="items-center mb-12">
             <View className="relative mb-6">
               <LinearGradient
-                colors={accentGradient}
+                colors={[theme.primary, theme.primaryDark]}
                 style={{
                   borderRadius: 32,
                   width: 80,
@@ -422,7 +410,7 @@ export default function OnboardingStep2() {
               }}
             >
               <LinearGradient
-                colors={accentGradient}
+                colors={[theme.primary, theme.primaryDark]}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 0 }}
                 style={{
@@ -594,7 +582,7 @@ export default function OnboardingStep2() {
               <LinearGradient
                 colors={
                   isFormValid && !isLoading
-                    ? accentGradient
+                    ? [theme.primary, theme.primaryDark]
                     : [
                         isDark ? 'rgba(71,85,105,1)' : 'rgba(203,213,225,1)',
                         isDark ? 'rgba(51,65,85,1)' : 'rgba(226,232,240,1)',
@@ -661,6 +649,6 @@ export default function OnboardingStep2() {
           </View>
         </View>
       </ScrollView>
-    </LinearGradient>
+    </SafeAreaView>
   );
 }

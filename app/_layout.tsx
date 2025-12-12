@@ -34,6 +34,8 @@ export default function RootLayout() {
     FredokaRegular: require('../assets/fonts/Fredoka-Regular.ttf'),
     FredokaMedium: require('../assets/fonts/Fredoka-Medium.ttf'),
     FredokaBold: require('../assets/fonts/Fredoka-Bold.ttf'),
+    CherryBombOneRegular: require('../assets/fonts/CherryBombOne-Regular.ttf'),
+    RougeScript: require('../assets/fonts/RougeScript-Regular.ttf'),
   });
 
   // Load app data

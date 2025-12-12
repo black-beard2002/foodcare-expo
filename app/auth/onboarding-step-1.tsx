@@ -179,7 +179,7 @@ export default function OnboardingStep1() {
                   <View
                     className="flex-row items-center px-3 py-2 rounded-2xl border-2"
                     style={{
-                      borderColor: getBorderColor('firstName', firstName),
+                      borderColor: getBorderColor('fname', firstName),
                       backgroundColor: isDark ? 'rgba(30,41,59,0.5)' : '#fff',
                     }}
                   >
@@ -189,9 +189,14 @@ export default function OnboardingStep1() {
                       onChangeText={setFirstName}
                       onFocus={() => setFocusedField('fname')}
                       onBlur={() => setFocusedField(null)}
-                      placeholder="John"
-                      placeholderTextColor={theme.textSecondary}
-                      style={{ color: theme.text, flex: 1, fontSize: 16 }}
+                      placeholder="First name"
+                      placeholderTextColor={theme.inputPlaceholder}
+                      style={{
+                        color: theme.text,
+                        flex: 1,
+                        fontSize: 16,
+                        marginLeft: 8,
+                      }}
                     />
                   </View>
                   {errors.firstName && (
@@ -210,7 +215,7 @@ export default function OnboardingStep1() {
                   <View
                     className="flex-row items-center px-3 py-2 rounded-2xl border-2"
                     style={{
-                      borderColor: getBorderColor('lastName', lastName),
+                      borderColor: getBorderColor('lname', lastName),
                       backgroundColor: isDark ? 'rgba(30,41,59,0.5)' : '#fff',
                     }}
                   >
@@ -220,9 +225,14 @@ export default function OnboardingStep1() {
                       onChangeText={setLastName}
                       onFocus={() => setFocusedField('lname')}
                       onBlur={() => setFocusedField(null)}
-                      placeholder="Doe"
-                      placeholderTextColor={theme.textSecondary}
-                      style={{ color: theme.text, flex: 1, fontSize: 16 }}
+                      placeholder="Last name"
+                      placeholderTextColor={theme.inputPlaceholder}
+                      style={{
+                        color: theme.text,
+                        flex: 1,
+                        fontSize: 16,
+                        marginLeft: 8,
+                      }}
                     />
                   </View>
                   {errors.lastName && (
@@ -254,7 +264,7 @@ export default function OnboardingStep1() {
                     onFocus={() => setFocusedField('email')}
                     onBlur={() => setFocusedField(null)}
                     placeholder="your.email@example.com"
-                    placeholderTextColor={theme.textSecondary}
+                    placeholderTextColor={theme.inputPlaceholder}
                     style={{
                       color: theme.text,
                       flex: 1,
@@ -286,14 +296,16 @@ export default function OnboardingStep1() {
                   <View
                     className="flex-row items-center px-3 py-3 rounded-2xl border-2"
                     style={{
-                      borderColor: getBorderColor('dateOfBirth', dateOfBirth),
+                      borderColor: getBorderColor('dob', dateOfBirth),
                       backgroundColor: isDark ? 'rgba(30,41,59,0.5)' : '#fff',
                     }}
                   >
                     <Calendar color={theme.textSecondary} size={20} />
                     <Text
                       style={{
-                        color: dateOfBirth ? theme.text : theme.textSecondary,
+                        color: dateOfBirth
+                          ? theme.text
+                          : theme.inputPlaceholder,
                         fontSize: 16,
                         marginLeft: 8,
                       }}
