@@ -354,7 +354,7 @@ export default function OnboardingStep2() {
               className="text-base text-center leading-6 px-8 opacity-70"
               style={{ color: theme.text }}
             >
-              Help us discover the best restaurants and dining experiences near
+              Help us discover the best food offers near
               you
             </Text>
 
@@ -497,7 +497,7 @@ export default function OnboardingStep2() {
                 className="text-sm font-semibold mb-3 tracking-wide"
                 style={{ color: theme.text }}
               >
-                DELIVERY ADDRESS
+                LOCATION ADDRESS
               </Text>
               <View
                 className="px-5 py-4 rounded-2xl border-2 shadow-sm"

@@ -929,7 +929,7 @@ Shared from FoodForLess App
                       fontFamily: 'FredokaMedium',
                     }}
                   >
-                    Delivery Address
+                    Location Address
                   </Text>
                   <Text
                     style={{

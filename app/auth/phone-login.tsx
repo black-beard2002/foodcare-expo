@@ -140,8 +140,8 @@ export default function PhoneLoginScreen(): JSX.Element {
           <View className="flex-1 px-5 pt-5">
             <Image
               source={require('../../assets/images/backgrounds/phone_input_step.png')}
-              className="w-72 mb-10 h-72 mx-auto"
-              resizeMode="cover"
+              className="w-72 mb-10 h-80 mx-auto"
+              resizeMode="center"
             />
             {/* Phone Input */}
             <View className="mb-6">

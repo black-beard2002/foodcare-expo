@@ -332,11 +332,7 @@ export default function OfferDetailsScreen() {
   const handleAddToCart = useCallback(() => {
     if (!offer) return;
     addToCart(offer, 1, selectedProperties);
-    showAlert(
-      'Added to cart',
-      `${offer.title} is added to your cart`,
-      'success'
-    );
+    router.push('/cart')
   }, [offer, selectedProperties, addToCart, showAlert]);
 
   const handleUpdateQuantity = useCallback(

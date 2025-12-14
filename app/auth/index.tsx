@@ -101,7 +101,7 @@ export default function AuthScreen() {
             },
           ]}
         >
-          Delicious meals delivered to your door
+          Too good to waste, too delicious to miss
         </Animated.Text>
 
         {/* Buttons */}
@@ -143,6 +143,9 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 34,
     fontWeight: '800',
+    // fontFamily:'PoppinsMedium',
+
+    // fontFamily:'FredokaMedium',
     textAlign: 'center',
     marginBottom: 10,
     letterSpacing: 1,
@@ -150,6 +153,7 @@ const styles = StyleSheet.create({
   subtitle: {
     color: '#f1f1f1',
     fontSize: 16,
+    fontFamily:'FredokaMedium',
     textAlign: 'center',
     marginBottom: 50,
     maxWidth: 300,

@@ -20,6 +20,7 @@ import {
   Package,
   X,
   Plus,
+  Mail,
 } from 'lucide-react-native';
 import { useAppStore } from '@/stores/appStore';
 import * as images from '@/constants/images';
@@ -49,7 +50,7 @@ export default function CheckoutScreen() {
   const { createOrder, isLoading } = useOrderStore();
   const [customerInfo, setCustomerInfo] = useState({
     name: user?.first_name?.concat(` ${user.last_name}`),
-    phone: user?.phone_number ?? '',
+    email: user?.email_address ?? '',
     pickupTime: '',
     specialInstructions: '',
   });
@@ -215,7 +216,7 @@ export default function CheckoutScreen() {
   };
 
   const handleReserveOrder = async () => {
-    if (!customerInfo.name?.trim() || !customerInfo.phone?.trim()) {
+    if (!customerInfo.name?.trim() || !customerInfo.email?.trim()) {
       showAlert(
         'Missing Information',
         'Please fill in your name and phone number.',
@@ -243,8 +244,8 @@ export default function CheckoutScreen() {
       client_data: {
         first_name: customerInfo.name.split(' ')[0],
         last_name: customerInfo.name.split(' ')[1] ?? '',
-        phone_number: customerInfo.phone ?? '',
-        email: user?.email_address ?? '',
+        phone_number: user?.phone_number ?? '',
+        email: customerInfo?.email ?? '',
         address: user?.address ?? '',
       },
       created_by: user?.id,
@@ -293,7 +294,7 @@ export default function CheckoutScreen() {
 
   const isReserveDisabled =
     !customerInfo.name?.trim() ||
-    !customerInfo.phone?.trim() ||
+    !customerInfo.email?.trim() ||
     isLoading ||
     cart.length === 0;
 
@@ -547,16 +548,16 @@ export default function CheckoutScreen() {
                 className="w-11 h-11 rounded-xl justify-center items-center"
                 style={{ backgroundColor: `${theme.primary}15` }}
               >
-                <Phone color={theme.primary} size={20} />
+                <Mail color={theme.primary} size={20} />
               </View>
               <TextInput
                 className="flex-1 text-base py-2"
                 style={{ color: theme.text, fontFamily: 'PoppinsMedium' }}
                 placeholder="Phone Number *"
                 placeholderTextColor={theme.inputPlaceholder}
-                value={customerInfo.phone}
+                value={customerInfo.email}
                 onChangeText={(text) =>
-                  setCustomerInfo({ ...customerInfo, phone: text })
+                  setCustomerInfo({ ...customerInfo, email: text })
                 }
                 keyboardType="phone-pad"
               />

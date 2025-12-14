@@ -336,7 +336,7 @@ export default function SetupSecurityScreen(): JSX.Element {
             className="text-lg text-center leading-7 mb-8 px-8"
             style={{ color: theme.textSecondary }}
           >
-            Your account is all set up. Get ready to discover amazing food!
+            Your account is all set up. Get ready to discover amazing offers!
           </Text>
         </MotiView>
 

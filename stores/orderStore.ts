@@ -122,11 +122,16 @@ export const useOrderStore = create<OrderStore>((set, get) => ({
   createOrder: async (orderData: Omit<TransactionBase, 'id' | 'createdAt'>) => {
     set({ isLoading: true, error: null });
     try {
+       const { user } = useAuthStore.getState();
       const response = await ordersApi.createOrder(orderData);
       console.log('Create Order Response:', response);
       if (response.success && response.data) {
         const { addOrder } = get();
         addOrder(response.data);
+        if(user?.email_address && user.first_name && user.last_name){
+          ordersApi.SendCheckoutEmail(user?.email_address,response.data.id.slice(0.7),user?.first_name,user?.last_name,"Food For Less","project_link")
+        }
+        
         set({ isLoading: false });
         return {
           success: true,

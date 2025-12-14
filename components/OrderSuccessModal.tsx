@@ -11,7 +11,7 @@ interface OrderSuccessModalProps {
   onClose: () => void;
   customerInfo: {
     name?: string;
-    phone: string;
+    email: string;
     pickupTime?: string;
     specialInstructions?: string;
   };
@@ -244,7 +244,7 @@ export default function OrderSuccessModal({
                 value={customerInfo.name ?? ''}
                 theme={theme}
               />
-              <InfoRow label="Phone" value={customerInfo.phone} theme={theme} />
+              <InfoRow label="Email" value={customerInfo.email} theme={theme} />
 
               {customerInfo.pickupTime && (
                 <InfoRow

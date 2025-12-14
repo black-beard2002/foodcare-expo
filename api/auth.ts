@@ -25,6 +25,13 @@ export interface AuthApi {
   // ) => Promise<ApiResponse<{ user: Partial<User>; token: string }>>;
   signOut: () => Promise<ApiResponse>;
   getUser: (id: string) => Promise<ApiResponse<Partial<User>>>;
+  SendWelcomeEmail(
+    email: string,
+    first_name: string,
+    last_name: string,
+    project_name: string,
+    project_link: string
+  ): Promise<void>,
   updateProfile: (
     userId: string,
     userData: Partial<Partial<User>>
@@ -132,6 +139,7 @@ class AuthApiImpl implements AuthApi {
       console.log('email sending err', error);
     }
   }
+
 
   async signOut(): Promise<ApiResponse> {
     try {

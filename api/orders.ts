@@ -9,6 +9,14 @@ export interface OrdersApi {
   createOrder: (
     order: Omit<TransactionBase, 'id' | 'createdAt'>
   ) => Promise<ApiResponse<TransactionBase>>;
+    SendCheckoutEmail(
+      email: string,
+      order_number:string,
+      first_name: string,
+      last_name: string,
+      project_name: string,
+      project_link: string
+    ): Promise<void> ,
   updateOrder: (
     id: string,
     data: Partial<TransactionBase>
@@ -99,6 +107,27 @@ class OrdersApiImpl implements OrdersApi {
         success: false,
         error: 'Failed to create order',
       };
+    }
+  }
+      async SendCheckoutEmail(
+    email: string,
+    order_number:string,
+    first_name: string,
+    last_name: string,
+    project_name: string,
+    project_link: string
+  ): Promise<void> {
+    try {
+      await this.transaction_api.post('/transaction/send-order-email', {
+        email,
+        order_number,
+        first_name,
+        last_name,
+        project_name,
+        project_link,
+      });
+    } catch (error) {
+      console.log('email sending err', error);
     }
   }
   async confirmOrder(transaction_id: string, tenant_id: string) {
