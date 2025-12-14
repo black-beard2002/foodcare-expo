@@ -57,7 +57,6 @@ import NearYouCard from '@/components/NearYouCard';
 import DefaultOfferCard from '@/components/DefaultOfferCard';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
-const HERO_CARD_WIDTH = SCREEN_WIDTH - 60;
 
 export default function HomeScreen(): JSX.Element {
   const { theme, isDark, toggleTheme } = useTheme();
@@ -91,7 +90,6 @@ export default function HomeScreen(): JSX.Element {
     const init = async () => {
       await loadCachedData();
       initNetworkListener();
-      await refreshData(true);
     };
     if (hasFetched.current) return;
     hasFetched.current = true;
@@ -410,9 +408,7 @@ export default function HomeScreen(): JSX.Element {
 
         {/* Near You Offers */}
         {isLoading ? (
-          <View
-            style={{ paddingBottom: tomorrowsOffers.length > 0 ? 20 : 100 }}
-          >
+          <View style={{ paddingBottom: todaysOffers.length > 0 ? 20 : 100 }}>
             <View style={{ paddingHorizontal: 20, marginBottom: 16 }}>
               <Text
                 style={{
@@ -436,7 +432,7 @@ export default function HomeScreen(): JSX.Element {
             />
           </View>
         ) : nearYouOffers.length > 0 ? (
-          <View style={{ paddingBottom: 20 }}>
+          <View style={{ paddingBottom: todaysOffers.length > 0 ? 20 : 100 }}>
             <View
               style={{
                 flexDirection: 'row',

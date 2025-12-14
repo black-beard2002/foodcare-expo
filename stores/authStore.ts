@@ -39,7 +39,7 @@ interface AuthState {
     userData: Partial<User>
   ) => Promise<{ success: boolean; error?: string }>;
   signOut: () => Promise<void>;
-  getUser: () => Promise<{ success: boolean; error?: string }>;
+  getUser: (id: string) => Promise<{ success: boolean; error?: string }>;
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -196,15 +196,15 @@ export const useAuthStore = create<AuthState>()(
         }
       },
 
-      getUser: async () => {
-        const { access_token, setError, user } = get();
+      getUser: async (id: string) => {
+        const { access_token, setError } = get();
         if (!access_token) {
           setError('No access token available');
           return { success: false, error: 'No access token available' };
         }
         set({ isLoading: true, error: null });
         try {
-          let response = await authApi.getUser(user?.id!);
+          let response = await authApi.getUser(id);
 
           set({ isLoading: false });
           if (response.success && response.data) {

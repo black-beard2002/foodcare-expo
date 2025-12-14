@@ -10,6 +10,7 @@ import MapView, {
   PROVIDER_GOOGLE,
   Region,
   LatLng,
+  Circle,
 } from 'react-native-maps';
 import {
   StyleSheet,
@@ -22,14 +23,21 @@ import {
   ActivityIndicator,
   Image,
   ScrollView,
+  Dimensions,
 } from 'react-native';
 import * as Location from 'expo-location';
 import { useAlert } from '@/providers/AlertProvider';
 import { useTheme } from '@/hooks/useTheme';
 import { useAppStore } from '@/stores/appStore';
 import { Ionicons } from '@expo/vector-icons';
-import { Provider, Address } from '../../types/appTypes'; // Assuming you have these types
+import { Provider, Address, Offer } from '../../types/appTypes';
 import { handleImageSrc } from '@/utils/helpers';
+import { useRouter } from 'expo-router';
+import { ArrowLeft } from 'lucide-react-native';
+
+const { width, height } = Dimensions.get('window');
+const CARD_WIDTH = width * 0.85;
+const NEAR_ME_RADIUS_KM = 9;
 
 // Haversine formula to calculate distance between two coordinates in km
 const calculateDistance = (
@@ -51,7 +59,7 @@ const calculateDistance = (
   return R * c;
 };
 
-type ProviderMarker = {
+type RestaurantMarker = {
   id: string;
   coordinate: {
     latitude: number;
@@ -62,150 +70,483 @@ type ProviderMarker = {
   distance?: number;
   provider: Provider;
   address: Address;
-  providerType: string;
+  offers: Offer[];
+  isNearMe: boolean;
+};
+
+// Custom Marker Component
+const CustomMarker = ({
+  marker,
+  isSelected,
+  onPress,
+}: {
+  marker: RestaurantMarker;
+  isSelected: boolean;
+  onPress: () => void;
+}) => {
+  const [imageError, setImageError] = useState(false);
+  const { theme } = useTheme();
+
+  return (
+    <Marker
+      coordinate={marker.coordinate}
+      onPress={onPress}
+      tracksViewChanges={false}
+      anchor={{ x: 0.5, y: 0.5 }}
+      zIndex={isSelected ? 1000 : 1}
+    >
+      <View style={styles.customMarkerContainer}>
+        {marker.provider?.logo_path && !imageError ? (
+          <View
+            style={[
+              styles.customMarker,
+              isSelected && styles.customMarkerSelected,
+              marker.isNearMe && styles.customMarkerNearMe,
+              {
+                borderColor: isSelected ? theme.primary : 'white',
+                backgroundColor: 'white',
+              },
+            ]}
+          >
+            <Image
+              source={{ uri: handleImageSrc(marker.provider.logo_path) }}
+              style={styles.markerImage}
+              resizeMode="contain"
+              onError={() => setImageError(true)}
+              onLoadStart={() => setImageError(false)}
+            />
+          </View>
+        ) : (
+          <View
+            style={[
+              styles.defaultMarker,
+              marker.isNearMe && styles.defaultMarkerNearMe,
+              {
+                backgroundColor: marker.isNearMe
+                  ? theme.success
+                  : theme.primary,
+                borderColor: 'white',
+              },
+            ]}
+          >
+            <Ionicons name="restaurant" size={20} color="white" />
+          </View>
+        )}
+        {marker.isNearMe && (
+          <View
+            style={[styles.nearMeBadge, { backgroundColor: theme.success }]}
+          >
+            <Text style={styles.nearMeBadgeText}>Near</Text>
+          </View>
+        )}
+      </View>
+    </Marker>
+  );
+};
+
+// Restaurant Card Component
+const RestaurantCard = ({
+  marker,
+  isActive,
+  onPress,
+  onCall,
+  onDirections,
+  onWebsite,
+  onOfferPress,
+}: {
+  marker: RestaurantMarker;
+  isActive: boolean;
+  onPress: () => void;
+  onCall: () => void;
+  onDirections: () => void;
+  onWebsite: () => void;
+  onOfferPress: (offerId: string) => void;
+}) => {
+  const { theme } = useTheme();
+
+  return (
+    <TouchableOpacity
+      style={[
+        styles.restaurantCard,
+        { backgroundColor: theme.card },
+        isActive && styles.activeCard,
+      ]}
+      onPress={onPress}
+      activeOpacity={0.9}
+    >
+      {/* Restaurant Header */}
+      <View style={styles.cardHeader}>
+        {marker.provider.logo_path ? (
+          <Image
+            source={{ uri: handleImageSrc(marker.provider.logo_path) }}
+            style={styles.cardLogo}
+            resizeMode="cover"
+          />
+        ) : (
+          <View
+            style={[
+              styles.cardLogoPlaceholder,
+              { backgroundColor: theme.primary },
+            ]}
+          >
+            <Ionicons name="restaurant" size={24} color="white" />
+          </View>
+        )}
+        <View style={styles.cardHeaderText}>
+          <View style={styles.cardTitleRow}>
+            <Text
+              style={[styles.cardTitle, { color: theme.text }]}
+              numberOfLines={1}
+            >
+              {marker.title}
+            </Text>
+            {marker.isNearMe && (
+              <View
+                style={[styles.nearMeChip, { backgroundColor: theme.success }]}
+              >
+                <Ionicons name="location" size={12} color="white" />
+                <Text style={styles.nearMeChipText}>Near</Text>
+              </View>
+            )}
+          </View>
+          <View style={styles.distanceRow}>
+            <Ionicons name="navigate" size={14} color={theme.primary} />
+            <Text style={[styles.distanceText, { color: theme.textSecondary }]}>
+              {marker.distance?.toFixed(1)} km away
+            </Text>
+          </View>
+        </View>
+      </View>
+
+      {/* Address */}
+      <View style={styles.addressContainer}>
+        <Ionicons
+          name="location-outline"
+          size={16}
+          color={theme.textSecondary}
+        />
+        <Text
+          style={[styles.addressText, { color: theme.textSecondary }]}
+          numberOfLines={2}
+        >
+          {marker.address.street}, {marker.address.city}
+        </Text>
+      </View>
+
+      {/* Available Offers */}
+      {marker.offers.length > 0 && (
+        <View style={styles.offersSection}>
+          <Text style={[styles.offersSectionTitle, { color: theme.text }]}>
+            Available Offers ({marker.offers.length})
+          </Text>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            style={styles.offersScroll}
+            nestedScrollEnabled={true}
+          >
+            {marker.offers.map((offer) => (
+              <TouchableOpacity
+                key={offer.id}
+                style={[
+                  styles.offerCard,
+                  { backgroundColor: theme.background },
+                ]}
+                onPress={() => onOfferPress(offer.id)}
+                activeOpacity={0.7}
+              >
+                {offer.main_image ? (
+                  <Image
+                    source={{ uri: handleImageSrc(offer.main_image) }}
+                    style={styles.offerImage}
+                    resizeMode="cover"
+                  />
+                ) : (
+                  <View
+                    style={[
+                      styles.offerImagePlaceholder,
+                      { backgroundColor: theme.primary + '20' },
+                    ]}
+                  >
+                    <Ionicons
+                      name="fast-food-outline"
+                      size={32}
+                      color={theme.primary}
+                    />
+                  </View>
+                )}
+                <View style={styles.offerDetails}>
+                  <Text
+                    style={[styles.offerTitle, { color: theme.text }]}
+                    numberOfLines={2}
+                  >
+                    {offer.title}
+                  </Text>
+                  <View style={styles.offerPriceRow}>
+                    {offer.sale_price && offer.sale_price < offer.price ? (
+                      <>
+                        <Text
+                          style={[
+                            styles.offerSalePrice,
+                            { color: theme.success },
+                          ]}
+                        >
+                          ${offer.sale_price.toFixed(2)}
+                        </Text>
+                        <Text
+                          style={[
+                            styles.offerOriginalPrice,
+                            { color: theme.textSecondary },
+                          ]}
+                        >
+                          ${offer.price.toFixed(2)}
+                        </Text>
+                      </>
+                    ) : (
+                      <Text style={[styles.offerPrice, { color: theme.text }]}>
+                        ${offer.price.toFixed(2)}
+                      </Text>
+                    )}
+                  </View>
+                </View>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+        </View>
+      )}
+
+      {/* Action Buttons */}
+      <View style={styles.actionButtons}>
+        {marker.provider.primary_phone && (
+          <TouchableOpacity
+            style={[styles.actionButton, { backgroundColor: theme.success }]}
+            onPress={onCall}
+          >
+            <Ionicons name="call" size={18} color="white" />
+            <Text style={styles.actionButtonText}>Call</Text>
+          </TouchableOpacity>
+        )}
+        <TouchableOpacity
+          style={[styles.actionButton, { backgroundColor: theme.primary }]}
+          onPress={onDirections}
+        >
+          <Ionicons name="navigate" size={18} color="white" />
+          <Text style={styles.actionButtonText}>Directions</Text>
+        </TouchableOpacity>
+        {marker.provider.website && (
+          <TouchableOpacity
+            style={[styles.actionButton, { backgroundColor: theme.secondary }]}
+            onPress={onWebsite}
+          >
+            <Ionicons name="globe" size={18} color="white" />
+            <Text style={styles.actionButtonText}>Website</Text>
+          </TouchableOpacity>
+        )}
+      </View>
+    </TouchableOpacity>
+  );
 };
 
 export default function NearMeScreen() {
   const [region, setRegion] = useState<Region | null>(null);
   const [userLocation, setUserLocation] = useState<LatLng | null>(null);
   const [isGettingLocation, setIsGettingLocation] = useState(false);
-  const [providerMarkers, setProviderMarkers] = useState<ProviderMarker[]>([]);
-  const [selectedMarker, setSelectedMarker] = useState<ProviderMarker | null>(
+  const [restaurantMarkers, setRestaurantMarkers] = useState<
+    RestaurantMarker[]
+  >([]);
+  const [selectedMarker, setSelectedMarker] = useState<RestaurantMarker | null>(
     null
   );
-  const [showAllAddresses, setShowAllAddresses] = useState(false); // Toggle for showing all addresses
+  const [showNearMeOnly, setShowNearMeOnly] = useState(true);
   const { theme } = useTheme();
   const { offers } = useAppStore();
   const { showAlert } = useAlert();
   const mapRef = useRef<MapView>(null);
+  const scrollViewRef = useRef<ScrollView>(null);
+  const [activeCardIndex, setActiveCardIndex] = useState(0);
+  const router = useRouter();
 
-  // Extract providers from offers and get their addresses
-  const providersWithAddresses = useMemo(() => {
+  // Get restaurants within 9km radius (NEAR_ME_RADIUS_KM)
+  const getNearMeRestaurants = useCallback(
+    (
+      userLat: number,
+      userLon: number,
+      allRestaurants: RestaurantMarker[]
+    ): RestaurantMarker[] => {
+      return allRestaurants.filter((restaurant) => {
+        const distance = calculateDistance(
+          userLat,
+          userLon,
+          restaurant.coordinate.latitude,
+          restaurant.coordinate.longitude
+        );
+        return distance <= NEAR_ME_RADIUS_KM;
+      });
+    },
+    []
+  );
+
+  // FIXED: Extract providers from offers and group offers by provider
+  const restaurantsWithOffers = useMemo(() => {
     if (!offers || offers.length === 0) return [];
 
-    const providers: { provider: Provider; offerId: string }[] = [];
+    const providerOffersMap = new Map<
+      string,
+      { provider: Provider; offers: Offer[] }
+    >();
+
     offers.forEach((offer) => {
-      if (offer?.provider) {
-        providers.push({ provider: offer.provider, offerId: offer.id });
+      // Validate offer has provider with valid ID
+      if (!offer?.provider?.id) {
+        console.warn('Offer missing provider or provider ID:', offer?.id);
+        return;
+      }
+
+      const providerId = offer.provider.id;
+      const providerData = offer.provider;
+
+      // Validate provider has basic required fields
+      if (
+        !providerData.name ||
+        !providerData.addresses ||
+        providerData.addresses.length === 0
+      ) {
+        console.warn('Provider missing required fields:', providerId);
+        return;
+      }
+
+      // Get valid address with coordinates
+      const validAddress = providerData.addresses.find(
+        (addr) =>
+          addr.latitude &&
+          addr.longitude &&
+          !isNaN(addr.latitude) &&
+          !isNaN(addr.longitude)
+      );
+
+      if (!validAddress) {
+        console.warn('No valid address found for provider:', providerData.name);
+        return;
+      }
+
+      // Initialize provider in map if not exists
+      if (!providerOffersMap.has(providerId)) {
+        providerOffersMap.set(providerId, {
+          provider: providerData,
+          offers: [],
+        });
+      }
+
+      // Only add unique offers for this provider
+      const existingOffers = providerOffersMap.get(providerId)!.offers;
+      const offerExists = existingOffers.some(
+        (existingOffer) => existingOffer.id === offer.id
+      );
+
+      if (!offerExists) {
+        providerOffersMap.get(providerId)!.offers.push(offer);
       }
     });
 
-    return providers;
+    const result = Array.from(providerOffersMap.values());
+    console.log('✅ Grouped restaurants:', result.length);
+
+    return result;
   }, [offers]);
 
-  // Process providers to create markers with distance calculations
+  // Process restaurants to create markers with distance calculations
   useEffect(() => {
-    if (!userLocation || providersWithAddresses.length === 0) {
-      setProviderMarkers([]);
+    if (!userLocation || restaurantsWithOffers.length === 0) {
+      setRestaurantMarkers([]);
+      setSelectedMarker(null);
+      setActiveCardIndex(0);
       return;
     }
 
-    const markers: ProviderMarker[] = [];
+    const markers: RestaurantMarker[] = [];
 
-    providersWithAddresses.forEach(({ provider, offerId }) => {
-      if (!provider.addresses || provider.addresses.length === 0) return;
-
-      const validAddresses = provider.addresses.filter(
-        (address: Address) =>
-          address?.latitude &&
-          address?.longitude &&
-          !isNaN(address.latitude) &&
-          !isNaN(address.longitude)
+    restaurantsWithOffers.forEach(({ provider, offers: providerOffers }) => {
+      // Get valid address with coordinates
+      const validAddress = provider.addresses?.find(
+        (addr) =>
+          addr.latitude &&
+          addr.longitude &&
+          !isNaN(addr.latitude) &&
+          !isNaN(addr.longitude)
       );
 
-      if (validAddresses.length === 0) return;
+      if (!validAddress) return;
 
-      // If showAllAddresses is true, create markers for all valid addresses
-      // Otherwise, only use the primary address (is_primary: true)
-      const addressesToUse = showAllAddresses
-        ? validAddresses
-        : validAddresses.filter((addr: Address) => addr.is_primary);
+      const distance = calculateDistance(
+        userLocation.latitude,
+        userLocation.longitude,
+        validAddress.latitude,
+        validAddress.longitude
+      );
 
-      if (addressesToUse.length === 0 && !showAllAddresses) {
-        // Fallback to first address if no primary address found
-        addressesToUse.push(validAddresses[0]);
-      }
+      const isNearMe = distance <= NEAR_ME_RADIUS_KM;
 
-      addressesToUse.forEach((address: Address, index: number) => {
-        const distance = calculateDistance(
-          userLocation.latitude,
-          userLocation.longitude,
-          address.latitude,
-          address.longitude
-        );
-
-        markers.push({
-          id: `${provider.id}-${address.latitude}-${address.longitude}-${index}`,
-          coordinate: {
-            latitude: address.latitude,
-            longitude: address.longitude,
-          },
-          title: provider.name || '',
-          description: `${address.street}, ${address.city}`,
-          distance,
-          provider,
-          address,
-          providerType: provider.provider_type,
-        });
+      markers.push({
+        id: provider.id,
+        coordinate: {
+          latitude: validAddress.latitude,
+          longitude: validAddress.longitude,
+        },
+        title: provider.name || 'Unnamed Restaurant',
+        description: `${validAddress.street || ''}, ${validAddress.city || ''}`,
+        distance,
+        provider,
+        address: validAddress,
+        offers: providerOffers,
+        isNearMe,
       });
     });
 
-    // Remove duplicates (same provider at same location)
-    const uniqueMarkers = markers.filter(
-      (marker, index, self) =>
-        index ===
-        self.findIndex(
-          (m) =>
-            m.provider.id === marker.provider.id &&
-            m.address.latitude === marker.address.latitude &&
-            m.address.longitude === marker.address.longitude
-        )
-    );
-
     // Sort by nearest first
-    const sortedMarkers = uniqueMarkers.sort(
+    const sortedMarkers = markers.sort(
       (a, b) => (a.distance || 0) - (b.distance || 0)
     );
 
-    setProviderMarkers(sortedMarkers);
-  }, [providersWithAddresses, userLocation, showAllAddresses]);
+    console.log('📍 Markers created:', sortedMarkers.length);
+    setRestaurantMarkers(sortedMarkers);
 
-  // Fit map to show all markers when they're loaded
+    // Select the first marker if there are markers
+    if (sortedMarkers.length > 0) {
+      setSelectedMarker(sortedMarkers[0]);
+      setActiveCardIndex(0);
+    }
+  }, [restaurantsWithOffers, userLocation]);
+
+  // Get filtered markers based on showNearMeOnly
+  const displayedMarkers = useMemo(() => {
+    if (!showNearMeOnly) return restaurantMarkers;
+    return restaurantMarkers.filter((marker) => marker.isNearMe);
+  }, [restaurantMarkers, showNearMeOnly]);
+
+  // Get restaurants within 9km radius for stats
+  const nearMeRestaurants = useMemo(() => {
+    if (!userLocation) return [];
+    return getNearMeRestaurants(
+      userLocation.latitude,
+      userLocation.longitude,
+      restaurantMarkers
+    );
+  }, [userLocation, restaurantMarkers, getNearMeRestaurants]);
+
+  // Fit map to show markers when they're loaded or filter changes
   useEffect(() => {
-    if (providerMarkers.length > 0 && userLocation) {
+    if (displayedMarkers.length > 0 && userLocation) {
       const allCoordinates = [
         userLocation,
-        ...providerMarkers.map((marker) => marker.coordinate),
+        ...displayedMarkers.map((marker) => marker.coordinate),
       ];
 
       mapRef.current?.fitToCoordinates(allCoordinates, {
-        edgePadding: { top: 100, right: 50, bottom: 150, left: 50 },
+        edgePadding: { top: 150, right: 50, bottom: 350, left: 50 },
         animated: true,
       });
     }
-  }, [providerMarkers, userLocation]);
-
-  const reverseGeocode = async (
-    lat: number,
-    lon: number
-  ): Promise<string | null> => {
-    try {
-      const data = await Location.reverseGeocodeAsync({
-        latitude: lat,
-        longitude: lon,
-      });
-      if (data.length > 0) {
-        const item = data[0];
-        return `${item.name || ''} ${item.city || ''} ${
-          item.region || ''
-        }`.trim();
-      }
-      return null;
-    } catch (e) {
-      console.error('Reverse geocode error:', e);
-      return null;
-    }
-  };
+  }, [displayedMarkers, userLocation]);
 
   const handleGetCurrentLocation = useCallback(
     async (showAlertMessage: boolean = true) => {
@@ -227,7 +568,7 @@ export default function NearMeScreen() {
         if (status !== 'granted') {
           Alert.alert(
             'Permission Required',
-            'Location access is required to show nearby providers.',
+            'Location access is required to show nearby restaurants.',
             [
               { text: 'Cancel', style: 'cancel' },
               {
@@ -262,25 +603,14 @@ export default function NearMeScreen() {
         setRegion(newRegion);
         setUserLocation({ latitude, longitude });
 
-        // Smooth animate map camera
         mapRef.current?.animateToRegion(newRegion, 1000);
 
         if (showAlertMessage) {
-          const addressString = await reverseGeocode(latitude, longitude);
-
-          if (addressString) {
-            showAlert(
-              'Location Found',
-              `You're in ${addressString}`,
-              'success'
-            );
-          } else {
-            showAlert(
-              'Location Found',
-              'Your current location has been detected.',
-              'info'
-            );
-          }
+          showAlert(
+            'Location Found',
+            'Your current location has been detected.',
+            'success'
+          );
         }
       } catch (error: any) {
         showAlert(
@@ -295,13 +625,22 @@ export default function NearMeScreen() {
     [showAlert]
   );
 
-  // Fetch user location on mount
+  // Initial location load
   useEffect(() => {
     handleGetCurrentLocation(false);
   }, []);
 
-  const handleMarkerPress = (marker: ProviderMarker) => {
+  const handleMarkerPress = (marker: RestaurantMarker) => {
     setSelectedMarker(marker);
+    const markerIndex = displayedMarkers.findIndex((m) => m.id === marker.id);
+    if (markerIndex !== -1) {
+      setActiveCardIndex(markerIndex);
+      scrollViewRef.current?.scrollTo({
+        x: markerIndex * (CARD_WIDTH + 20),
+        animated: true,
+      });
+    }
+
     mapRef.current?.animateToRegion(
       {
         ...marker.coordinate,
@@ -316,46 +655,83 @@ export default function NearMeScreen() {
     setSelectedMarker(null);
   };
 
-  const getMarkerColor = (providerType: string) => {
-    switch (providerType) {
-      case 'hospital':
-        return '#FF4444'; // Red for hospitals
-      case 'clinic':
-        return '#44B7FF'; // Blue for clinics
-      case 'pharmacy':
-        return '#44FF7F'; // Green for pharmacies
-      default:
-        return '#FF6B6B';
-    }
-  };
-
-  const nearestProviders = useMemo(
-    () => providerMarkers.slice(0, 5), // Show top 5 nearest
-    [providerMarkers]
-  );
-
-  const toggleShowAllAddresses = () => {
-    setShowAllAddresses(!showAllAddresses);
+  const toggleNearMeFilter = () => {
+    setShowNearMeOnly(!showNearMeOnly);
+    setSelectedMarker(null);
+    setActiveCardIndex(0);
     showAlert(
-      'Display Mode Changed',
+      'Filter Updated',
       `Now showing ${
-        !showAllAddresses ? 'all addresses' : 'only primary addresses'
+        !showNearMeOnly ? 'only nearby restaurants (9km)' : 'all restaurants'
       }`,
       'info'
     );
   };
 
   const handleCallProvider = (phone: string) => {
-    Linking.openURL(`tel:${phone}`).catch((err) =>
+    Linking.openURL(`tel:${phone}`).catch(() =>
       showAlert('Error', 'Could not make call', 'error')
     );
   };
 
   const handleVisitWebsite = (website: string) => {
     const url = website.startsWith('http') ? website : `https://${website}`;
-    Linking.openURL(url).catch((err) =>
+    Linking.openURL(url).catch(() =>
       showAlert('Error', 'Could not open website', 'error')
     );
+  };
+
+  const handleOfferPress = useCallback(
+    (offerId: string) => {
+      router.push(`/offer-details?id=${offerId}`);
+    },
+    [router]
+  );
+
+  const handleGetDirections = (
+    latitude: number,
+    longitude: number,
+    name: string
+  ) => {
+    const scheme = Platform.select({
+      ios: 'maps:0,0?q=',
+      android: 'geo:0,0?q=',
+    });
+    const latLng = `${latitude},${longitude}`;
+    const label = name;
+    const url = Platform.select({
+      ios: `${scheme}${label}@${latLng}`,
+      android: `${scheme}${latLng}(${label})`,
+    });
+
+    Linking.openURL(url!).catch(() => {
+      const webUrl = `https://www.google.com/maps/search/?api=1&query=${latLng}`;
+      Linking.openURL(webUrl);
+    });
+  };
+
+  const onScroll = (event: any) => {
+    const contentOffsetX = event.nativeEvent.contentOffset.x;
+    const index = Math.round(contentOffsetX / (CARD_WIDTH + 20));
+
+    if (
+      index !== activeCardIndex &&
+      index >= 0 &&
+      index < displayedMarkers.length
+    ) {
+      setActiveCardIndex(index);
+      const marker = displayedMarkers[index];
+      setSelectedMarker(marker);
+
+      mapRef.current?.animateToRegion(
+        {
+          ...marker.coordinate,
+          latitudeDelta: 0.01,
+          longitudeDelta: 0.01,
+        },
+        350
+      );
+    }
   };
 
   return (
@@ -370,43 +746,37 @@ export default function NearMeScreen() {
           latitudeDelta: 0.0922,
           longitudeDelta: 0.0421,
         }}
-        region={region}
+        region={region!}
         onPress={handleMapPress}
         showsUserLocation={true}
         showsMyLocationButton={false}
         showsCompass={true}
         loadingEnabled={true}
       >
-        {/* User Location Marker */}
-        {userLocation && (
-          <Marker
-            coordinate={userLocation}
-            title="Your Location"
-            description="Your current position"
-            pinColor="#2196F3"
-          >
-            <Ionicons name="person-circle" size={40} color="#2196F3" />
-          </Marker>
+        {/* 9km radius circle */}
+        {userLocation && showNearMeOnly && (
+          <Circle
+            center={userLocation}
+            radius={NEAR_ME_RADIUS_KM * 1000}
+            fillColor="rgba(33, 150, 243, 0.1)"
+            strokeColor="rgba(33, 150, 243, 0.3)"
+            strokeWidth={2}
+          />
         )}
 
-        {/* Provider Markers */}
-        {providerMarkers.map((marker) => (
-          <Marker
+        {/* Restaurant Markers with Custom Icons */}
+        {displayedMarkers.map((marker) => (
+          <CustomMarker
             key={marker.id}
-            coordinate={marker.coordinate}
-            title={marker.title}
-            description={`${marker.address.city}, ${marker.distance?.toFixed(
-              1
-            )}km`}
+            marker={marker}
+            isSelected={selectedMarker?.id === marker.id}
             onPress={() => handleMarkerPress(marker)}
-            pinColor={getMarkerColor(marker.providerType)}
           />
         ))}
       </MapView>
 
-      {/* Control Buttons Container */}
+      {/* Control Buttons */}
       <View style={styles.controlsContainer}>
-        {/* Location Button */}
         <TouchableOpacity
           style={[styles.controlButton, { backgroundColor: theme.primary }]}
           onPress={() => handleGetCurrentLocation()}
@@ -419,184 +789,89 @@ export default function NearMeScreen() {
           )}
         </TouchableOpacity>
 
-        {/* Toggle Addresses Button */}
-        {providersWithAddresses.length > 0 && (
-          <TouchableOpacity
-            style={[styles.controlButton, { backgroundColor: theme.secondary }]}
-            onPress={toggleShowAllAddresses}
-          >
-            <Ionicons
-              name={showAllAddresses ? 'location' : 'location-outline'}
-              size={24}
-              color="white"
-            />
-          </TouchableOpacity>
-        )}
+        <TouchableOpacity
+          style={[
+            styles.controlButton,
+            {
+              backgroundColor: showNearMeOnly ? theme.success : theme.secondary,
+            },
+          ]}
+          onPress={toggleNearMeFilter}
+        >
+          <Ionicons
+            name={showNearMeOnly ? 'radio-button-on' : 'radio-button-off'}
+            size={24}
+            color="white"
+          />
+        </TouchableOpacity>
       </View>
 
-      {/* Selected Provider Details Card */}
-      {selectedMarker && (
-        <View
-          style={[styles.detailsCard, { backgroundColor: theme.background }]}
+      {/* Header Stats */}
+      <View style={[styles.headerStats, { backgroundColor: theme.card }]}>
+        <TouchableOpacity
+          onPress={() => router.back()}
+          style={{
+            backgroundColor: theme.backgroundSecondary,
+            padding: 6,
+            borderRadius: 12,
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
         >
-          <View style={styles.detailsHeader}>
-            {selectedMarker.provider.logo_path ? (
-              <Image
-                source={{
-                  uri: handleImageSrc(selectedMarker.provider.logo_path),
-                }}
-                style={styles.providerLogo}
-                resizeMode="cover"
-              />
-            ) : (
-              <View
-                style={[
-                  styles.providerLogoPlaceholder,
-                  { backgroundColor: theme.primary },
-                ]}
-              >
-                <Text style={styles.logoPlaceholderText}>
-                  {selectedMarker.provider.name?.charAt(0) || 'P'}
-                </Text>
-              </View>
-            )}
-            <View style={styles.detailsTitle}>
-              <Text style={[styles.providerName, { color: theme.text }]}>
-                {selectedMarker.provider.name}
-              </Text>
-              <Text
-                style={[styles.providerType, { color: theme.textSecondary }]}
-              >
-                {selectedMarker.provider.provider_type}
-              </Text>
-            </View>
-            <TouchableOpacity onPress={() => setSelectedMarker(null)}>
-              <Ionicons name="close" size={24} color={theme.textSecondary} />
-            </TouchableOpacity>
-          </View>
-
-          <View style={styles.detailsContent}>
-            <View style={styles.addressSection}>
-              <Ionicons name="location" size={20} color={theme.primary} />
-              <View style={styles.addressText}>
-                <Text style={[styles.addressStreet, { color: theme.text }]}>
-                  {selectedMarker.address.street}
-                </Text>
-                <Text
-                  style={[styles.addressCity, { color: theme.textSecondary }]}
-                >
-                  {selectedMarker.address.city}, {selectedMarker.address.state}{' '}
-                  {selectedMarker.address.zipcode}
-                </Text>
-              </View>
-            </View>
-
-            <View style={styles.distanceSection}>
-              <Ionicons name="navigate" size={20} color={theme.primary} />
-              <Text style={[styles.distanceText, { color: theme.text }]}>
-                {selectedMarker.distance?.toFixed(1)} km away
-              </Text>
-            </View>
-
-            {selectedMarker.provider.description && (
-              <Text
-                style={[styles.description, { color: theme.textSecondary }]}
-              >
-                {selectedMarker.provider.description}
-              </Text>
-            )}
-
-            <View style={styles.contactButtons}>
-              {selectedMarker.provider.primary_phone && (
-                <TouchableOpacity
-                  style={[
-                    styles.contactButton,
-                    { backgroundColor: theme.success },
-                  ]}
-                  onPress={() =>
-                    handleCallProvider(selectedMarker.provider.primary_phone)
-                  }
-                >
-                  <Ionicons name="call" size={20} color="white" />
-                  <Text style={styles.contactButtonText}>Call</Text>
-                </TouchableOpacity>
-              )}
-
-              {selectedMarker.provider.website && (
-                <TouchableOpacity
-                  style={[
-                    styles.contactButton,
-                    { backgroundColor: theme.primary },
-                  ]}
-                  onPress={() =>
-                    handleVisitWebsite(selectedMarker.provider.website)
-                  }
-                >
-                  <Ionicons name="globe" size={20} color="white" />
-                  <Text style={styles.contactButtonText}>Website</Text>
-                </TouchableOpacity>
-              )}
-            </View>
-          </View>
-        </View>
-      )}
-
-      {/* Nearest Providers List */}
-      {providerMarkers.length > 0 && selectedMarker && (
-        <View
-          style={[styles.nearestList, { backgroundColor: theme.background }]}
-        >
-          <Text style={[styles.nearestTitle, { color: theme.text }]}>
-            Nearest Restaurants ({providerMarkers.length})
+          <ArrowLeft color={theme.text} />
+        </TouchableOpacity>
+        <View style={styles.statItem}>
+          <Text style={[styles.statNumber, { color: theme.primary }]}>
+            {displayedMarkers.length}
           </Text>
-          <ScrollView>
-            {nearestProviders.map((provider) => (
-              <TouchableOpacity
-                key={provider.id}
-                style={[
-                  styles.providerItem,
-                  selectedMarker?.id === provider.id &&
-                    styles.selectedProviderItem,
-                ]}
-                onPress={() => handleMarkerPress(provider)}
-              >
-                <View style={styles.providerMarker}>
-                  <View
-                    style={[
-                      styles.markerDot,
-                      {
-                        backgroundColor: getMarkerColor(provider.providerType),
-                      },
-                    ]}
-                  />
-                </View>
-                <View style={styles.providerInfo}>
-                  <Text style={[styles.providerName, { color: theme.text }]}>
-                    {provider.title}
-                  </Text>
-                  <Text
-                    style={[
-                      styles.providerAddress,
-                      { color: theme.textSecondary },
-                    ]}
-                  >
-                    {provider.address.city}, {provider.address.state}
-                  </Text>
-                  <Text
-                    style={[styles.providerDistance, { color: theme.primary }]}
-                  >
-                    {provider.distance?.toFixed(1)} km away
-                  </Text>
-                </View>
-                <Ionicons
-                  name="chevron-forward"
-                  size={20}
-                  color={theme.textSecondary}
-                />
-              </TouchableOpacity>
-            ))}
-          </ScrollView>
+          <Text style={[styles.statLabel, { color: theme.textSecondary }]}>
+            Total
+          </Text>
         </View>
+        <View style={styles.statDivider} />
+        <View style={styles.statItem}>
+          <Text style={[styles.statNumber, { color: theme.success }]}>
+            {nearMeRestaurants.length}
+          </Text>
+          <Text style={[styles.statLabel, { color: theme.textSecondary }]}>
+            Within {NEAR_ME_RADIUS_KM}km
+          </Text>
+        </View>
+      </View>
+
+      {/* Horizontal Scrolling Restaurant Cards */}
+      {displayedMarkers.length > 0 && (
+        <ScrollView
+          ref={scrollViewRef}
+          horizontal
+          pagingEnabled
+          showsHorizontalScrollIndicator={false}
+          snapToInterval={CARD_WIDTH + 20}
+          decelerationRate="fast"
+          onScroll={onScroll}
+          scrollEventThrottle={16}
+          contentContainerStyle={styles.cardsContainer}
+          style={styles.cardsScrollView}
+        >
+          {displayedMarkers.map((marker, index) => (
+            <RestaurantCard
+              key={marker.id}
+              marker={marker}
+              isActive={activeCardIndex === index}
+              onPress={() => handleMarkerPress(marker)}
+              onCall={() => handleCallProvider(marker.provider.primary_phone)}
+              onDirections={() =>
+                handleGetDirections(
+                  marker.coordinate.latitude,
+                  marker.coordinate.longitude,
+                  marker.title
+                )
+              }
+              onWebsite={() => handleVisitWebsite(marker.provider.website)}
+              onOfferPress={handleOfferPress}
+            />
+          ))}
+        </ScrollView>
       )}
 
       {/* Loading Overlay */}
@@ -613,39 +888,44 @@ export default function NearMeScreen() {
         </View>
       )}
 
-      {/* No Providers Message */}
-      {providerMarkers.length === 0 &&
-        providersWithAddresses.length > 0 &&
-        userLocation && (
-          <View style={styles.noProvidersOverlay}>
-            <View
-              style={[
-                styles.noProvidersContent,
-                { backgroundColor: theme.card },
-              ]}
+      {/* No Restaurants Message */}
+      {displayedMarkers.length === 0 && !isGettingLocation && userLocation && (
+        <View style={styles.noRestaurantsOverlay}>
+          <View
+            style={[
+              styles.noRestaurantsContent,
+              { backgroundColor: theme.card },
+            ]}
+          >
+            <Ionicons
+              name="restaurant-outline"
+              size={64}
+              color={theme.textSecondary}
+            />
+            <Text style={[styles.noRestaurantsTitle, { color: theme.text }]}>
+              No Restaurants Found
+            </Text>
+            <Text
+              style={[styles.noRestaurantsText, { color: theme.textSecondary }]}
             >
-              <Ionicons
-                name="location-outline"
-                size={48}
-                color={theme.textSecondary}
-              />
-              <Text style={[styles.noProvidersText, { color: theme.text }]}>
-                No restaurants with location data available nearby
-              </Text>
-            </View>
+              {showNearMeOnly
+                ? `No restaurants within ${NEAR_ME_RADIUS_KM}km of your location`
+                : 'No restaurants available in this area'}
+            </Text>
+            {showNearMeOnly && (
+              <TouchableOpacity
+                style={[
+                  styles.showAllButton,
+                  { backgroundColor: theme.primary },
+                ]}
+                onPress={toggleNearMeFilter}
+              >
+                <Text style={styles.showAllButtonText}>
+                  Show All Restaurants
+                </Text>
+              </TouchableOpacity>
+            )}
           </View>
-        )}
-
-      {/* Info Banner */}
-      {providerMarkers.length > 0 && (
-        <View style={[styles.infoBanner, { backgroundColor: theme.card }]}>
-          <Ionicons name="information-circle" size={20} color={theme.primary} />
-          <Text style={[styles.infoText, { color: theme.textSecondary }]}>
-            Tap on markers for details •{' '}
-            {showAllAddresses
-              ? 'Showing all locations'
-              : 'Showing primary locations'}
-          </Text>
         </View>
       )}
     </View>
@@ -662,9 +942,9 @@ const styles = StyleSheet.create({
   },
   controlsContainer: {
     position: 'absolute',
-    top: 50,
+    top: 120,
     right: 20,
-    gap: 10,
+    gap: 12,
   },
   controlButton: {
     width: 50,
@@ -672,160 +952,265 @@ const styles = StyleSheet.create({
     borderRadius: 25,
     justifyContent: 'center',
     alignItems: 'center',
+    elevation: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4.65,
+  },
+  headerStats: {
+    position: 'absolute',
+    top: 50,
+    left: 20,
+    right: 100,
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 12,
+    elevation: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 3,
+  },
+  statItem: {
+    flex: 1,
+    alignItems: 'center',
+  },
+  statNumber: {
+    fontSize: 24,
+    fontWeight: 'bold',
+  },
+  statLabel: {
+    fontSize: 12,
+    marginTop: 2,
+  },
+  statDivider: {
+    width: 1,
+    height: 40,
+    backgroundColor: '#E0E0E0',
+  },
+  customMarkerContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  customMarker: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    borderWidth: 3,
+    overflow: 'hidden',
     elevation: 5,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
+    shadowOpacity: 0.3,
+    shadowRadius: 3,
   },
-  detailsCard: {
+  customMarkerSelected: {
+    borderWidth: 4,
+    transform: [{ scale: 1.2 }],
+    elevation: 8,
+  },
+  customMarkerNearMe: {
+    borderColor: '#4CAF50',
+  },
+  markerImage: {
+    width: '100%',
+    height: '100%',
+  },
+  defaultMarker: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 3,
+    elevation: 5,
+  },
+  defaultMarkerNearMe: {
+    borderColor: '#4CAF50',
+  },
+  nearMeBadge: {
     position: 'absolute',
-    bottom: 20,
-    left: 20,
-    right: 20,
-    borderRadius: 16,
-    padding: 20,
-    elevation: 10,
+    top: -8,
+    right: -8,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 8,
+    minWidth: 30,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  nearMeBadgeText: {
+    color: 'white',
+    fontSize: 10,
+    fontWeight: 'bold',
+  },
+  cardsScrollView: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    maxHeight: height * 0.45,
+  },
+  cardsContainer: {
+    paddingHorizontal: (width - CARD_WIDTH) / 2,
+    paddingVertical: 20,
+  },
+  restaurantCard: {
+    width: CARD_WIDTH,
+    marginHorizontal: 10,
+    borderRadius: 20,
+    padding: 16,
+    elevation: 8,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 5,
-    maxHeight: 300,
   },
-  detailsHeader: {
+  activeCard: {
+    transform: [{ scale: 1.02 }],
+    elevation: 12,
+  },
+  cardHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 40,
-  },
-  providerLogo: {
-    width: 50,
-    height: 50,
-    borderRadius: 24,
-    marginRight: 12,
-  },
-  providerLogoPlaceholder: {
-    width: 50,
-    height: 50,
-    borderRadius: 8,
-    marginRight: 12,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  logoPlaceholderText: {
-    color: 'white',
-    fontSize: 20,
-    fontWeight: 'bold',
-  },
-  detailsTitle: {
-    flex: 1,
-  },
-  providerName: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 4,
-  },
-  providerType: {
-    fontSize: 14,
-    textTransform: 'capitalize',
-  },
-  detailsContent: {
-    gap: 12,
-  },
-  addressSection: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: 12,
-  },
-  addressText: {
-    flex: 1,
-  },
-  addressStreet: {
-    fontSize: 14,
-    marginBottom: 2,
-  },
-  addressCity: {
-    fontSize: 13,
-  },
-  distanceSection: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-  },
-  distanceText: {
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  description: {
-    fontSize: 13,
-    lineHeight: 18,
-    marginTop: 4,
-  },
-  contactButtons: {
-    flexDirection: 'row',
-    gap: 12,
-    marginTop: 16,
-  },
-  contactButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderRadius: 8,
-    flex: 1,
-    justifyContent: 'center',
-  },
-  contactButtonText: {
-    color: 'white',
-    fontWeight: '600',
-  },
-  nearestList: {
-    position: 'absolute',
-    bottom: 20,
-    left: 20,
-    right: 20,
-    borderRadius: 16,
-    padding: 16,
-    maxHeight: 220,
-    elevation: 5,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-  },
-  nearestTitle: {
-    fontSize: 16,
-    fontWeight: 'bold',
     marginBottom: 12,
   },
-  providerItem: {
+  cardLogo: {
+    width: 60,
+    height: 60,
+    borderRadius: 12,
+  },
+  cardLogoPlaceholder: {
+    width: 60,
+    height: 60,
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  cardHeaderText: {
+    flex: 1,
+    marginLeft: 12,
+  },
+  cardTitleRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 10,
-    paddingHorizontal: 12,
-    borderRadius: 10,
-    marginBottom: 8,
+    marginBottom: 4,
   },
-  selectedProviderItem: {
-    backgroundColor: 'rgba(33, 150, 243, 0.1)',
-  },
-  providerMarker: {
-    marginRight: 12,
-  },
-  markerDot: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
-  },
-  providerInfo: {
+  cardTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
     flex: 1,
   },
-  providerAddress: {
-    fontSize: 12,
-    marginBottom: 2,
+  nearMeChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+    gap: 4,
   },
-  providerDistance: {
-    fontSize: 12,
+  nearMeChipText: {
+    color: 'white',
+    fontSize: 11,
+    fontWeight: '600',
+  },
+  distanceRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  distanceText: {
+    fontSize: 13,
+  },
+  addressContainer: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 8,
+    marginBottom: 12,
+  },
+  addressText: {
+    fontSize: 13,
+    flex: 1,
+    lineHeight: 18,
+  },
+  offersSection: {
+    marginBottom: 12,
+  },
+  offersSectionTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    marginBottom: 8,
+  },
+  offersScroll: {
+    marginHorizontal: -4,
+  },
+  offerCard: {
+    width: 160,
+    marginHorizontal: 4,
+    borderRadius: 12,
+    overflow: 'hidden',
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.15,
+    shadowRadius: 2,
+  },
+  offerImage: {
+    width: '100%',
+    height: 100,
+  },
+  offerImagePlaceholder: {
+    width: '100%',
+    height: 100,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  offerDetails: {
+    padding: 10,
+  },
+  offerTitle: {
+    fontSize: 13,
+    fontWeight: '500',
+    marginBottom: 6,
+    height: 36,
+    lineHeight: 18,
+  },
+  offerPriceRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  offerPrice: {
+    fontSize: 15,
+    fontWeight: 'bold',
+  },
+  offerSalePrice: {
+    fontSize: 15,
+    fontWeight: 'bold',
+  },
+  offerOriginalPrice: {
+    fontSize: 13,
+    textDecorationLine: 'line-through',
+  },
+  actionButtons: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  actionButton: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    paddingVertical: 10,
+    borderRadius: 10,
+  },
+  actionButtonText: {
+    color: 'white',
+    fontSize: 13,
     fontWeight: '600',
   },
   loadingOverlay: {
@@ -836,54 +1221,59 @@ const styles = StyleSheet.create({
     bottom: 0,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.3)',
+    backgroundColor: 'rgba(0, 0, 0, 0.4)',
   },
   loadingContent: {
-    padding: 24,
-    borderRadius: 12,
+    padding: 30,
+    borderRadius: 16,
     alignItems: 'center',
     justifyContent: 'center',
     minWidth: 200,
+    elevation: 10,
   },
   loadingText: {
-    marginTop: 12,
+    marginTop: 16,
     fontSize: 16,
-    fontWeight: '500',
+    fontWeight: '600',
   },
-  noProvidersOverlay: {
+  noRestaurantsOverlay: {
     position: 'absolute',
-    bottom: 20,
-    left: 20,
-    right: 20,
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    justifyContent: 'center',
     alignItems: 'center',
-  },
-  noProvidersContent: {
     padding: 20,
-    borderRadius: 12,
+  },
+  noRestaurantsContent: {
+    padding: 32,
+    borderRadius: 20,
     alignItems: 'center',
     justifyContent: 'center',
     width: '100%',
+    maxWidth: 400,
+    elevation: 8,
   },
-  noProvidersText: {
-    marginTop: 12,
+  noRestaurantsTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginTop: 16,
+    marginBottom: 8,
+  },
+  noRestaurantsText: {
     fontSize: 14,
     textAlign: 'center',
-    fontWeight: '500',
+    marginBottom: 20,
   },
-  infoBanner: {
-    position: 'absolute',
-    top: 40,
-    left: 20,
-    right: 100,
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    borderRadius: 8,
-    gap: 8,
+  showAllButton: {
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 12,
   },
-  infoText: {
-    fontSize: 12,
-    flex: 1,
+  showAllButtonText: {
+    color: 'white',
+    fontSize: 14,
+    fontWeight: '600',
   },
 });

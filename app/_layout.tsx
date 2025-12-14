@@ -10,7 +10,6 @@ import React from 'react';
 import { useTheme } from '@/hooks/useTheme';
 import { useFavoritesStore } from '@/stores/favoritesStore';
 import { useRecentlyViewedStore } from '@/stores/recentlyViewedStore';
-import { useNotificationsStore } from '@/stores/notificationsStore';
 import { useBudgetStore } from '@/stores/budgetStore';
 import { useSearchHistoryStore } from '@/stores/searchHistoryStore';
 import { useAuthStore } from '@/stores/authStore';
@@ -49,7 +48,6 @@ export default function RootLayout() {
             useFavoritesStore.getState().loadFavorites?.(),
             useRecentlyViewedStore.getState().loadRecentlyViewed?.(),
             useSearchHistoryStore.getState().loadSearchHistory?.(),
-            useNotificationsStore.getState().loadNotifications?.(),
             useBudgetStore.getState().loadBudgetData?.(),
           ].filter(Boolean)
         );
@@ -64,7 +62,7 @@ export default function RootLayout() {
     prepareApp();
   }, []);
 
-  // Handle navigation
+  //Handle navigation
   useEffect(() => {
     const handleNavigation = async () => {
       if (hasNavigated.current) return;
@@ -74,7 +72,7 @@ export default function RootLayout() {
         const { user, access_token, isLoading, getUser } =
           useAuthStore.getState();
 
-        const res = await getUser();
+        const res = await getUser(user?.id!);
 
         // Simple navigation logic: if user exists, go to tabs, else go to auth
         if (res.success && access_token) {
@@ -89,7 +87,6 @@ export default function RootLayout() {
           );
           router.replace('/auth');
         }
-        console.log('Auth State:', { user, access_token, isLoading });
         hasNavigated.current = true;
       } catch (error) {
         console.error('Error during navigation:', error);

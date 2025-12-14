@@ -1,164 +1,248 @@
 import React, { useEffect, useRef } from 'react';
-import { View, Text, Animated, Easing, Image } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
-import * as images from '@/constants/images';
+import { View, Text, StyleSheet, Image, Animated } from 'react-native';
+import { useTheme } from '@/hooks/useTheme';
+import logo from '@/assets/images/logo.png';
 
-export default function CustomSplashScreen() {
+type SplashProps = { isAnimating: boolean };
+
+function PulseCircleSplash({ isAnimating }: SplashProps) {
+  const { theme } = useTheme();
+
+  // Create multiple pulse animations for layered effect
+  const pulse1 = useRef(new Animated.Value(0)).current;
+  const pulse2 = useRef(new Animated.Value(0)).current;
+  const pulse3 = useRef(new Animated.Value(0)).current;
+  const pulse4 = useRef(new Animated.Value(0)).current;
+
+  // Fade in animation for logo and text
   const fadeAnim = useRef(new Animated.Value(0)).current;
-  const scaleAnim = useRef(new Animated.Value(0.3)).current;
-  const rotateAnim = useRef(new Animated.Value(0)).current;
-  const dotsAnim = useRef([
-    new Animated.Value(0),
-    new Animated.Value(0),
-    new Animated.Value(0),
-  ]).current;
 
   useEffect(() => {
-    // Logo animation
-    Animated.parallel([
-      Animated.timing(fadeAnim, {
-        toValue: 1,
-        duration: 800,
-        useNativeDriver: true,
-      }),
-      Animated.spring(scaleAnim, {
-        toValue: 1,
-        tension: 50,
-        friction: 7,
-        useNativeDriver: true,
-      }),
-    ]).start();
-
-    // Rotating animation for the outer ring
+    // Start all pulse animations with delays for staggered effect
     Animated.loop(
-      Animated.timing(rotateAnim, {
-        toValue: 1,
-        duration: 3000,
-        easing: Easing.linear,
-        useNativeDriver: true,
-      })
+      Animated.sequence([
+        Animated.timing(pulse1, {
+          toValue: 1,
+          duration: 3000,
+          useNativeDriver: true,
+        }),
+        Animated.timing(pulse1, {
+          toValue: 0,
+          duration: 0,
+          useNativeDriver: true,
+        }),
+      ])
     ).start();
 
-    // Loading dots animation
-    const animateDots = () => {
-      Animated.stagger(
-        150,
-        dotsAnim.map((anim) =>
-          Animated.sequence([
-            Animated.timing(anim, {
-              toValue: 1,
-              duration: 400,
-              useNativeDriver: true,
-            }),
-            Animated.timing(anim, {
-              toValue: 0,
-              duration: 400,
-              useNativeDriver: true,
-            }),
-          ])
-        )
-      ).start(() => animateDots());
-    };
+    Animated.loop(
+      Animated.sequence([
+        Animated.delay(500),
+        Animated.timing(pulse2, {
+          toValue: 1,
+          duration: 3000,
+          useNativeDriver: true,
+        }),
+        Animated.timing(pulse2, {
+          toValue: 0,
+          duration: 0,
+          useNativeDriver: true,
+        }),
+      ])
+    ).start();
 
-    animateDots();
+    Animated.loop(
+      Animated.sequence([
+        Animated.delay(1000),
+        Animated.timing(pulse3, {
+          toValue: 1,
+          duration: 3000,
+          useNativeDriver: true,
+        }),
+        Animated.timing(pulse3, {
+          toValue: 0,
+          duration: 0,
+          useNativeDriver: true,
+        }),
+      ])
+    ).start();
+
+    Animated.loop(
+      Animated.sequence([
+        Animated.delay(1500),
+        Animated.timing(pulse4, {
+          toValue: 1,
+          duration: 3000,
+          useNativeDriver: true,
+        }),
+        Animated.timing(pulse4, {
+          toValue: 0,
+          duration: 0,
+          useNativeDriver: true,
+        }),
+      ])
+    ).start();
+
+    // Fade in content
+    Animated.timing(fadeAnim, {
+      toValue: 1,
+      duration: 1000,
+      useNativeDriver: true,
+    }).start();
   }, []);
 
-  const spin = rotateAnim.interpolate({
-    inputRange: [0, 1],
-    outputRange: ['0deg', '360deg'],
+  // Interpolation for each pulse circle
+  const createPulseInterpolation = (pulse: Animated.Value) => ({
+    scale: pulse.interpolate({
+      inputRange: [0, 1],
+      outputRange: [1, 3],
+    }),
+    opacity: pulse.interpolate({
+      inputRange: [0, 0.5, 1],
+      outputRange: [0.8, 0.4, 0],
+    }),
   });
 
-  return (
-    <LinearGradient
-      colors={['#667eea', '#764ba2', '#f093fb']}
-      start={{ x: 0, y: 0 }}
-      end={{ x: 1, y: 1 }}
-      style={{
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-      }}
-    >
-      {/* Animated background circles */}
-      <View className="absolute inset-0 items-center justify-center">
-        <Animated.View
-          style={{
-            transform: [{ rotate: spin }],
-            opacity: 0.1,
-          }}
-          className="w-80 h-80 rounded-full border-4 border-white"
-        />
-        <Animated.View
-          style={{
-            transform: [{ rotate: spin }],
-            opacity: 0.1,
-          }}
-          className="absolute w-64 h-64 rounded-full border-4 border-white"
-        />
-      </View>
+  const pulse1Style = createPulseInterpolation(pulse1);
+  const pulse2Style = createPulseInterpolation(pulse2);
+  const pulse3Style = createPulseInterpolation(pulse3);
+  const pulse4Style = createPulseInterpolation(pulse4);
 
-      {/* Logo container */}
+  return (
+    <View style={[styles.full, { backgroundColor: theme.background }]}>
+      {/* Multiple pulsing circles */}
       <Animated.View
-        style={{
-          opacity: fadeAnim,
-          transform: [{ scale: scaleAnim }],
-        }}
-        className="items-center"
+        style={[
+          styles.pulseRing,
+          {
+            transform: [{ scale: pulse1Style.scale }],
+            opacity: pulse1Style.opacity,
+            borderColor: theme.primary,
+            backgroundColor: theme.primary + '20', // Adding opacity
+          },
+        ]}
+      />
+
+      <Animated.View
+        style={[
+          styles.pulseRing,
+          {
+            transform: [{ scale: pulse2Style.scale }],
+            opacity: pulse2Style.opacity,
+            borderColor: theme.secondary,
+            backgroundColor: theme.secondary + '20',
+          },
+        ]}
+      />
+
+      <Animated.View
+        style={[
+          styles.pulseRing,
+          {
+            transform: [{ scale: pulse3Style.scale }],
+            opacity: pulse3Style.opacity,
+            borderColor: theme.accent,
+            backgroundColor: theme.accent + '20',
+          },
+        ]}
+      />
+
+      <Animated.View
+        style={[
+          styles.pulseRing,
+          {
+            transform: [{ scale: pulse4Style.scale }],
+            opacity: pulse4Style.opacity,
+            borderColor: theme.primary,
+            backgroundColor: theme.primary + '20',
+          },
+        ]}
+      />
+
+      {/* Center content with fade animation */}
+      <Animated.View
+        style={[
+          styles.centerContent,
+          { opacity: fadeAnim, transform: [{ scale: fadeAnim }] },
+        ]}
       >
-        {/* Icon/Logo */}
-        <View className="w-24 h-24 bg-white rounded-3xl items-center justify-center mb-6 shadow-2xl">
-          <LinearGradient
-            colors={['#a855f7', '#a852c8']}
-            style={{
-              width: '100%',
-              height: '100%',
-              borderRadius: 12,
-              padding: 10,
-            }}
-          >
-            <Image source={images.APP_LOGO} className="w-full h-full" />
-          </LinearGradient>
+        <View
+          style={[styles.logoContainer, { backgroundColor: theme.primary }]}
+        >
+          <Image source={logo} style={{ width: '100%', height: '100%' }} />
         </View>
 
-        {/* App name */}
-        <Text className="text-white text-3xl font-bold tracking-wide mb-2">
-          FoodForLess
+        <Text
+          style={[
+            styles.title,
+            { color: theme.text, fontFamily: 'FredokaBold' },
+          ]}
+        >
+          Food For Less
         </Text>
-        <Text className="text-white/80 text-sm tracking-widest">
-          ORDER. EAT. ENJOY.
-        </Text>
-      </Animated.View>
-
-      {/* Loading indicator */}
-      <View className="absolute bottom-24 flex-row items-center space-x-2">
-        {dotsAnim.map((anim, index) => (
-          <Animated.View
-            key={index}
-            style={{
-              opacity: anim,
-              transform: [
-                {
-                  translateY: anim.interpolate({
-                    inputRange: [0, 1],
-                    outputRange: [0, -10],
-                  }),
-                },
-              ],
-            }}
-            className="w-3 h-3 bg-white rounded-full"
-          />
-        ))}
-      </View>
-
-      {/* Loading text */}
-      <Animated.View
-        style={{ opacity: fadeAnim }}
-        className="absolute bottom-12"
-      >
-        <Text className="text-white/70 text-xs tracking-wider">
-          Loading your experience...
+        <Text
+          style={[
+            styles.subtitle,
+            { color: theme.textSecondary, fontFamily: 'FredokaMedium' },
+          ]}
+        >
+          Find amazing deals near you
         </Text>
       </Animated.View>
-    </LinearGradient>
+    </View>
   );
 }
+
+export default function CustomSplashScreen() {
+  const [isAnimating] = React.useState(true);
+
+  return (
+    <View style={styles.container}>
+      <PulseCircleSplash isAnimating={isAnimating} />
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+  full: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  pulseRing: {
+    position: 'absolute',
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    borderWidth: 2,
+  },
+  centerContent: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  logoContainer: {
+    width: 140,
+    height: 140,
+    borderRadius: 70,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+  title: {
+    fontSize: 42,
+    letterSpacing: 1,
+    marginTop: 10,
+  },
+  subtitle: {
+    fontSize: 18,
+    marginTop: 8,
+    letterSpacing: 0.5,
+  },
+});
