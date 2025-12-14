@@ -113,7 +113,7 @@ class AuthApiImpl implements AuthApi {
     }
   }
 
-  async SendWelcomeEmail (
+  async SendWelcomeEmail(
     email: string,
     first_name: string,
     last_name: string,
@@ -121,7 +121,7 @@ class AuthApiImpl implements AuthApi {
     project_link: string
   ): Promise<void> {
     try {
-      const api_response = await this.auth_api.post('/user/send-welcome-email', {
+      await this.auth_api.post('/user/send-welcome-email', {
         email,
         first_name,
         last_name,
@@ -129,81 +129,9 @@ class AuthApiImpl implements AuthApi {
         project_link,
       });
     } catch (error) {
-      console.log("email sending err",error);
+      console.log('email sending err', error);
     }
   }
-
-  // async signInWithEmail(
-  //   email: string,
-  //   password: string
-  // ): Promise<ApiResponse<{ user: Partial<User>; token: string }>> {
-  //   try {
-  //     await new Promise((resolve) => setTimeout(resolve, 1000));
-
-  //     // Demo validation
-  //     if (!email || !password) {
-  //       return {
-  //         success: false,
-  //         error: 'Email and password are required',
-  //       };
-  //     }
-
-  //     const user: Partial<User> = {
-  //       id: Date.now().toString(),
-  //       phone_number: '+1234567890',
-  //       email_address: email,
-  //       first_name: 'Demo User',
-  //     };
-
-  //     const token = `token_${Date.now()}`;
-
-  //     return {
-  //       success: true,
-  //       data: { user, token },
-  //       message: 'Signed in successfully',
-  //     };
-  //   } catch (error) {
-  //     return {
-  //       success: false,
-  //       error: 'Failed to sign in',
-  //     };
-  //   }
-  // }
-
-  // async signUp(
-  //   userData: SignUpData
-  // ): Promise<ApiResponse<{ user: Partial<User>; token: string }>> {
-  //   try {
-  //     await new Promise((resolve) => setTimeout(resolve, 1200));
-
-  //     if (!userData.full_name) {
-  //       return {
-  //         success: false,
-  //         error: 'Full name is required',
-  //       };
-  //     }
-
-  //     const user: Partial<User> = {
-  //       id: Date.now().toString(),
-  //       phone_number: userData.phone_number || '',
-  //       email_address: userData.email,
-  //       first_name: userData.full_name,
-  //     };
-
-  //     const token = `token_${Date.now()}`;
-
-  //     return {
-  //       success: true,
-  //       data: { user, token },
-  //       message: 'Account created successfully',
-  //     };
-  //   } catch (error) {
-  //     return {
-  //       success: false,
-  //       error: 'Failed to create account',
-  //     };
-  //   }
-  // }
 
   async signOut(): Promise<ApiResponse> {
     try {
