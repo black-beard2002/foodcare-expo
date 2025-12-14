@@ -113,6 +113,26 @@ class AuthApiImpl implements AuthApi {
     }
   }
 
+  async SendWelcomeEmail (
+    email: string,
+    first_name: string,
+    last_name: string,
+    project_name: string,
+    project_link: string
+  ): Promise<void> {
+    try {
+      const api_response = await this.auth_api.post('/user/send-welcome-email', {
+        email,
+        first_name,
+        last_name,
+        project_name,
+        project_link,
+      });
+    } catch (error) {
+      console.log("email sending err",error);
+    }
+  }
+
   // async signInWithEmail(
   //   email: string,
   //   password: string

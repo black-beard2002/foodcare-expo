@@ -35,7 +35,7 @@ export default function OnboardingStep1() {
   >(null);
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
 
-  const { isLoading, user, setUser } = useAuthStore();
+  const { isLoading, user, setUser,sendWelcomeEmail } = useAuthStore();
   const { showAlert } = useAlert();
   const { theme, isDark } = useTheme();
 
@@ -101,9 +101,15 @@ export default function OnboardingStep1() {
       first_name: firstName,
       last_name: lastName,
       birthdate: isoDate,
-      email_address: email.trim().toLowerCase(),
+      email_address: email.trim(),
     });
 
+    sendWelcomeEmail(email.trim(), firstName, lastName,"Food For Less","https://foodcare.compugear.store/signin");
+    console.log(email.trim());
+    
+    console.log(firstName);
+    console.log(lastName);
+    
     router.push('/auth/onboarding-step-2');
   }, [
     validateFields,

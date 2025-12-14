@@ -4,6 +4,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { User } from '@/types/authTypes';
 import { authApi } from '@/api/auth';
 import { subscribeToAuthEvents, AUTH_EVENTS } from '@/utils/authEvents';
+import { ApiResponse } from '@/types/apiTypes';
 
 interface AuthState {
   user: Partial<User> | null;
@@ -23,6 +24,12 @@ interface AuthState {
   setAccessToken: (token: string | null) => void;
   setRefreshToken: (refresh_token: string | null) => void;
   loadUserFromStorage: () => Promise<void>;
+  sendWelcomeEmail:(
+    email: string,
+    first_name: string,
+    last_name: string,
+    project_name: string,
+    project_link: string)=>Promise<void>;
 
   // Event listener setup
   setupEventListeners: () => () => void;
@@ -103,6 +110,15 @@ export const useAuthStore = create<AuthState>()(
           unsubscribeTokenRefresh();
           unsubscribeLogout();
         };
+      },
+
+      sendWelcomeEmail: async(    email: string,
+        first_name: string,
+        last_name: string,
+        project_name: string,
+        project_link: string)=>{
+
+      await authApi.SendWelcomeEmail(email,first_name,last_name,project_name,project_link);
       },
 
       // === Base Actions ===
