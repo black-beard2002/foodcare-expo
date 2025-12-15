@@ -611,7 +611,7 @@ export default function OrderHistoryScreen() {
               <>
                 <Text
                   className="text-xl font-inter-semibold mb-2 text-center md:text-2xl"
-                  style={{ color: theme.text }}
+                  style={{ color: theme.text, fontFamily: 'FredokaMedium' }}
                 >
                   No orders found
                 </Text>

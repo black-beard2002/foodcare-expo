@@ -79,28 +79,35 @@ const NearYouCard = ({
           style={{
             position: 'absolute',
             top: -50,
-            left: '50%',
+            left: '38%',
             transform: [{ translateX: -100 }],
-            width: 200,
-            height: 200,
-            borderRadius: 100,
+            width: '90%',
+            height: 180,
+            borderRadius: 50,
             shadowColor: theme.shadow,
             shadowOffset: { width: 0, height: 12 },
             shadowOpacity: 0.5,
             shadowRadius: 20,
-            borderWidth: 6,
-            borderColor: theme.card,
+            borderWidth: 1,
+            borderColor: theme.primaryLight,
           }}
           resizeMode="cover"
         />
       </View>
 
-      <View style={{ paddingTop: 170, padding: 20, alignItems: 'center' }}>
+      <View
+        style={{
+          paddingTop: 165,
+          padding: 20,
+          paddingBottom: 1,
+          alignItems: 'center',
+        }}
+      >
         <TouchableOpacity
           onPress={handleFavouriteToggle}
           style={{
             position: 'absolute',
-            top: 120,
+            top: 100,
             right: 12,
             backgroundColor: theme.background + '90',
             width: 44,
@@ -127,10 +134,10 @@ const NearYouCard = ({
           <View
             style={{
               position: 'absolute',
-              top: 120,
+              top: 100,
               left: 12,
-              backgroundColor: theme.backgroundSecondary,
-              padding: 4,
+              backgroundColor: theme.primary,
+              padding: 3,
               width: 54,
               height: 54,
               borderRadius: 27,
@@ -149,83 +156,73 @@ const NearYouCard = ({
             />
           </View>
         )}
+        {offer.provider?.name && (
+          <View
+            style={{
+              position: 'absolute',
+              top: 135,
+              left: 70,
+            }}
+          >
+            <Text
+              style={{
+                color: theme.textSecondary,
+                fontFamily: 'PoppinsMedium',
+                textAlignVertical: 'center',
+                fontSize: 13,
+              }}
+              numberOfLines={1}
+            >
+              {offer.provider?.name.length > 15
+                ? offer.provider?.name.slice(0, 13) + '...'
+                : offer.provider?.name}
+            </Text>
+          </View>
+        )}
 
         <Text
           style={{
             fontSize: 21,
             fontFamily: 'PoppinsMedium',
             color: theme.text,
-            marginBottom: 6,
             textAlign: 'center',
           }}
           numberOfLines={2}
         >
           {offer.title}
         </Text>
+
         <View
           style={{
             flexDirection: 'row',
             width: '100%',
             alignItems: 'center',
-            justifyContent: 'space-between',
+            gap: 5,
+            justifyContent: 'center',
           }}
         >
-          {offer.provider?.name && (
-            <View
-              style={{
-                flexDirection: 'row',
-                marginBottom: 10,
-                alignItems: 'center',
-                gap: 6,
-              }}
-            >
-              <ChefHat fill={theme.primary} color={theme.primary} size={16} />
-              <Text
-                style={{
-                  color: theme.textSecondary,
-                  fontFamily: 'PoppinsMedium',
-                  textAlignVertical: 'center',
-                  fontSize: 13,
-                }}
-                numberOfLines={1}
-              >
-                {offer.provider?.name.length > 15
-                  ? offer.provider?.name.slice(0, 13) + '...'
-                  : offer.provider?.name}
-              </Text>
-            </View>
-          )}
-          <View
-            style={{
-              flexDirection: 'row',
-              alignItems: 'center',
-              gap: 8,
-              marginBottom: 12,
-            }}
-          >
-            {offer.sale_price && (
-              <Text
-                style={{
-                  fontSize: 16,
-                  color: theme.textSecondary,
-                  textDecorationLine: 'line-through',
-                  fontFamily: 'PoppinsMedium',
-                }}
-              >
-                ${offer.price}
-              </Text>
-            )}
+          {offer.sale_price && (
             <Text
               style={{
-                fontSize: 26,
+                fontSize: 16,
+                color: theme.textSecondary,
+                textDecorationLine: 'line-through',
                 fontFamily: 'PoppinsMedium',
-                color: theme.primary,
-                letterSpacing: -0.5,
               }}
             >
-              ${formatPrice(offer.sale_price ?? offer.price)}
+              ${offer.price}
             </Text>
-          </View>
+          )}
+          <Text
+            style={{
+              fontSize: 26,
+              fontFamily: 'PoppinsMedium',
+              color: theme.primary,
+              letterSpacing: -0.5,
+            }}
+          >
+            ${formatPrice(offer.sale_price ?? offer.price)}
+          </Text>
         </View>
 
         <View

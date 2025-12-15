@@ -68,3 +68,27 @@ export const formatDateRange = (dateStrings: string[]) => {
     end
   )} ${formatTime(end)}`;
 };
+export const formatCountdown = (ms: number) => {
+  if (ms <= 0) return 'Expired';
+
+  const totalMinutes = Math.floor(ms / (1000 * 60));
+  const days = Math.floor(totalMinutes / (60 * 24));
+  const hours = Math.floor((totalMinutes % (60 * 24)) / 60);
+  const minutes = totalMinutes % 60;
+
+  let result = '';
+  if (days > 0) result += `${days}day`;
+  if (hours > 0) result += `${hours}hrs`;
+  if (minutes > 0 || result === '') result += `${minutes}min`;
+
+  return result;
+};
+
+export const getCountdownColor = (remainingMs: number, theme: any) => {
+  const minutes = remainingMs / (1000 * 60);
+
+  if (minutes <= 0) return theme.error;
+  if (minutes <= 30) return theme.error; // 🔴 red
+  if (minutes <= 120) return theme.warning; // 🟡 orange
+  return theme.success; // 🟢 green
+};

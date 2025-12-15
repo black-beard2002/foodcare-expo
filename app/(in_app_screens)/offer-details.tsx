@@ -332,7 +332,7 @@ export default function OfferDetailsScreen() {
   const handleAddToCart = useCallback(() => {
     if (!offer) return;
     addToCart(offer, 1, selectedProperties);
-    router.push('/cart')
+    router.push('/cart');
   }, [offer, selectedProperties, addToCart, showAlert]);
 
   const handleUpdateQuantity = useCallback(
@@ -354,21 +354,6 @@ export default function OfferDetailsScreen() {
 
     return (
       <View className="mb-6">
-        <View className="flex-row items-center gap-2 mb-4">
-          <View
-            className="w-8 h-8 rounded-full items-center justify-center"
-            style={{ backgroundColor: `${theme.primary}15` }}
-          >
-            <Sparkles color={theme.primary} size={18} />
-          </View>
-          <Text
-            className="text-xl"
-            style={{ color: theme.text, fontFamily: 'FredokaMedium' }}
-          >
-            Customize Your Order
-          </Text>
-        </View>
-
         <View className="gap-3">
           {Object.entries(offer.custom_properties).map(([key, property]) => {
             if (
@@ -429,50 +414,66 @@ export default function OfferDetailsScreen() {
             }
 
             return (
-              <TouchableOpacity
-                key={key}
-                onPress={() => handlePropertySelect(property)}
-                className="rounded-2xl p-4"
-                style={{
-                  backgroundColor: theme.card,
-                  borderWidth: 1,
-                  borderColor:
-                    excludedCount > 0
-                      ? theme.error
-                      : selectedValue
-                      ? theme.primary
-                      : theme.border,
-                }}
-              >
-                <View className="flex-row items-center justify-between">
-                  <View className="flex-1">
-                    <View className="flex-row items-center gap-2 mb-1">
-                      {property.icon && (
-                        <Text style={{ fontSize: 18 }}>{property.icon}</Text>
-                      )}
+              <>
+                <View className="flex-row items-center gap-2 mb-4">
+                  <View
+                    className="w-8 h-8 rounded-full items-center justify-center"
+                    style={{ backgroundColor: `${theme.primary}15` }}
+                  >
+                    <Sparkles color={theme.primary} size={18} />
+                  </View>
+                  <Text
+                    className="text-xl"
+                    style={{ color: theme.text, fontFamily: 'FredokaMedium' }}
+                  >
+                    Customize Your Order
+                  </Text>
+                </View>
+                <TouchableOpacity
+                  key={key}
+                  onPress={() => handlePropertySelect(property)}
+                  className="rounded-2xl p-4"
+                  style={{
+                    backgroundColor: theme.card,
+                    borderWidth: 1,
+                    borderColor:
+                      excludedCount > 0
+                        ? theme.error
+                        : selectedValue
+                        ? theme.primary
+                        : theme.border,
+                  }}
+                >
+                  <View className="flex-row items-center justify-between">
+                    <View className="flex-1">
+                      <View className="flex-row items-center gap-2 mb-1">
+                        {property.icon && (
+                          <Text style={{ fontSize: 18 }}>{property.icon}</Text>
+                        )}
+                        <Text
+                          className="text-sm uppercase tracking-wide"
+                          style={{
+                            color: theme.textSecondary,
+                            fontFamily: 'PoppinsMedium',
+                          }}
+                        >
+                          {property.label}
+                        </Text>
+                      </View>
                       <Text
-                        className="text-sm uppercase tracking-wide"
+                        className="text-base"
                         style={{
-                          color: theme.textSecondary,
+                          color: theme.text,
                           fontFamily: 'PoppinsMedium',
                         }}
                       >
-                        {property.label}
+                        {displayValue}
                       </Text>
                     </View>
-                    <Text
-                      className="text-base"
-                      style={{
-                        color: theme.text,
-                        fontFamily: 'PoppinsMedium',
-                      }}
-                    >
-                      {displayValue}
-                    </Text>
+                    <ChevronDown color={theme.textSecondary} size={20} />
                   </View>
-                  <ChevronDown color={theme.textSecondary} size={20} />
-                </View>
-              </TouchableOpacity>
+                </TouchableOpacity>
+              </>
             );
           })}
         </View>

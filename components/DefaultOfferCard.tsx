@@ -206,6 +206,7 @@ const DefaultOfferCard = ({
             justifyContent: 'space-between',
             alignItems: 'center',
             borderTopWidth: 1,
+            paddingTop: 5,
             borderTopColor: theme.border + '40',
           }}
         >

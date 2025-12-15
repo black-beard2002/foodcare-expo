@@ -47,7 +47,12 @@ import {
 } from 'lucide-react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import * as Haptics from 'expo-haptics';
-import { formatPrice, handleImageSrc } from '@/utils/helpers';
+import {
+  formatCountdown,
+  formatPrice,
+  getCountdownColor,
+  handleImageSrc,
+} from '@/utils/helpers';
 import * as images from '@/constants/images';
 import { useOrderStore } from '@/stores/orderStore';
 import { useCameraPermissions } from 'expo-camera';
@@ -55,6 +60,7 @@ import { useAlert } from '@/providers/AlertProvider';
 import { useAuthStore } from '@/stores/authStore';
 import { TSX_WEBSOCKET_URL } from '@/constants/api_constants';
 import { formatDateTime } from '@/utils/formatters';
+import CountdownTimer from '@/components/CountdownTimer';
 
 export default function OrderDetailsScreen() {
   const { theme } = useTheme();
@@ -315,6 +321,21 @@ export default function OrderDetailsScreen() {
       </View>
     );
   };
+
+  function renderCountdown(orderItem: OrderItem) {
+    const pickupEndDate = orderItem.item.pickup_end_time;
+    const pickupStartDate = orderItem.item.pickup_start_time;
+
+    if (!pickupEndDate || !pickupStartDate) return null;
+
+    return (
+      <CountdownTimer
+        pickupStartTime={pickupStartDate}
+        pickupEndTime={pickupEndDate}
+        theme={theme}
+      />
+    );
+  }
 
   function handleQrScan() {
     requestPermission();
@@ -671,6 +692,7 @@ Shared from FoodForLess App
                 }}
               >
                 {/* ITEM ROW */}
+
                 <View style={{ flexDirection: 'row', gap: 14 }}>
                   {/* Image */}
                   <Image
@@ -737,6 +759,8 @@ Shared from FoodForLess App
                   </View>
                 </View>
 
+                {/* Countdown */}
+                <View>{renderCountdown(orderItem)}</View>
                 {/* Properties */}
                 <View>{renderSelectedProperties(orderItem)}</View>
               </View>
@@ -1006,71 +1030,6 @@ Shared from FoodForLess App
               </Text>
             </View>
 
-            {/* <View
-              style={{
-                flexDirection: 'row',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-              }}
-            >
-              <Text style={{ fontSize: 14, color: theme.textSecondary }}>
-                Payment Status
-              </Text>
-              <View
-                style={{
-                  backgroundColor: paymentConfig.color + '20',
-                  paddingHorizontal: 12,
-                  paddingVertical: 6,
-                  borderRadius: 12,
-                }}
-              >
-                <Text
-                  style={{
-                    fontSize: 13,
-                    fontWeight: '600',
-                    color: paymentConfig.color,
-                  }}
-                >
-                  {paymentConfig.label}
-                </Text>
-              </View>
-            </View> */}
-
-            <View
-              style={{
-                height: 1,
-                backgroundColor: theme.border,
-                marginVertical: 4,
-              }}
-            />
-
-            <View
-              style={{
-                flexDirection: 'row',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-              }}
-            >
-              <Text
-                style={{
-                  fontSize: 14,
-                  color: theme.textSecondary,
-                  fontFamily: 'FredokaMedium',
-                }}
-              >
-                Subtotal
-              </Text>
-              <Text
-                style={{
-                  fontSize: 15,
-                  fontFamily: 'PoppinsMedium',
-                  color: theme.text,
-                }}
-              >
-                ${formatPrice(order?.total_price || 0)}
-              </Text>
-            </View>
-
             <View
               style={{
                 flexDirection: 'row',
@@ -1277,48 +1236,6 @@ Shared from FoodForLess App
             )}
           </View>
         </View>
-
-        {/* QR Code Section */}
-        {/* {order?.qr_code_url && (
-          <View style={{ paddingHorizontal: 20, marginTop: 24 }}>
-            <View
-              style={{
-                backgroundColor: theme.card,
-                borderRadius: 16,
-                padding: 20,
-                alignItems: 'center',
-                borderWidth: 1,
-                borderColor: theme.border,
-              }}
-            >
-              <Text
-                style={{
-                  fontSize: 16,
-                  fontFamily: 'FredokaMedium',
-                  color: theme.text,
-                  marginBottom: 12,
-                }}
-              >
-                Order QR Code
-              </Text>
-              <Image
-                source={{ uri: handleImageSrc(order?.qr_code_url) }}
-                style={{ width: 200, height: 200, borderRadius: 12 }}
-                resizeMode="contain"
-              />
-              <Text
-                style={{
-                  fontSize: 12,
-                  color: theme.textSecondary,
-                  marginTop: 8,
-                  textAlign: 'center',
-                }}
-              >
-                Show this QR code for verification
-              </Text>
-            </View>
-          </View>
-        )} */}
       </ScrollView>
     </SafeAreaView>
   );

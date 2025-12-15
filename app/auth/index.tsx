@@ -4,13 +4,13 @@ import {
   Text,
   TouchableOpacity,
   ImageBackground,
-  Dimensions,
   Animated,
   StyleSheet,
+  Image,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Phone } from 'lucide-react-native';
-
+import logo from '../../assets/images/logo.png';
 import { router } from 'expo-router';
 
 import { useTheme } from '@/hooks/useTheme';
@@ -64,6 +64,8 @@ export default function AuthScreen() {
       />
 
       <View style={styles.container}>
+        {/* Logo */}
+        <Image source={logo} style={{ width: 80, height: 80 }} />
         {/* Title */}
         <Animated.Text
           style={[
@@ -141,11 +143,8 @@ const styles = StyleSheet.create({
   },
   title: {
     color: '#fff',
-    fontSize: 34,
-    fontWeight: '800',
-    // fontFamily:'PoppinsMedium',
-
-    // fontFamily:'FredokaMedium',
+    fontSize: 45,
+    fontFamily: 'FredokaBold',
     textAlign: 'center',
     marginBottom: 10,
     letterSpacing: 1,
@@ -153,7 +152,7 @@ const styles = StyleSheet.create({
   subtitle: {
     color: '#f1f1f1',
     fontSize: 16,
-    fontFamily:'FredokaMedium',
+    fontFamily: 'FredokaMedium',
     textAlign: 'center',
     marginBottom: 50,
     maxWidth: 300,

@@ -354,8 +354,7 @@ export default function OnboardingStep2() {
               className="text-base text-center leading-6 px-8 opacity-70"
               style={{ color: theme.text }}
             >
-              Help us discover the best food offers near
-              you
+              Help us discover the best food offers near you
             </Text>
 
             {/* Progress Indicator */}
@@ -376,21 +375,12 @@ export default function OnboardingStep2() {
                   backgroundColor: theme.primary,
                 }}
               />
-              <View
-                className="h-1.5 rounded-full"
-                style={{
-                  width: 16,
-                  backgroundColor: isDark
-                    ? 'rgba(255,255,255,0.2)'
-                    : 'rgba(0,0,0,0.1)',
-                }}
-              />
             </View>
             <Text
               className="text-xs mt-3 font-medium tracking-wider opacity-60"
               style={{ color: theme.text }}
             >
-              STEP 2 OF 3
+              STEP 2 OF 2
             </Text>
           </View>
 

@@ -51,26 +51,9 @@ export default function RootLayout() {
             useBudgetStore.getState().loadBudgetData?.(),
           ].filter(Boolean)
         );
-      } catch (error) {
-        console.error('Error loading app data:', error);
-      } finally {
-        setIsReady(true);
-        setShowSplash(false);
-        SplashScreen.hideAsync();
-      }
-    };
-    prepareApp();
-  }, []);
-
-  //Handle navigation
-  useEffect(() => {
-    const handleNavigation = async () => {
-      if (hasNavigated.current) return;
-      if (!isReady || (!fontsLoaded && !fontError)) return;
-
-      try {
-        const { user, access_token, isLoading, getUser } =
-          useAuthStore.getState();
+        if (hasNavigated.current) return;
+        if (!isReady || (!fontsLoaded && !fontError)) return;
+        const { user, access_token, getUser } = useAuthStore.getState();
 
         const res = await getUser(user?.id!);
 
@@ -89,12 +72,15 @@ export default function RootLayout() {
         }
         hasNavigated.current = true;
       } catch (error) {
-        console.error('Error during navigation:', error);
+        console.error('Error loading app data:', error);
+      } finally {
+        setIsReady(true);
+        setShowSplash(false);
+        SplashScreen.hideAsync();
       }
     };
-
-    handleNavigation();
-  }, [isReady, fontsLoaded, fontError]);
+    prepareApp();
+  }, []);
 
   // SPLASH SCREEN
   if (showSplash) {
