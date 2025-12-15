@@ -393,6 +393,7 @@ export type TransactionBase = {
   total_items: number;
   payment_status?: PaymentStatus;
   payment_method?: PaymentMethod;
+  special_instruction?: string;
   confirmation_code?: string;
   qr_code_url?: string;
   expiry?: string;

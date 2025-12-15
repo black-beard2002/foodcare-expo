@@ -70,8 +70,7 @@ import {
 } from '@/utils/helpers';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
-const IMAGE_HEIGHT = SCREEN_HEIGHT * 0.45;
-const THUMBNAIL_SIZE = 70;
+const IMAGE_HEIGHT = SCREEN_HEIGHT * 0.35;
 
 export default function OfferDetailsScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -159,17 +158,6 @@ export default function OfferDetailsScreen() {
       [propertyId]: value,
     }));
   }, []);
-
-  // Format pickup time
-  const formatPickupTime = (dateString?: string) => {
-    if (!dateString) return '';
-    const date = new Date(dateString);
-    return date.toLocaleTimeString('en-US', {
-      hour: '2-digit',
-      minute: '2-digit',
-      hour12: true,
-    });
-  };
 
   // Open location in maps
   const openLocation = (address: Address) => {
@@ -1554,15 +1542,52 @@ export default function OfferDetailsScreen() {
   if (!offer) {
     return (
       <View
-        className="flex-1 items-center justify-center"
+        className="flex-1 items-center justify-center px-6"
         style={{ backgroundColor: theme.background }}
       >
+        {/* Icon */}
+        <View
+          className="w-16 h-16 rounded-full items-center justify-center mb-5"
+          style={{ backgroundColor: theme.card }}
+        >
+          <Clock size={28} color={theme.primary} />
+        </View>
+
+        {/* Title */}
         <Text
-          className="text-lg"
+          className="text-xl text-center mb-2"
           style={{ color: theme.text, fontFamily: 'FredokaMedium' }}
         >
-          Offer not found
+          This offer is coming soon ⏳
         </Text>
+
+        {/* Description */}
+        <Text
+          className="text-sm text-center mb-8 leading-5"
+          style={{ color: theme.textSecondary }}
+        >
+          We're putting the final touches on this deal. Check back shortly —
+          delicious savings are on the way!
+        </Text>
+
+        {/* Action */}
+        <TouchableOpacity
+          onPress={() => router.replace('/')}
+          activeOpacity={0.85}
+          className="px-6 py-3 rounded-full"
+          style={{ backgroundColor: theme.primary }}
+        >
+          <Text
+            className="text-sm"
+            style={{
+              color: theme.background,
+              fontFamily: 'FredokaMedium',
+              letterSpacing: 0.3,
+            }}
+          >
+            Back to Home
+          </Text>
+        </TouchableOpacity>
       </View>
     );
   }

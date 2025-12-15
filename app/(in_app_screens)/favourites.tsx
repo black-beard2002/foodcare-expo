@@ -91,10 +91,7 @@ export default function FavouritesScreen() {
           </TouchableOpacity>
 
           <View className="flex-1">
-            <Text
-              className="text-3xl font-inter-bold"
-              style={{ color: theme.text }}
-            >
+            <Text className="text-3xl" style={{ color: theme.text }}>
               My Favorites
             </Text>
           </View>
@@ -125,17 +122,17 @@ export default function FavouritesScreen() {
             }}
           >
             <ShoppingBag color={theme.primary} size={18} />
-            <Text
-              className="text-base font-inter-bold ml-2"
-              style={{ color: theme.text }}
-            >
+            <Text className="text-base ml-2" style={{ color: theme.text }}>
               {favorites.length}
             </Text>
             <Text
               className="text-sm font-inter-medium ml-1"
-              style={{ color: theme.textSecondary }}
+              style={{
+                color: theme.textSecondary,
+                fontFamily: 'PoppinsMedium',
+              }}
             >
-              {favorites.length === 1 ? 'Item' : 'Items'}
+              {favorites.length === 1 ? 'Favourite' : 'Favourites'}
             </Text>
           </View>
 
@@ -149,10 +146,7 @@ export default function FavouritesScreen() {
               }}
             >
               <TrendingDown color={theme.success} size={18} />
-              <Text
-                className="text-base font-inter-bold ml-2"
-                style={{ color: theme.success }}
-              >
+              <Text className="text-base ml-2" style={{ color: theme.success }}>
                 {checkPriceDrops().length}
               </Text>
               <Text
@@ -193,15 +187,18 @@ export default function FavouritesScreen() {
             </View>
 
             <Text
-              className="text-2xl font-inter-bold text-center mb-3"
-              style={{ color: theme.text }}
+              className="text-2xl text-center mb-3"
+              style={{ color: theme.text, fontFamily: 'PoppinsMedium' }}
             >
               No Favorites Yet
             </Text>
 
             <Text
               className="text-base text-center leading-6 mb-8"
-              style={{ color: theme.textSecondary }}
+              style={{
+                color: theme.textSecondary,
+                fontFamily: 'PoppinsMedium',
+              }}
             >
               Start building your collection of favorite meals and offers
             </Text>
@@ -219,7 +216,10 @@ export default function FavouritesScreen() {
               onPress={() => router.push('/(tabs)')}
             >
               <ShoppingBag color="white" size={20} />
-              <Text className="text-white font-inter-bold text-base">
+              <Text
+                style={{ fontFamily: 'PoppinsBold' }}
+                className="text-white text-base"
+              >
                 Explore Offers
               </Text>
             </TouchableOpacity>
@@ -247,7 +247,6 @@ export default function FavouritesScreen() {
                 <TouchableOpacity
                   key={favorite.id}
                   activeOpacity={0.9}
-                  disabled={!isAvailable}
                   onPress={() =>
                     router.push(
                       `/(in_app_screens)/offer-details?id=${favorite.favorited.id}`
@@ -304,9 +303,7 @@ export default function FavouritesScreen() {
                         }}
                       >
                         <AlertCircle color="white" size={16} />
-                        <Text className="text-white text-sm font-inter-bold">
-                          Unavailable
-                        </Text>
+                        <Text className="text-white text-sm">Unavailable</Text>
                       </View>
                     )}
 
@@ -318,7 +315,10 @@ export default function FavouritesScreen() {
                           backgroundColor: theme.error,
                         }}
                       >
-                        <Text className="text-white text-sm font-inter-bold">
+                        <Text
+                          style={{ fontFamily: 'PoppinsMedium' }}
+                          className="text-white text-sm"
+                        >
                           {discountPercent}% OFF
                         </Text>
                       </View>
@@ -337,7 +337,10 @@ export default function FavouritesScreen() {
                           size={16}
                           strokeWidth={2.5}
                         />
-                        <Text className="text-white text-xs font-inter-bold">
+                        <Text
+                          style={{ fontFamily: 'PoppinsMedium' }}
+                          className="text-white text-xs"
+                        >
                           Price Drop
                         </Text>
                       </View>
@@ -397,8 +400,8 @@ export default function FavouritesScreen() {
                   <View className="p-5">
                     {/* Title */}
                     <Text
-                      className="text-xl font-inter-bold mb-2 leading-6"
-                      style={{ color: theme.text }}
+                      className="text-xl mb-2 leading-6"
+                      style={{ color: theme.text, fontFamily: 'PoppinsMedium' }}
                       numberOfLines={2}
                     >
                       {favorite.favorited.title}
@@ -415,7 +418,10 @@ export default function FavouritesScreen() {
                         </View>
                         <Text
                           className="text-sm font-inter-medium flex-1"
-                          style={{ color: theme.textSecondary }}
+                          style={{
+                            color: theme.textSecondary,
+                            fontFamily: 'PoppinsMedium',
+                          }}
                           numberOfLines={1}
                         >
                           {favorite.favorited.provider.name}
@@ -429,8 +435,11 @@ export default function FavouritesScreen() {
                             size={16}
                           />
                           <Text
-                            className="text-sm font-inter-bold"
-                            style={{ color: theme.text }}
+                            className="text-sm"
+                            style={{
+                              color: theme.text,
+                              fontFamily: 'PoppinsMedium',
+                            }}
                           >
                             {favorite.favorited.rating || '5.0'}
                           </Text>
@@ -443,8 +452,11 @@ export default function FavouritesScreen() {
                       <View className="flex-row items-center gap-2 mb-4">
                         <MapPin color={theme.textSecondary} size={16} />
                         <Text
-                          className="text-sm font-inter-regular flex-1"
-                          style={{ color: theme.textSecondary }}
+                          className="text-sm  flex-1"
+                          style={{
+                            color: theme.textSecondary,
+                            fontFamily: 'PoppinsMedium',
+                          }}
                           numberOfLines={1}
                         >
                           {favorite.favorited.provider.addresses[0].street},{' '}
@@ -465,15 +477,21 @@ export default function FavouritesScreen() {
                         {favorite.favorited.sale_price && (
                           <Text
                             className="text-sm line-through mb-1"
-                            style={{ color: theme.textSecondary }}
+                            style={{
+                              color: theme.textSecondary,
+                              fontFamily: 'PoppinsMedium',
+                            }}
                           >
                             ${formatPrice(favorite.favorited.price)}
                           </Text>
                         )}
                         <View className="flex-row items-center gap-2">
                           <Text
-                            className="text-3xl font-inter-bold"
-                            style={{ color: theme.primary }}
+                            className="text-3xl"
+                            style={{
+                              color: theme.primary,
+                              fontFamily: 'PoppinsMedium',
+                            }}
                           >
                             $
                             {formatPrice(
@@ -489,8 +507,11 @@ export default function FavouritesScreen() {
                               }}
                             >
                               <Text
-                                className="text-xs font-inter-bold"
-                                style={{ color: theme.success }}
+                                className="text-xs"
+                                style={{
+                                  color: theme.success,
+                                  fontFamily: 'PoppinsMedium',
+                                }}
                               >
                                 Save $
                                 {formatPrice(
@@ -520,7 +541,10 @@ export default function FavouritesScreen() {
                             elevation: 4,
                           }}
                         >
-                          <Text className="text-white text-sm font-inter-bold">
+                          <Text
+                            style={{ fontFamily: 'PoppinsMedium' }}
+                            className="text-white text-sm"
+                          >
                             View Details
                           </Text>
                         </TouchableOpacity>

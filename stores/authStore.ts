@@ -24,12 +24,13 @@ interface AuthState {
   setAccessToken: (token: string | null) => void;
   setRefreshToken: (refresh_token: string | null) => void;
   loadUserFromStorage: () => Promise<void>;
-  sendWelcomeEmail:(
+  sendWelcomeEmail: (
     email: string,
     first_name: string,
     last_name: string,
     project_name: string,
-    project_link: string)=>Promise<void>;
+    project_link: string
+  ) => Promise<void>;
 
   // Event listener setup
   setupEventListeners: () => () => void;
@@ -73,8 +74,6 @@ export const useAuthStore = create<AuthState>()(
         };
 
         const handleAuthLogout = (data?: { reason?: string }) => {
-          console.log('Auth logout triggered:', data);
-
           // Clear state
           set({
             user: null,
@@ -112,13 +111,20 @@ export const useAuthStore = create<AuthState>()(
         };
       },
 
-      sendWelcomeEmail: async(    email: string,
+      sendWelcomeEmail: async (
+        email: string,
         first_name: string,
         last_name: string,
         project_name: string,
-        project_link: string)=>{
-
-      await authApi.SendWelcomeEmail(email,first_name,last_name,project_name,project_link);
+        project_link: string
+      ) => {
+        await authApi.SendWelcomeEmail(
+          email,
+          first_name,
+          last_name,
+          project_name,
+          project_link
+        );
       },
 
       // === Base Actions ===
@@ -178,7 +184,6 @@ export const useAuthStore = create<AuthState>()(
 
           if (response.success && response.data) {
             const user = response.data.user;
-
             await AsyncStorage.setItem('user', JSON.stringify(user));
             await AsyncStorage.setItem(
               'access_token',

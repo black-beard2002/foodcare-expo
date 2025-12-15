@@ -165,9 +165,7 @@ function PulseCircleSplash({ isAnimating }: SplashProps) {
           { opacity: fadeAnim, transform: [{ scale: fadeAnim }] },
         ]}
       >
-        <View
-          style={[styles.logoContainer, { backgroundColor: theme.primary }]}
-        >
+        <View style={[styles.logoContainer]}>
           <Image source={logo} style={{ width: '100%', height: '100%' }} />
         </View>
 
@@ -229,20 +227,20 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 8,
+    marginTop: 115,
   },
   title: {
     fontSize: 42,
     letterSpacing: 1,
+    textTransform: 'uppercase',
+    width: 400,
+    textAlign: 'center',
     marginTop: 10,
   },
   subtitle: {
     fontSize: 18,
     marginTop: 8,
+    width: '100%',
     letterSpacing: 0.5,
   },
 });

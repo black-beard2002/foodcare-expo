@@ -17,8 +17,6 @@ import CustomSplashScreen from '@/components/CustomSplashScreen';
 import { useSettingsStore } from '@/stores/settingsStore';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-SplashScreen.preventAutoHideAsync();
-
 export default function RootLayout() {
   useFrameworkReady();
   const { isDark } = useTheme();
@@ -37,6 +35,10 @@ export default function RootLayout() {
     RougeScript: require('../assets/fonts/RougeScript-Regular.ttf'),
   });
 
+  useEffect(() => {
+    SplashScreen.preventAutoHideAsync();
+  }, []);
+
   // Load app data
   useEffect(() => {
     const prepareApp = async () => {
@@ -53,12 +55,13 @@ export default function RootLayout() {
         );
         if (hasNavigated.current) return;
         if (!isReady || (!fontsLoaded && !fontError)) return;
-        const { user, access_token, getUser } = useAuthStore.getState();
+        const { user, access_token, getUser, isAuthenticated } =
+          useAuthStore.getState();
 
         const res = await getUser(user?.id!);
 
         // Simple navigation logic: if user exists, go to tabs, else go to auth
-        if (res.success && access_token) {
+        if (res.success && access_token && isAuthenticated) {
           router.replace('/(tabs)');
         } else {
           await AsyncStorage.multiRemove([

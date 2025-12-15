@@ -145,6 +145,7 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 45,
     fontFamily: 'FredokaBold',
+    width: '100%',
     textAlign: 'center',
     marginBottom: 10,
     letterSpacing: 1,

@@ -14,6 +14,7 @@ import {
   Animated,
   StyleSheet,
   TouchableOpacity,
+  PanResponder,
 } from 'react-native';
 
 type AlertType = 'success' | 'error' | 'info' | 'warning';
@@ -76,7 +77,7 @@ const matteColors: Record<AlertType, string> = {
   warning: '#F9A825',
   info: '#1565C0',
 };
-
+const SWIPE_DISMISS_THRESHOLD = -40;
 const Toast = ({
   alert,
   onDismiss,
@@ -95,6 +96,20 @@ const Toast = ({
     warning: AlertTriangle,
     info: Info,
   }[alert.type];
+  const dismiss = () => {
+    Animated.parallel([
+      Animated.timing(slideAnim, {
+        toValue: -100,
+        duration: 250,
+        useNativeDriver: true,
+      }),
+      Animated.timing(fadeAnim, {
+        toValue: 0,
+        duration: 250,
+        useNativeDriver: true,
+      }),
+    ]).start(() => onDismiss(alert.id));
+  };
 
   useEffect(() => {
     Animated.parallel([
@@ -127,9 +142,30 @@ const Toast = ({
 
     return () => clearTimeout(timeout);
   }, []);
+  const panResponder = useRef(
+    PanResponder.create({
+      onMoveShouldSetPanResponder: (_, gesture) => Math.abs(gesture.dy) > 8,
+      onPanResponderMove: (_, gesture) => {
+        if (gesture.dy < 0) {
+          slideAnim.setValue(gesture.dy);
+        }
+      },
+      onPanResponderRelease: (_, gesture) => {
+        if (gesture.dy < SWIPE_DISMISS_THRESHOLD) {
+          dismiss();
+        } else {
+          Animated.spring(slideAnim, {
+            toValue: 0,
+            useNativeDriver: true,
+          }).start();
+        }
+      },
+    })
+  ).current;
 
   return (
     <Animated.View
+      {...panResponder.panHandlers}
       style={[
         styles.toast,
         {

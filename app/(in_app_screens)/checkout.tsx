@@ -251,7 +251,7 @@ export default function CheckoutScreen() {
       created_by: user?.id,
       provider_id: items[0]?.item.provider_id || '',
       tenant_id: items[0]?.item.tenant_id || '',
-      special_instructions:
+      special_instruction:
         customerInfo.specialInstructions || 'no instructions',
     };
 

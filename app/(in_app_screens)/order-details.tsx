@@ -47,12 +47,7 @@ import {
 } from 'lucide-react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import * as Haptics from 'expo-haptics';
-import {
-  formatCountdown,
-  formatPrice,
-  getCountdownColor,
-  handleImageSrc,
-} from '@/utils/helpers';
+import { formatPrice, handleImageSrc } from '@/utils/helpers';
 import * as images from '@/constants/images';
 import { useOrderStore } from '@/stores/orderStore';
 import { useCameraPermissions } from 'expo-camera';
@@ -723,50 +718,105 @@ Shared from FoodForLess App
                     >
                       {orderItem.item.title}
                     </Text>
-
-                    <Text
-                      style={{
-                        color: theme.textSecondary,
-                        fontSize: 13,
-                        fontFamily: 'PoppinsMedium',
-                        marginBottom: 6,
-                      }}
-                    >
-                      Quantity: {orderItem.quantity}
-                    </Text>
-
-                    {/* Price */}
                     <View
                       style={{
-                        alignSelf: 'flex-start',
-                        backgroundColor: theme.primary + '20',
-                        paddingHorizontal: 10,
-                        paddingVertical: 4,
-                        borderRadius: 10,
-                        marginTop: 'auto',
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        gap: 15,
                       }}
                     >
-                      <Text
-                        style={{
-                          fontSize: 17,
-                          fontFamily: 'PoppinsMedium',
-                          color: theme.primary,
-                        }}
-                      >
-                        ${formatPrice(orderItem.total)}
-                      </Text>
+                      <View>
+                        <Text
+                          style={{
+                            color: theme.textSecondary,
+                            fontSize: 13,
+                            fontFamily: 'PoppinsMedium',
+                            marginBottom: 6,
+                          }}
+                        >
+                          Quantity: {orderItem.quantity}
+                        </Text>
+
+                        {/* Price */}
+                        <View
+                          style={{
+                            alignSelf: 'flex-start',
+                            backgroundColor: theme.primary + '20',
+                            paddingHorizontal: 10,
+                            paddingVertical: 4,
+                            borderRadius: 10,
+                            marginTop: 'auto',
+                          }}
+                        >
+                          <Text
+                            style={{
+                              fontSize: 17,
+                              fontFamily: 'PoppinsMedium',
+                              color: theme.primary,
+                            }}
+                          >
+                            ${formatPrice(orderItem.total)}
+                          </Text>
+                        </View>
+                      </View>
+                      {/* Countdown */}
+                      <View>{renderCountdown(orderItem)}</View>
                     </View>
                   </View>
                 </View>
 
-                {/* Countdown */}
-                <View>{renderCountdown(orderItem)}</View>
                 {/* Properties */}
                 <View>{renderSelectedProperties(orderItem)}</View>
               </View>
             ))}
           </View>
         </View>
+        {/* Special Instructions */}
+
+        {order?.special_instruction?.trim() && (
+          <View style={{ paddingHorizontal: 20, marginTop: 24 }}>
+            <View
+              style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                gap: 8,
+                marginBottom: 16,
+              }}
+            >
+              <AlertCircle color={theme.primary} size={20} />
+              <Text
+                style={{
+                  fontSize: 18,
+                  fontFamily: 'FredokaMedium',
+                  color: theme.text,
+                }}
+              >
+                Special Instructions
+              </Text>
+            </View>
+
+            <View
+              style={{
+                backgroundColor: theme.card,
+                borderRadius: 16,
+                padding: 16,
+                borderWidth: 1,
+                borderColor: theme.border,
+              }}
+            >
+              <Text
+                style={{
+                  fontSize: 15,
+                  fontFamily: 'PoppinsMedium',
+                  color: theme.text,
+                  lineHeight: 22,
+                }}
+              >
+                {order?.special_instruction}
+              </Text>
+            </View>
+          </View>
+        )}
 
         {/* Customer Information */}
         {order?.client_data && (
