@@ -60,6 +60,10 @@ export default function RootLayout() {
 
         const res = await getUser(user?.id!);
 
+        console.log('user:', user);
+        console.log('access_token:', access_token);
+        console.log('isAuthenticated:', isAuthenticated);
+
         // Simple navigation logic: if user exists, go to tabs, else go to auth
         if (res.success && access_token && isAuthenticated) {
           router.replace('/(tabs)');

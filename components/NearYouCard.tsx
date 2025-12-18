@@ -267,6 +267,7 @@ const NearYouCard = ({
           style={{
             flexDirection: 'row',
             alignItems: 'center',
+            paddingBottom: 8,
             justifyContent: 'space-between',
             width: '100%',
           }}
