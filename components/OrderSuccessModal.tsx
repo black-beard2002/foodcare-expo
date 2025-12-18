@@ -295,6 +295,29 @@ export default function OrderSuccessModal({
                   Done
                 </Text>
               </TouchableOpacity>
+
+              {/* <TouchableOpacity
+                className="py-3.5 rounded-xl items-center border"
+                style={{
+                  backgroundColor: theme.card,
+                  borderColor: theme.border,
+                }}
+                onPress={() => {
+                  onClose();
+                  router.push('/(tabs)/order_history');
+                }}
+                activeOpacity={0.7}
+              >
+                <Text
+                  className="text-base"
+                  style={{
+                    color: theme.textSecondary,
+                    fontFamily: 'FredokaMedium',
+                  }}
+                >
+                  Track Order
+                </Text>
+              </TouchableOpacity> */}
             </View>
           </Animated.View>
         </Animated.View>

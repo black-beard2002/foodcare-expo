@@ -4,12 +4,15 @@
     "slug": "FoodForLess",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/logo.png",
+    "icon": "./assets/images/icon.png",
     "scheme": "myapp",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.lb.foodforless",
+      "buildNumber": "1",
+      "icon": "./assets/images/icon.png"
     },
     "web": {
       "bundler": "metro",
@@ -43,9 +46,6 @@
       "eas": {
         "projectId": "3014ad0f-88b9-4c51-ab16-ed85f0f3cfa1"
       }
-    },
-    "android": {
-      "package": "com.foodforless"
     }
   }
 }

@@ -1,9 +1,4 @@
 {
-  "expo": {
-    "name": "FoodForLess",
-    "slug": "FoodForLess",
-    "owner": "khalil-hamze"
-  },
   "cli": {
     "version": ">= 16.20.0",
     "appVersionSource": "remote"
