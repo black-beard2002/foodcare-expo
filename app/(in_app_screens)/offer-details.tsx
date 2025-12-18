@@ -1693,15 +1693,16 @@ export default function OfferDetailsScreen() {
           <Text
             style={{
               color: theme.text,
-              fontFamily: 'PoppinsMedium',
-              fontSize: 15
+              fontFamily: 'FredokaMedium',
+              fontSize: 15,
+              marginBottom: 3,
             }}
           >
-              What you expect:
+            What to expect:
           </Text>
           <Text
             style={{
-              color: theme.text,
+              color: theme.textSecondary,
               fontFamily: 'PoppinsMedium',
               marginBottom: 22,
             }}
