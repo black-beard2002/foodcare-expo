@@ -298,7 +298,7 @@ export default function OrderSuccessModal({
                 </Text>
               </TouchableOpacity>
 
-              <TouchableOpacity
+              {/* <TouchableOpacity
                 className="py-3.5 rounded-xl items-center border"
                 style={{
                   backgroundColor: theme.card,
@@ -319,7 +319,7 @@ export default function OrderSuccessModal({
                 >
                   Track Order
                 </Text>
-              </TouchableOpacity>
+              </TouchableOpacity> */}
             </View>
           </Animated.View>
         </Animated.View>
