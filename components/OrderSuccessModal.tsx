@@ -1,9 +1,8 @@
 import React, { useEffect, useRef } from 'react';
 import { View, Text, TouchableOpacity, Modal, Animated } from 'react-native';
-import * as Clipboard from 'expo-clipboard';
-import { CheckCircle, Copy, Sparkles } from 'lucide-react-native';
+import { CheckCircle, Sparkles } from 'lucide-react-native';
 import { useTheme } from '@/hooks/useTheme';
-import { useAlert } from '@/providers/AlertProvider';
+
 import { router } from 'expo-router';
 
 interface OrderSuccessModalProps {
@@ -23,7 +22,6 @@ export default function OrderSuccessModal({
   customerInfo,
 }: OrderSuccessModalProps) {
   const { theme } = useTheme();
-  const { showAlert } = useAlert();
 
   // Animation values
   const scaleAnim = useRef(new Animated.Value(0.3)).current;
@@ -295,29 +293,6 @@ export default function OrderSuccessModal({
                   style={{ fontFamily: 'FredokaMedium' }}
                 >
                   Done
-                </Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                className="py-3.5 rounded-xl items-center border"
-                style={{
-                  backgroundColor: theme.card,
-                  borderColor: theme.border,
-                }}
-                onPress={() => {
-                  onClose();
-                  router.push('/(tabs)/order_history');
-                }}
-                activeOpacity={0.7}
-              >
-                <Text
-                  className="text-base"
-                  style={{
-                    color: theme.textSecondary,
-                    fontFamily: 'FredokaMedium',
-                  }}
-                >
-                  Track Order
                 </Text>
               </TouchableOpacity>
             </View>
