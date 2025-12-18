@@ -777,7 +777,7 @@ export default function OfferDetailsScreen() {
 
     return (
       <View className="mb-6">
-        <View className="flex-row items-center gap-2 mb-4">
+        {/* <View className="flex-row items-center gap-2 mb-4">
           <View
             className="w-8 h-8 rounded-full items-center justify-center"
             style={{ backgroundColor: `${theme.primary}15` }}
@@ -790,7 +790,7 @@ export default function OfferDetailsScreen() {
           >
             Additional Information
           </Text>
-        </View>
+        </View> */}
 
         <View className="gap-3">
           {readonlyProps.map(([key, property]) => (
