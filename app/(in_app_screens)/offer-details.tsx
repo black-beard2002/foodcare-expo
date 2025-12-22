@@ -402,7 +402,7 @@ export default function OfferDetailsScreen() {
             }
 
             return (
-              <>
+              <View key={key}>
                 <View className="flex-row items-center gap-2 mb-4">
                   <View
                     className="w-8 h-8 rounded-full items-center justify-center"
@@ -461,7 +461,7 @@ export default function OfferDetailsScreen() {
                     <ChevronDown color={theme.textSecondary} size={20} />
                   </View>
                 </TouchableOpacity>
-              </>
+              </View>
             );
           })}
         </View>

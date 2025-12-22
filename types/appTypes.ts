@@ -299,8 +299,14 @@ export interface FlashSale {
 export interface BudgetTracker {
   monthly_limit?: number;
   current_month_spending: number;
+  current_month_savings: number;
   overall_spending: number;
+  overall_savings: number;
   spending_by_category: {
+    category: string;
+    amount: number;
+  }[];
+  savings_by_category: {
     category: string;
     amount: number;
   }[];
@@ -308,8 +314,11 @@ export interface BudgetTracker {
     month: string;
     amount: number;
   }[];
+  savings_history: {
+    month: string;
+    amount: number;
+  }[];
 }
-
 export interface SearchHistory {
   id: string;
   query: string;

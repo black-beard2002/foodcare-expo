@@ -56,8 +56,8 @@ export default function CheckoutScreen() {
   });
   const [showOrderModal, setShowOrderModal] = useState(false);
 
-  // Calculate item total including addons
-  const calculateItemTotal = (item: CartItem) => {
+  // Calculate item total including addons (final price after discount)
+  const calculateItemDiscountedTotal = (item: CartItem) => {
     const basePrice = item.item.sale_price ?? item.item.price;
     let addonTotal = 0;
 
@@ -74,6 +74,33 @@ export default function CheckoutScreen() {
     }
 
     return (basePrice + addonTotal) * item.quantity;
+  };
+
+  // Calculate item original total (before any discounts)
+  const calculateItemOriginalTotal = (item: CartItem) => {
+    const basePrice = item.item.price; // Always use original price
+    let addonTotal = 0;
+
+    if (item.selectedProperties) {
+      Object.values(item.selectedProperties).forEach((value) => {
+        if (Array.isArray(value)) {
+          value.forEach((v) => {
+            if (typeof v === 'object' && v !== null && 'price' in v) {
+              addonTotal += (v as AddOn).price;
+            }
+          });
+        }
+      });
+    }
+
+    return (basePrice + addonTotal) * item.quantity;
+  };
+
+  // Calculate savings for an item
+  const calculateItemSavings = (item: CartItem) => {
+    const originalTotal = calculateItemOriginalTotal(item);
+    const discountedTotal = calculateItemDiscountedTotal(item);
+    return originalTotal - discountedTotal;
   };
 
   // Render selected properties for an item
@@ -224,11 +251,12 @@ export default function CheckoutScreen() {
       );
       return;
     }
+
     const items = cart.map((cart_item) => ({
       item: cart_item.item,
       quantity: cart_item.quantity,
       selectedProperties: cart_item.selectedProperties,
-      total: calculateItemTotal(cart_item),
+      total: calculateItemDiscountedTotal(cart_item),
     }));
 
     const orderData = {
@@ -259,14 +287,40 @@ export default function CheckoutScreen() {
 
     if (result.success && result.confirmation_code) {
       setShowOrderModal(true);
-      // Update budget store with the new expense according to each cart item category
-      cart.forEach(async (item) => {
-        await addExpense(
+
+      // Group items by category and sum their totals
+      const categoryMap = new Map();
+
+      cart.forEach((item) => {
+        const categoryName =
           categories.find((cat) => cat.id === item.item.category_id)?.name ||
-            'Uncategorized',
-          calculateItemTotal(item)
-        );
+          'Uncategorized';
+        const originalTotal = calculateItemOriginalTotal(item);
+        const discountedTotal = calculateItemDiscountedTotal(item);
+
+        if (!categoryMap.has(categoryName)) {
+          categoryMap.set(categoryName, {
+            originalAmount: 0,
+            discountedAmount: 0,
+          });
+        }
+
+        const current = categoryMap.get(categoryName);
+        categoryMap.set(categoryName, {
+          originalAmount: current.originalAmount + originalTotal,
+          discountedAmount: current.discountedAmount + discountedTotal,
+        });
       });
+
+      // Update budget store with spending and savings data by category
+      for (const [categoryName, amounts] of categoryMap) {
+        await addExpense(
+          categoryName,
+          amounts.originalAmount,
+          amounts.discountedAmount
+        );
+      }
+
       clearCart();
       showAlert(
         'Order Created!',
@@ -285,11 +339,10 @@ export default function CheckoutScreen() {
   const deliveryFee = 0.0;
   const subtotal = getCartTotal();
   const total = subtotal + deliveryFee;
+
+  // Calculate total savings from all items
   const totalSavings = cart.reduce((sum, item) => {
-    const baseDiscount =
-      (item.item.price - (item.item.sale_price ?? item.item.price)) *
-      item.quantity;
-    return sum + baseDiscount;
+    return sum + calculateItemSavings(item);
   }, 0);
 
   const isReserveDisabled =
@@ -355,7 +408,9 @@ export default function CheckoutScreen() {
 
           <View className="gap-3">
             {cart.map((item) => {
-              const itemTotal = calculateItemTotal(item);
+              const discountedTotal = calculateItemDiscountedTotal(item);
+              const originalTotal = calculateItemOriginalTotal(item);
+              const itemSavings = calculateItemSavings(item);
               const hasCustomizations =
                 item.selectedProperties &&
                 Object.keys(item.selectedProperties).length > 0;
@@ -459,19 +514,17 @@ export default function CheckoutScreen() {
                         </View>
 
                         <View className="items-end">
-                          {!hasCustomizations &&
-                            item.item.sale_price &&
-                            item.item.sale_price < item.item.price && (
-                              <Text
-                                className="text-xs line-through"
-                                style={{
-                                  color: theme.textTertiary,
-                                  fontFamily: 'PoppinsMedium',
-                                }}
-                              >
-                                ${(item.item.price * item.quantity).toFixed(2)}
-                              </Text>
-                            )}
+                          {itemSavings > 0 && (
+                            <Text
+                              className="text-xs line-through mb-1"
+                              style={{
+                                color: theme.textTertiary,
+                                fontFamily: 'PoppinsMedium',
+                              }}
+                            >
+                              ${originalTotal.toFixed(2)}
+                            </Text>
+                          )}
                           <Text
                             className="text-lg"
                             style={{
@@ -479,8 +532,19 @@ export default function CheckoutScreen() {
                               fontFamily: 'PoppinsMedium',
                             }}
                           >
-                            ${itemTotal.toFixed(2)}
+                            ${discountedTotal.toFixed(2)}
                           </Text>
+                          {itemSavings > 0 && (
+                            <Text
+                              className="text-xs mt-0.5"
+                              style={{
+                                color: theme.success,
+                                fontFamily: 'PoppinsMedium',
+                              }}
+                            >
+                              Saved ${itemSavings.toFixed(2)}
+                            </Text>
+                          )}
                         </View>
                       </View>
                     </View>

@@ -9,7 +9,6 @@ import {
   ColorValue,
   Share,
 } from 'react-native';
-import * as Sharing from 'expo-sharing';
 import {
   TransactionBase,
   OrderItem,
@@ -26,7 +25,6 @@ import {
   Phone,
   Mail,
   CreditCard,
-  Calendar,
   Clock,
   CheckCircle2,
   XCircle,
@@ -54,7 +52,7 @@ import { useCameraPermissions } from 'expo-camera';
 import { useAlert } from '@/providers/AlertProvider';
 import { useAuthStore } from '@/stores/authStore';
 import { TSX_WEBSOCKET_URL } from '@/constants/api_constants';
-import { formatDateTime } from '@/utils/formatters';
+import { formatDateTime } from '@/utils/helpers';
 import CountdownTimer from '@/components/CountdownTimer';
 
 export default function OrderDetailsScreen() {
@@ -568,30 +566,32 @@ Shared from FoodForLess App
               </View>
             </View>
 
-            {order?.updated_at && (
-              <View
-                style={{
-                  marginTop: 16,
-                  paddingTop: 16,
-                  borderTopWidth: 1,
-                  borderTopColor: theme.border,
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  gap: 8,
-                }}
-              >
-                <CalendarCheck color={theme.textSecondary} size={16} />
-                <Text
+            {order?.updated_at &&
+              (order.status === 'COMPLETED' ||
+                order?.status === 'DELIVERED') && (
+                <View
                   style={{
-                    color: theme.textSecondary,
-                    fontSize: 13,
-                    fontFamily: 'PoppinsMedium',
+                    marginTop: 16,
+                    paddingTop: 16,
+                    borderTopWidth: 1,
+                    borderTopColor: theme.border,
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    gap: 8,
                   }}
                 >
-                  Confirmed: {formatDateTime(order?.updated_at)}
-                </Text>
-              </View>
-            )}
+                  <CalendarCheck color={theme.textSecondary} size={16} />
+                  <Text
+                    style={{
+                      color: theme.textSecondary,
+                      fontSize: 13,
+                      fontFamily: 'PoppinsMedium',
+                    }}
+                  >
+                    Confirmed: {formatDateTime(order?.updated_at)}
+                  </Text>
+                </View>
+              )}
           </LinearGradient>
         </MotiView>
 

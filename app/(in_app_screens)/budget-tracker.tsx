@@ -18,6 +18,8 @@ import {
   PieChart,
   HandCoins,
   Trash2,
+  PiggyBank,
+  TrendingDown,
 } from 'lucide-react-native';
 import { useTheme } from '@/hooks/useTheme';
 import { useBudgetStore } from '@/stores/budgetStore';
@@ -31,6 +33,8 @@ export default function BudgetTrackerScreen() {
     setMonthlyLimit,
     getRemainingBudget,
     getSpendingPercentage,
+    getTotalSavings,
+    getSavingsPercentage,
     isOverBudget,
     clearBudgetData,
   } = useBudgetStore();
@@ -39,6 +43,8 @@ export default function BudgetTrackerScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [editingLimit, setEditingLimit] = useState(false);
   const [limitInput, setLimitInput] = useState('');
+  const [showSavings, setShowSavings] = useState(false);
+  const [showSpendings, setShowSpendings] = useState(true);
 
   useEffect(() => {
     loadBudgetData();
@@ -84,6 +90,8 @@ export default function BudgetTrackerScreen() {
   const remaining = getRemainingBudget();
   const percentage = getSpendingPercentage();
   const overBudget = isOverBudget();
+  const totalSavings = getTotalSavings();
+  const savingsPercentage = getSavingsPercentage();
 
   return (
     <SafeAreaView
@@ -126,7 +134,7 @@ export default function BudgetTrackerScreen() {
                 fontFamily: 'PoppinsMedium',
               }}
             >
-              Monitor your spending
+              Track your spending & savings from discounts
             </Text>
           </View>
         </View>
@@ -143,18 +151,40 @@ export default function BudgetTrackerScreen() {
           }
         >
           <View className="px-6 py-6">
+            {/* Budget Overview Card */}
             <View
               className="rounded-2xl p-6 mb-6"
               style={{ backgroundColor: theme.card }}
             >
-              <View className="flex-row items-center gap-2 mb-4">
-                <Wallet color={theme.primary} size={24} />
-                <Text
-                  className="text-lg"
-                  style={{ color: theme.text, fontFamily: 'FredokaMedium' }}
-                >
-                  Monthly Budget
-                </Text>
+              <View className="flex-row items-center justify-between mb-4">
+                <View className="flex-row items-center gap-2">
+                  <Wallet color={theme.primary} size={24} />
+                  <Text
+                    className="text-lg"
+                    style={{ color: theme.text, fontFamily: 'FredokaMedium' }}
+                  >
+                    Monthly Overview
+                  </Text>
+                </View>
+
+                {/* Savings Indicator */}
+                {totalSavings > 0 && (
+                  <View
+                    className="flex-row items-center gap-1 px-3 py-1 rounded-full"
+                    style={{ backgroundColor: theme.success + '20' }}
+                  >
+                    <PiggyBank color={theme.success} size={16} />
+                    <Text
+                      style={{
+                        color: theme.success,
+                        fontFamily: 'PoppinsMedium',
+                        fontSize: 12,
+                      }}
+                    >
+                      Saved ${totalSavings.toFixed(2)}
+                    </Text>
+                  </View>
+                )}
               </View>
 
               {editingLimit ? (
@@ -207,72 +237,129 @@ export default function BudgetTrackerScreen() {
                 <View>
                   {budgetData.monthly_limit ? (
                     <>
-                      <View className="flex-row items-baseline gap-2 mb-2">
+                      {/* Spending vs Limit */}
+                      <View className="mb-4">
                         <Text
-                          className="text-4xl"
-                          style={{
-                            color: theme.text,
-                            fontFamily: 'PoppinsMedium',
-                          }}
-                        >
-                          ${budgetData.current_month_spending.toFixed(2)}
-                        </Text>
-                        <Text
-                          className="text-lg"
+                          className="text-sm mb-2"
                           style={{
                             color: theme.textSecondary,
                             fontFamily: 'PoppinsMedium',
                           }}
                         >
-                          / ${budgetData.monthly_limit.toFixed(2)}
+                          Budget Progress
                         </Text>
-                      </View>
-
-                      <View
-                        className="h-3 rounded-full overflow-hidden mb-3"
-                        style={{ backgroundColor: theme.border }}
-                      >
-                        <View
-                          className="h-full"
-                          style={{
-                            width: `${Math.min(percentage, 100)}%`,
-                            backgroundColor: overBudget
-                              ? theme.error
-                              : percentage > 80
-                              ? theme.warning
-                              : theme.success,
-                          }}
-                        />
-                      </View>
-
-                      {overBudget ? (
-                        <View
-                          className="flex-row items-center gap-2 p-3 rounded-xl mb-3"
-                          style={{ backgroundColor: theme.error + '20' }}
-                        >
-                          <AlertTriangle color={theme.error} size={20} />
+                        <View className="flex-row items-baseline gap-2 mb-2">
                           <Text
-                            className="text-sm flex-1"
+                            className="text-3xl"
                             style={{
-                              color: theme.error,
+                              color: theme.text,
                               fontFamily: 'PoppinsMedium',
                             }}
                           >
-                            You've exceeded your budget by $
-                            {Math.abs(remaining).toFixed(2)}
+                            ${budgetData.current_month_spending.toFixed(2)}
+                          </Text>
+                          <Text
+                            className="text-lg"
+                            style={{
+                              color: theme.textSecondary,
+                              fontFamily: 'PoppinsMedium',
+                            }}
+                          >
+                            / ${budgetData.monthly_limit.toFixed(2)}
                           </Text>
                         </View>
-                      ) : (
+
+                        {/* Progress Bar */}
+                        <View
+                          className="h-3 rounded-full overflow-hidden mb-2"
+                          style={{ backgroundColor: theme.border }}
+                        >
+                          <View
+                            className="h-full"
+                            style={{
+                              width: `${Math.min(percentage, 100)}%`,
+                              backgroundColor: overBudget
+                                ? theme.error
+                                : percentage > 80
+                                ? theme.warning
+                                : theme.success,
+                            }}
+                          />
+                        </View>
+
                         <Text
-                          className="text-sm mb-3"
+                          className="text-sm"
                           style={{
                             color: theme.textSecondary,
                             fontFamily: 'PoppinsMedium',
                           }}
                         >
-                          ${remaining.toFixed(2)} remaining this month
+                          {overBudget
+                            ? `Exceeded by $${Math.abs(remaining).toFixed(2)}`
+                            : `$${remaining.toFixed(2)} remaining`}
                         </Text>
-                      )}
+                      </View>
+
+                      {/* Savings Section */}
+                      <View
+                        className="mt-4 pt-4 border-t"
+                        style={{ borderTopColor: theme.border }}
+                      >
+                        <Text
+                          className="text-sm mb-2"
+                          style={{
+                            color: theme.textSecondary,
+                            fontFamily: 'PoppinsMedium',
+                          }}
+                        >
+                          Savings from Discounts
+                        </Text>
+                        <View className="flex-row items-baseline gap-2 mb-2">
+                          <Text
+                            className="text-3xl"
+                            style={{
+                              color: theme.success,
+                              fontFamily: 'PoppinsMedium',
+                            }}
+                          >
+                            ${totalSavings.toFixed(2)}
+                          </Text>
+                          <Text
+                            className="text-sm"
+                            style={{
+                              color: theme.textSecondary,
+                              fontFamily: 'PoppinsMedium',
+                            }}
+                          >
+                            saved this month
+                          </Text>
+                        </View>
+
+                        {/* Savings Percentage Bar */}
+                        <View
+                          className="h-2 rounded-full overflow-hidden mb-2"
+                          style={{ backgroundColor: theme.border }}
+                        >
+                          <View
+                            className="h-full"
+                            style={{
+                              width: `${Math.min(savingsPercentage, 100)}%`,
+                              backgroundColor: theme.success,
+                            }}
+                          />
+                        </View>
+
+                        <Text
+                          className="text-sm"
+                          style={{
+                            color: theme.textSecondary,
+                            fontFamily: 'PoppinsMedium',
+                          }}
+                        >
+                          {savingsPercentage.toFixed(1)}% of your spending came
+                          from discounts
+                        </Text>
+                      </View>
                     </>
                   ) : (
                     <Text
@@ -287,7 +374,7 @@ export default function BudgetTrackerScreen() {
                   )}
 
                   <TouchableOpacity
-                    className="py-3 rounded-xl items-center"
+                    className="py-3 rounded-xl items-center mt-4"
                     style={{ backgroundColor: theme.primary }}
                     onPress={() => setEditingLimit(true)}
                   >
@@ -300,18 +387,82 @@ export default function BudgetTrackerScreen() {
                 </View>
               )}
             </View>
+
+            {/* Savings/Spendings by Category */}
             <View className="mb-5">
-              <View className="flex-row items-center gap-2 mb-4">
-                <PieChart color={theme.primary} size={20} />
-                <Text
-                  className="text-lg "
-                  style={{ color: theme.text, fontFamily: 'FredokaMedium' }}
+              <View>
+                <View className="flex-row items-center gap-2 mb-2">
+                  <PieChart color={theme.primary} size={20} />
+                  <Text
+                    className="text-lg"
+                    style={{ color: theme.text, fontFamily: 'FredokaMedium' }}
+                  >
+                    Savings/Spendings by Category
+                  </Text>
+                </View>
+
+                {/* Toggle Buttons */}
+                <View
+                  style={{
+                    backgroundColor: theme.card,
+                    width: 164,
+                    borderRadius: 10,
+                  }}
+                  className="flex-row rounded-lg p-1 mb-2"
                 >
-                  Spending by Category
-                </Text>
+                  <TouchableOpacity
+                    className="px-3 py-1 rounded "
+                    style={{
+                      backgroundColor: showSpendings
+                        ? theme.backgroundSecondary
+                        : 'transparent',
+                    }}
+                    onPress={() => {
+                      setShowSpendings(true);
+                      setShowSavings(false);
+                    }}
+                  >
+                    <Text
+                      style={{
+                        color: showSpendings
+                          ? theme.primary
+                          : theme.textSecondary,
+                        fontFamily: 'PoppinsMedium',
+                        fontSize: 12,
+                      }}
+                    >
+                      Spendings
+                    </Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    className="px-3 py-1 rounded "
+                    style={{
+                      backgroundColor: showSavings
+                        ? theme.backgroundSecondary
+                        : 'transparent',
+                    }}
+                    onPress={() => {
+                      setShowSavings(true);
+                      setShowSpendings(false);
+                    }}
+                  >
+                    <Text
+                      style={{
+                        color: showSavings
+                          ? theme.success
+                          : theme.textSecondary,
+                        fontFamily: 'PoppinsMedium',
+                        fontSize: 12,
+                      }}
+                    >
+                      Savings
+                    </Text>
+                  </TouchableOpacity>
+                </View>
               </View>
 
-              {budgetData.spending_by_category.length > 0 ? (
+              {/* Show Spending by Category */}
+              {showSpendings && budgetData.spending_by_category.length > 0 ? (
                 <View className="gap-3 mb-6">
                   {budgetData.spending_by_category
                     .sort((a, b) => b.amount - a.amount)
@@ -334,7 +485,6 @@ export default function BudgetTrackerScreen() {
                             >
                               {category.category}
                             </Text>
-
                             <Text
                               style={{
                                 color: theme.primary,
@@ -370,68 +520,201 @@ export default function BudgetTrackerScreen() {
                     })}
                 </View>
               ) : (
-                <View
-                  className="p-6 rounded-xl items-center"
-                  style={{ backgroundColor: theme.card }}
-                >
-                  <Text
-                    className="text-sm"
-                    style={{
-                      color: theme.textSecondary,
-                      fontFamily: 'FredokaMedium',
-                    }}
+                showSpendings && (
+                  <View
+                    className="p-6 rounded-xl items-center"
+                    style={{ backgroundColor: theme.card }}
                   >
-                    No spending data yet
-                  </Text>
+                    <Text
+                      className="text-sm"
+                      style={{
+                        color: theme.textSecondary,
+                        fontFamily: 'FredokaMedium',
+                      }}
+                    >
+                      No spending data yet
+                    </Text>
+                  </View>
+                )
+              )}
+
+              {/* Show Savings by Category */}
+              {showSavings && budgetData.savings_by_category.length > 0 ? (
+                <View className="gap-3 mb-6">
+                  {budgetData.savings_by_category
+                    .sort((a, b) => b.amount - a.amount)
+                    .map((category) => {
+                      const categoryPercentage =
+                        (category.amount / totalSavings) * 100;
+                      return (
+                        <View
+                          key={category.category}
+                          className="p-4 rounded-xl"
+                          style={{ backgroundColor: theme.card }}
+                        >
+                          <View className="flex-row items-center justify-between mb-2">
+                            <Text
+                              style={{
+                                color: theme.text,
+                                fontFamily: 'FredokaMedium',
+                              }}
+                            >
+                              {category.category}
+                            </Text>
+                            <Text
+                              style={{
+                                color: theme.success,
+                                fontFamily: 'PoppinsMedium',
+                              }}
+                            >
+                              Saved ${category.amount.toFixed(2)}
+                            </Text>
+                          </View>
+                          <View
+                            className="h-2 rounded-full overflow-hidden"
+                            style={{ backgroundColor: theme.border }}
+                          >
+                            <View
+                              className="h-full rounded-full"
+                              style={{
+                                width: `${categoryPercentage}%`,
+                                backgroundColor: theme.success,
+                              }}
+                            />
+                          </View>
+                          <Text
+                            className="text-xs mt-2"
+                            style={{
+                              color: theme.textSecondary,
+                              fontFamily: 'PoppinsMedium',
+                            }}
+                          >
+                            {categoryPercentage.toFixed(1)}% of total savings
+                          </Text>
+                        </View>
+                      );
+                    })}
                 </View>
+              ) : (
+                showSavings && (
+                  <View
+                    className="p-6 rounded-xl items-center"
+                    style={{ backgroundColor: theme.card }}
+                  >
+                    <Text
+                      className="text-sm"
+                      style={{
+                        color: theme.textSecondary,
+                        fontFamily: 'FredokaMedium',
+                      }}
+                    >
+                      No savings data yet
+                    </Text>
+                  </View>
+                )
               )}
             </View>
+
+            {/* Combined History */}
             <View className="mb-5">
               <View className="flex-row items-center gap-2 mb-4">
                 <TrendingUp color={theme.primary} size={20} />
                 <Text
-                  className="text-lg "
+                  className="text-lg"
                   style={{ color: theme.text, fontFamily: 'FredokaMedium' }}
                 >
-                  Spending History
+                  Monthly History
                 </Text>
               </View>
 
-              {budgetData.spending_history.length > 0 ? (
+              {budgetData.spending_history.length > 0 ||
+              budgetData.savings_history.length > 0 ? (
                 <View className="gap-3">
-                  {budgetData.spending_history
-                    .sort((a, b) => b.month.localeCompare(a.month))
+                  {/* Get unique months from both histories */}
+                  {Array.from(
+                    new Set([
+                      ...budgetData.spending_history.map((h) => h.month),
+                      ...budgetData.savings_history.map((h) => h.month),
+                    ])
+                  )
+                    .sort((a, b) => b.localeCompare(a))
                     .slice(0, 6)
-                    .map((history) => (
-                      <View
-                        key={history.month}
-                        className="flex-row items-center justify-between p-4 rounded-xl"
-                        style={{ backgroundColor: theme.card }}
-                      >
-                        <Text
-                          style={{
-                            color: theme.text,
-                            fontFamily: 'FredokaMedium',
-                          }}
+                    .map((month) => {
+                      const spending =
+                        budgetData.spending_history.find(
+                          (h) => h.month === month
+                        )?.amount || 0;
+                      const savings =
+                        budgetData.savings_history.find(
+                          (h) => h.month === month
+                        )?.amount || 0;
+
+                      return (
+                        <View
+                          key={month}
+                          className="p-4 rounded-xl"
+                          style={{ backgroundColor: theme.card }}
                         >
-                          {new Date(history.month + '-01').toLocaleDateString(
-                            'en-US',
-                            {
-                              month: 'long',
-                              year: 'numeric',
-                            }
-                          )}
-                        </Text>
-                        <Text
-                          style={{
-                            color: theme.primary,
-                            fontFamily: 'PoppinsMedium',
-                          }}
-                        >
-                          ${history.amount.toFixed(2)}
-                        </Text>
-                      </View>
-                    ))}
+                          <Text
+                            className="mb-2"
+                            style={{
+                              color: theme.text,
+                              fontFamily: 'FredokaMedium',
+                            }}
+                          >
+                            {new Date(month + '-01').toLocaleDateString(
+                              'en-US',
+                              {
+                                month: 'long',
+                                year: 'numeric',
+                              }
+                            )}
+                          </Text>
+
+                          <View className="flex-row justify-between items-center">
+                            <View>
+                              <Text
+                                className="text-xs"
+                                style={{
+                                  color: theme.textSecondary,
+                                  fontFamily: 'PoppinsMedium',
+                                }}
+                              >
+                                Spent
+                              </Text>
+                              <Text
+                                style={{
+                                  color: theme.primary,
+                                  fontFamily: 'PoppinsMedium',
+                                }}
+                              >
+                                ${spending.toFixed(2)}
+                              </Text>
+                            </View>
+
+                            <View className="items-end">
+                              <Text
+                                className="text-xs"
+                                style={{
+                                  color: theme.textSecondary,
+                                  fontFamily: 'PoppinsMedium',
+                                }}
+                              >
+                                Saved
+                              </Text>
+                              <Text
+                                style={{
+                                  color: theme.success,
+                                  fontFamily: 'PoppinsMedium',
+                                }}
+                              >
+                                ${savings.toFixed(2)}
+                              </Text>
+                            </View>
+                          </View>
+                        </View>
+                      );
+                    })}
                 </View>
               ) : (
                 <View
@@ -450,59 +733,76 @@ export default function BudgetTrackerScreen() {
                 </View>
               )}
             </View>
+
+            {/* Total Summary */}
             <View className="mb-5">
               <View className="flex-row items-center gap-2 mb-4">
                 <HandCoins color={theme.primary} size={20} />
                 <Text
-                  className="text-lg "
+                  className="text-lg"
                   style={{ color: theme.text, fontFamily: 'FredokaMedium' }}
                 >
-                  Total Spending
+                  Total Summary
                 </Text>
               </View>
-              <View>
+
+              <View className="flex-row gap-3">
                 {/* Overall Spending Card */}
-                {budgetData.overall_spending !== undefined ? (
+                <View className="flex-1">
                   <View
-                    className="p-6 rounded-2xl items-center"
+                    className="p-4 rounded-2xl items-center"
                     style={{ backgroundColor: theme.card }}
                   >
-                    <HandCoins color={theme.primary} size={32} />
+                    <HandCoins color={theme.primary} size={24} />
                     <Text
-                      className="text-3xl  mt-2"
+                      className="text-xl mt-2"
                       style={{ color: theme.text, fontFamily: 'PoppinsMedium' }}
                     >
                       ${budgetData.overall_spending.toFixed(2)}
                     </Text>
                     <Text
-                      className="text-sm mt-1"
+                      className="text-xs mt-1 text-center"
                       style={{
                         color: theme.textSecondary,
                         fontFamily: 'PoppinsMedium',
                       }}
                     >
-                      Overall spending to date
+                      Total spent
                     </Text>
                   </View>
-                ) : (
+                </View>
+
+                {/* Overall Savings Card */}
+                <View className="flex-1">
                   <View
-                    className="p-6 rounded-xl items-center"
+                    className="p-4 rounded-2xl items-center"
                     style={{ backgroundColor: theme.card }}
                   >
+                    <PiggyBank color={theme.success} size={24} />
                     <Text
-                      className="text-sm"
+                      className="text-xl mt-2"
                       style={{
-                        color: theme.textSecondary,
-                        fontFamily: 'FredokaMedium',
+                        color: theme.success,
+                        fontFamily: 'PoppinsMedium',
                       }}
                     >
-                      No overall spending data yet
+                      ${budgetData.overall_savings.toFixed(2)}
+                    </Text>
+                    <Text
+                      className="text-xs mt-1 text-center"
+                      style={{
+                        color: theme.textSecondary,
+                        fontFamily: 'PoppinsMedium',
+                      }}
+                    >
+                      Total saved
                     </Text>
                   </View>
-                )}
+                </View>
               </View>
             </View>
-            {/* clear budget data button*/}
+
+            {/* Clear budget data button */}
             <TouchableOpacity
               className="py-3 rounded-xl items-center"
               style={{ backgroundColor: theme.error }}
@@ -521,6 +821,8 @@ export default function BudgetTrackerScreen() {
           </View>
         </ScrollView>
       </LinearGradient>
+
+      {/* Clear Confirmation Modal */}
       {clearConfirmModal && (
         <View
           className="absolute inset-0 bg-black/70 bg-opacity-50 items-center justify-center px-6"
