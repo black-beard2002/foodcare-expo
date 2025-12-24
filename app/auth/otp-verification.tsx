@@ -197,7 +197,7 @@ export default function OTPVerificationScreen(): JSX.Element {
           className="text-base text-center mb-5 leading-6"
           style={{ color: theme.textSecondary }}
         >
-          Enter the 6-digit code sent to your phone number
+          Enter the 4-digit code sent to your phone number
         </Text>
 
         {/* OTP Inputs */}
