@@ -1016,7 +1016,7 @@ export default function OfferDetailsScreen() {
         <View className="flex-row items-center gap-2 ml-15">
           <Text
             style={{
-              fontSize: 20,
+              fontSize: 15,
               color: theme.primary,
               fontFamily: 'PoppinsMedium',
             }}
