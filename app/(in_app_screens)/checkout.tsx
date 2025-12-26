@@ -43,7 +43,7 @@ import { formatPrice, handleImageSrc } from '@/utils/helpers';
 
 export default function CheckoutScreen() {
   const { theme } = useTheme();
-  const { cart, getCartTotal, clearCart, categories } = useAppStore();
+  const { cart, getCartTotal, clearCart, categories, fetchOffers } = useAppStore();
   const { showAlert } = useAlert();
   const { addExpense } = useBudgetStore();
   const { user } = useAuthStore();
@@ -322,6 +322,7 @@ export default function CheckoutScreen() {
       }
 
       clearCart();
+      fetchOffers(true);
       showAlert(
         'Order Created!',
         `Your order has been placed successfully.`,

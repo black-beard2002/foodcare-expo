@@ -52,7 +52,7 @@ import { useCameraPermissions } from 'expo-camera';
 import { useAlert } from '@/providers/AlertProvider';
 import { useAuthStore } from '@/stores/authStore';
 import { TSX_WEBSOCKET_URL } from '@/constants/api_constants';
-import { formatDateTime } from '@/utils/helpers';
+import { formatDateTime, formatDateRange } from '@/utils/helpers';
 import CountdownTimer from '@/components/CountdownTimer';
 
 export default function OrderDetailsScreen() {
@@ -648,6 +648,7 @@ Shared from FoodForLess App
           </View>
         </View>
 
+
         {/* Order Items */}
         <View style={{ paddingHorizontal: 20, marginTop: 24 }}>
           <View
@@ -655,7 +656,7 @@ Shared from FoodForLess App
               flexDirection: 'row',
               alignItems: 'center',
               gap: 8,
-              marginBottom: 16,
+              marginBottom: 5,
             }}
           >
             <ShoppingBag color={theme.primary} size={20} />
@@ -669,6 +670,7 @@ Shared from FoodForLess App
               Order Items {order?.items ? `(${order.items.length})` : ''}
             </Text>
           </View>
+
 
           <View
             style={{
@@ -686,7 +688,36 @@ Shared from FoodForLess App
                   padding: 14,
                 }}
               >
+
                 {/* ITEM ROW */}
+
+                {/* Date Time Range */}
+                <View
+                  style={{
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    alignSelf: 'flex-start',
+                    backgroundColor: theme.primary + '15',
+                    paddingHorizontal: 8,
+                    paddingVertical: 3,
+                    borderRadius: 8,
+                    marginBottom: 6,
+                  }}
+                >
+                  <Text
+                    style={{
+                      fontSize: 13,
+                      fontFamily: 'PoppinsMedium',
+                      color: theme.primary,
+                    }}
+                  >
+                    {formatDateRange([
+                      orderItem.item.pickup_start_time,
+                      orderItem.item.pickup_end_time,
+                    ])}
+                  </Text>
+                </View>
+
 
                 <View style={{ flexDirection: 'row', gap: 14 }}>
                   {/* Image */}
@@ -718,6 +749,7 @@ Shared from FoodForLess App
                     >
                       {orderItem.item.title}
                     </Text>
+
                     <View
                       style={{
                         flexDirection: 'row',
@@ -737,15 +769,22 @@ Shared from FoodForLess App
                           Quantity: {orderItem.quantity}
                         </Text>
 
+
+                        <View
+                          style={{
+                            flexDirection: 'row',
+                            alignItems: 'center',
+                            gap: 10,
+                            marginTop: 'auto',
+                          }}
+                        >
                         {/* Price */}
                         <View
                           style={{
-                            alignSelf: 'flex-start',
                             backgroundColor: theme.primary + '20',
                             paddingHorizontal: 10,
                             paddingVertical: 4,
-                            borderRadius: 10,
-                            marginTop: 'auto',
+                            borderRadius: 10
                           }}
                         >
                           <Text
@@ -758,9 +797,10 @@ Shared from FoodForLess App
                             ${formatPrice(orderItem.total)}
                           </Text>
                         </View>
+                        {/* Countdown */}
+                        <View>{renderCountdown(orderItem)}</View>
+                        </View>
                       </View>
-                      {/* Countdown */}
-                      <View>{renderCountdown(orderItem)}</View>
                     </View>
                   </View>
                 </View>
