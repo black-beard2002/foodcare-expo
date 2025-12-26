@@ -51,7 +51,7 @@ const ModernCategoryChip = ({
             : images.CATEGORY_PLACEHOLDER_IMAGE
         }
         style={{ width: 60, height: 60, borderRadius: 30 }}
-        resizeMode="contain"
+        resizeMode="cover"
       />
     </View>
     <Text

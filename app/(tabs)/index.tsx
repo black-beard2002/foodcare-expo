@@ -14,9 +14,12 @@ import {
   FlatList,
   RefreshControl,
   Dimensions,
+  Alert,
+  Platform,
+  Linking,
 } from 'react-native';
 import { router } from 'expo-router';
-
+import * as Location from 'expo-location';
 import {
   Search,
   Sparkles,
@@ -29,15 +32,16 @@ import {
   Heart,
   CalendarDays,
   CalendarPlus,
-  Filter,
   ArrowRight,
+  Zap,
+  TrendingUp,
 } from 'lucide-react-native';
 
 import { useAppStore } from '@/stores/appStore';
 import { useTheme } from '@/hooks/useTheme';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { FilterOptions } from '@/types/appTypes';
+import { FilterOptions, Provider } from '@/types/appTypes';
 import FilterModal from '@/components/HomeScreenFilter';
 import { useFavoritesStore } from '@/stores/favoritesStore';
 import { useAuthStore } from '@/stores/authStore';
@@ -55,8 +59,10 @@ import ModernCategoryChip from '@/components/ModernCategoryChip';
 import OfferCardSkeleton from '@/components/skeletons/OfferCardSkeleton';
 import NearYouCard from '@/components/NearYouCard';
 import DefaultOfferCard from '@/components/DefaultOfferCard';
+import { LatLng, Region } from 'react-native-maps';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
+const NEAR_ME_RADIUS_KM = 3;
 
 export default function HomeScreen(): JSX.Element {
   const { theme, isDark, toggleTheme } = useTheme();
@@ -76,7 +82,8 @@ export default function HomeScreen(): JSX.Element {
   const { user } = useAuthStore();
   const { addToFavorites, removeFromFavorites, isFavorite } =
     useFavoritesStore();
-
+  const [userLocation, setUserLocation] = useState<LatLng | null>(null);
+  const [isGettingLocation, setIsGettingLocation] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const hasFetched = useRef(false);
   const [filterVisible, setFilterVisible] = useState(false);
@@ -105,6 +112,61 @@ export default function HomeScreen(): JSX.Element {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     await refreshData(true);
     setRefreshing(false);
+  }, []);
+
+  const handleGetCurrentLocation = useCallback(
+    async (showAlertMessage: boolean = true) => {
+      setIsGettingLocation(true);
+
+      try {
+        const servicesEnabled = await Location.hasServicesEnabledAsync();
+        if (!servicesEnabled) {
+          setIsGettingLocation(false);
+          return;
+        }
+
+        const { status } = await Location.requestForegroundPermissionsAsync();
+        if (status !== 'granted') {
+          Alert.alert(
+            'Permission Required',
+            'Location access is required to show nearby restaurants.',
+            [
+              { text: 'Cancel', style: 'cancel' },
+              {
+                text: 'Open Settings',
+                onPress: () => {
+                  if (Platform.OS === 'ios') {
+                    Linking.openURL('app-settings:');
+                  } else {
+                    Linking.openSettings();
+                  }
+                },
+              },
+            ]
+          );
+          setIsGettingLocation(false);
+          return;
+        }
+
+        const location = await Location.getCurrentPositionAsync({
+          accuracy: Location.Accuracy.Balanced,
+        });
+
+        const { latitude, longitude } = location.coords;
+
+        setUserLocation({ latitude, longitude });
+      } catch (error: any) {
+        console.error('Error getting location:', error);
+      } finally {
+        setIsGettingLocation(false);
+      }
+    },
+    []
+  );
+
+  // Initial location load
+  useEffect(() => {
+    handleGetCurrentLocation(false);
   }, []);
 
   const featuredOffers = useMemo(
@@ -146,6 +208,59 @@ export default function HomeScreen(): JSX.Element {
 
   const cartCount = getCartItemCount();
 
+  const calculateDistance = (
+    lat1: number,
+    lon1: number,
+    lat2: number,
+    lon2: number
+  ): number => {
+    const R = 6371; // Earth's radius in km
+    const dLat = ((lat2 - lat1) * Math.PI) / 180;
+    const dLon = ((lon2 - lon1) * Math.PI) / 180;
+    const a =
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos((lat1 * Math.PI) / 180) *
+        Math.cos((lat2 * Math.PI) / 180) *
+        Math.sin(dLon / 2) *
+        Math.sin(dLon / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c;
+  };
+
+  const getAllRestaurants = useCallback((): Provider[] => {
+    const restaurantMap: { [key: string]: Provider } = {};
+    offers.forEach((offer) => {
+      if (offer.provider && !restaurantMap[offer.provider.id]) {
+        restaurantMap[offer.provider.id] = offer.provider;
+      }
+    });
+    return Object.values(restaurantMap);
+  }, [offers]);
+
+  // Fixed: Check ALL provider addresses instead of just the first one
+  const getNearMeRestaurants = useCallback(
+    (userLat: number, userLon: number): Provider[] => {
+      return getAllRestaurants().filter((restaurant) => {
+        // Check if ANY of the restaurant's addresses are within range
+        return restaurant.addresses.some((address) => {
+          const distance = calculateDistance(
+            userLat,
+            userLon,
+            address.latitude,
+            address.longitude
+          );
+          return distance <= NEAR_ME_RADIUS_KM;
+        });
+      });
+    },
+    [getAllRestaurants]
+  );
+
+  const nearMeRestaurants = useMemo(() => {
+    if (!userLocation) return [];
+    return getNearMeRestaurants(userLocation.latitude, userLocation.longitude);
+  }, [userLocation, getNearMeRestaurants]);
+
   return (
     <SafeAreaView
       style={{ flex: 1, backgroundColor: theme.backgroundSecondary }}
@@ -156,8 +271,22 @@ export default function HomeScreen(): JSX.Element {
         theme={theme}
       />
 
-      {/* Header */}
-      <View style={{ paddingHorizontal: 20, paddingTop: 8, paddingBottom: 16 }}>
+      {/* Modern Header with Gradient Effect */}
+      <View
+        style={{
+          paddingHorizontal: 20,
+          paddingTop: 12,
+          paddingBottom: 20,
+          backgroundColor: theme.card,
+          borderBottomLeftRadius: 24,
+          borderBottomRightRadius: 24,
+          shadowColor: '#000',
+          shadowOffset: { width: 0, height: 4 },
+          shadowOpacity: 0.1,
+          shadowRadius: 8,
+          elevation: 5,
+        }}
+      >
         <View
           style={{
             flexDirection: 'row',
@@ -165,97 +294,162 @@ export default function HomeScreen(): JSX.Element {
             alignItems: 'center',
           }}
         >
-          <View>
-            <Text
+          <View style={{ flex: 1 }}>
+            <View
               style={{
-                fontSize: 13,
-                color: theme.textSecondary,
-                fontFamily: 'PoppinsLight',
+                flexDirection: 'row',
+                alignItems: 'center',
+                marginBottom: 4,
               }}
             >
-              Welcome back
-            </Text>
-            <View
-              style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}
-            >
-              <MapPin size={14} color={theme.textSecondary} />
               <Text
                 style={{
-                  fontSize: 16,
+                  fontSize: 14,
+                  color: theme.textSecondary,
+                  fontFamily: 'PoppinsLight',
+                }}
+              >
+                👋 Welcome back
+              </Text>
+            </View>
+            <View
+              style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}
+            >
+              <View
+                style={{
+                  backgroundColor: theme.primary + '20',
+                  padding: 6,
+                  borderRadius: 8,
+                }}
+              >
+                <MapPin size={16} color={theme.primary} />
+              </View>
+              <Text
+                style={{
+                  fontSize: 18,
                   fontFamily: 'FredokaMedium',
                   color: theme.text,
+                  flex: 1,
                 }}
+                numberOfLines={1}
               >
                 {user?.address?.split(',')[0] || 'Food Lover'}
               </Text>
             </View>
           </View>
 
-          <View style={{ flexDirection: 'row', gap: 8 }}>
+          <View style={{ flexDirection: 'row', gap: 10 }}>
             <TouchableOpacity
               style={{
-                width: 45,
-                height: 45,
-                borderRadius: 24,
-                backgroundColor: theme.card,
+                width: 38,
+                height: 38,
+                borderRadius: 16,
+                backgroundColor: theme.backgroundSecondary,
                 justifyContent: 'center',
                 alignItems: 'center',
+                shadowColor: '#000',
+                shadowOffset: { width: 0, height: 2 },
+                shadowOpacity: 0.08,
+                shadowRadius: 4,
+                elevation: 3,
               }}
               onPress={toggleTheme}
+              activeOpacity={0.7}
             >
               {isDark ? (
-                <Sun color={theme.textSecondary} size={20} />
+                <Sun color={theme.primary} size={17} strokeWidth={2.5} />
               ) : (
-                <Moon color={theme.textSecondary} size={20} />
+                <Moon color={theme.primary} size={17} strokeWidth={2.5} />
               )}
             </TouchableOpacity>
             <TouchableOpacity
               style={{
-                width: 45,
-                height: 45,
-                borderRadius: 24,
-                backgroundColor: theme.card,
+                width: 38,
+                height: 38,
+                borderRadius: 16,
+                backgroundColor: theme.backgroundSecondary,
                 justifyContent: 'center',
                 alignItems: 'center',
+                shadowColor: '#000',
+                shadowOffset: { width: 0, height: 2 },
+                shadowOpacity: 0.08,
+                shadowRadius: 4,
+                elevation: 3,
               }}
               onPress={() => router.push('/(tabs)/cart')}
+              activeOpacity={0.7}
             >
-              <ShoppingCart color={theme.textSecondary} size={20} />
-              <AnimatedBadge count={cartCount} color={theme.primary} />
+              <ShoppingCart color={theme.primary} size={17} strokeWidth={2.5} />
+              <AnimatedBadge count={cartCount} color={theme.error} />
             </TouchableOpacity>
             <TouchableOpacity
               style={{
-                width: 45,
-                height: 45,
-                borderRadius: 24,
-                backgroundColor: theme.card,
+                width: 38,
+                height: 38,
+                borderRadius: 16,
+                backgroundColor: theme.backgroundSecondary,
                 justifyContent: 'center',
                 alignItems: 'center',
+                shadowColor: '#000',
+                shadowOffset: { width: 0, height: 2 },
+                shadowOpacity: 0.08,
+                shadowRadius: 4,
+                elevation: 3,
               }}
               onPress={() => router.push('/(in_app_screens)/favourites')}
+              activeOpacity={0.7}
             >
               <Heart
-                color={theme.textSecondary}
+                color={isNewFavoritedAdded ? theme.error : theme.primary}
                 fill={isNewFavoritedAdded ? theme.error : 'transparent'}
-                size={20}
-                strokeWidth={isNewFavoritedAdded ? 0 : 2}
+                size={17}
+                strokeWidth={isNewFavoritedAdded ? 0 : 2.5}
               />
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={{
-                width: 45,
-                height: 45,
-                borderRadius: 24,
-                backgroundColor: theme.card,
-                justifyContent: 'center',
-                alignItems: 'center',
-              }}
-              onPress={() => router.push('/(in_app_screens)/search')}
-            >
-              <Search color={theme.textSecondary} size={20} />
             </TouchableOpacity>
           </View>
         </View>
+
+        {/* Search Bar */}
+        <TouchableOpacity
+          style={{
+            marginTop: 16,
+            backgroundColor: theme.backgroundSecondary,
+            borderRadius: 16,
+            paddingHorizontal: 16,
+            paddingVertical: 14,
+            flexDirection: 'row',
+            alignItems: 'center',
+            gap: 12,
+            shadowColor: '#000',
+            shadowOffset: { width: 0, height: 2 },
+            shadowOpacity: 0.05,
+            shadowRadius: 3,
+            elevation: 2,
+          }}
+          onPress={() => router.push('/(in_app_screens)/search')}
+          activeOpacity={0.8}
+        >
+          <Search color={theme.textSecondary} size={20} strokeWidth={2.5} />
+          <Text
+            style={{
+              flex: 1,
+              fontSize: 15,
+              color: theme.textSecondary,
+              fontFamily: 'PoppinsLight',
+            }}
+          >
+            Search for food, restaurants...
+          </Text>
+          <View
+            style={{
+              backgroundColor: theme.primary + '20',
+              padding: 6,
+              borderRadius: 8,
+            }}
+          >
+            <Sparkles size={16} color={theme.primary} />
+          </View>
+        </TouchableOpacity>
       </View>
 
       <ScrollView
@@ -278,26 +472,56 @@ export default function HomeScreen(): JSX.Element {
             <FeaturedCardSkeleton isDark={isDark} theme={theme} />
           </View>
         ) : featuredOffers.length > 0 ? (
-          <View style={{ marginBottom: 24 }}>
+          <View style={{ marginBottom: 28 }}>
             <View
               style={{
                 flexDirection: 'row',
                 alignItems: 'center',
-                gap: 8,
+                justifyContent: 'space-between',
                 paddingHorizontal: 20,
-                marginBottom: 5,
+                marginBottom: 16,
               }}
             >
-              <Sparkles color={theme.primary} size={20} />
-              <Text
+              <View
+                style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}
+              >
+                <View
+                  style={{
+                    backgroundColor: theme.primary + '20',
+                    padding: 8,
+                    borderRadius: 12,
+                  }}
+                >
+                  <Sparkles color={theme.primary} size={20} />
+                </View>
+                <Text
+                  style={{
+                    fontSize: 22,
+                    fontFamily: 'FredokaMedium',
+                    color: theme.text,
+                  }}
+                >
+                  Featured Offers
+                </Text>
+              </View>
+              <View
                 style={{
-                  fontSize: 20,
-                  fontFamily: 'FredokaMedium',
-                  color: theme.text,
+                  backgroundColor: theme.primary + '15',
+                  paddingHorizontal: 12,
+                  paddingVertical: 6,
+                  borderRadius: 12,
                 }}
               >
-                Featured Offers
-              </Text>
+                <Text
+                  style={{
+                    fontSize: 12,
+                    fontFamily: 'PoppinsMedium',
+                    color: theme.primary,
+                  }}
+                >
+                  Hot 🔥
+                </Text>
+              </View>
             </View>
             <Carousel
               width={SCREEN_WIDTH * 0.88}
@@ -335,59 +559,50 @@ export default function HomeScreen(): JSX.Element {
             />
           </View>
         ) : categories.length > 0 ? (
-          <View style={{ marginBottom: 24 }}>
+          <View style={{ marginBottom: 28 }}>
             <View
               style={{
-                flexDirection: 'row',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                width: '100%',
                 paddingHorizontal: 20,
                 marginBottom: 16,
               }}
             >
-              <View>
-                <Text
-                  style={{
-                    fontSize: 14,
-                    color: theme.textSecondary,
-                    marginBottom: 4,
-                    fontFamily: 'PoppinsLight',
-                  }}
-                >
-                  What do you want to eat today?
-                </Text>
-                <Text
-                  style={{
-                    fontSize: 24,
-                    color: theme.text,
-                    fontFamily: 'FredokaMedium',
-                  }}
-                >
-                  Choose Your Favorite Food
-                </Text>
-              </View>
-              <TouchableOpacity
-                onPress={() => router.push('/categories')}
+              <View
                 style={{
-                  justifyContent: 'center',
+                  flexDirection: 'row',
                   alignItems: 'center',
-                  backgroundColor: theme.card,
-                  padding: 12,
-                  borderRadius: 24,
+                  gap: 10,
                 }}
               >
-                <ArrowRight color={theme.text} size={15} />
-                <Text
+                <View
                   style={{
-                    color: theme.text,
-                    fontFamily: 'FredokaMedium',
-                    fontSize: 10,
+                    backgroundColor: theme.primary + '20',
+                    padding: 8,
+                    borderRadius: 12,
                   }}
                 >
-                  see all
-                </Text>
-              </TouchableOpacity>
+                  <UtensilsCrossed color={theme.primary} size={20} />
+                </View>
+                <View>
+                  <Text
+                    style={{
+                      fontSize: 12,
+                      color: theme.text,
+                      fontFamily: 'PoppinsLight',
+                    }}
+                  >
+                    What are you craving today?
+                  </Text>
+                  <Text
+                    style={{
+                      fontSize: 20,
+                      color: theme.textSecondary,
+                      fontFamily: 'FredokaMedium',
+                    }}
+                  >
+                    Choose Your Favourite Category
+                  </Text>
+                </View>
+              </View>
             </View>
             <FlatList
               data={categories}
@@ -401,7 +616,7 @@ export default function HomeScreen(): JSX.Element {
               )}
               horizontal
               showsHorizontalScrollIndicator={false}
-              contentContainerStyle={{ paddingHorizontal: 20 }}
+              contentContainerStyle={{ paddingHorizontal: 20, gap: 12 }}
             />
           </View>
         ) : null}
@@ -412,12 +627,12 @@ export default function HomeScreen(): JSX.Element {
             <View style={{ paddingHorizontal: 20, marginBottom: 16 }}>
               <Text
                 style={{
-                  fontSize: 20,
+                  fontSize: 22,
                   fontFamily: 'FredokaMedium',
                   color: theme.text,
                 }}
               >
-                Near You Offers
+                Near You
               </Text>
             </View>
             <FlatList
@@ -446,40 +661,56 @@ export default function HomeScreen(): JSX.Element {
                 style={{
                   flexDirection: 'row',
                   alignItems: 'center',
-                  gap: 8,
+                  gap: 10,
                 }}
               >
-                <Route color={theme.primary} size={20} />
+                <View
+                  style={{
+                    backgroundColor: theme.primary + '20',
+                    padding: 8,
+                    borderRadius: 12,
+                  }}
+                >
+                  <Route color={theme.primary} size={20} />
+                </View>
                 <Text
                   style={{
-                    fontSize: 20,
+                    fontSize: 22,
                     fontFamily: 'FredokaMedium',
                     color: theme.text,
                   }}
                 >
-                  Near You Offers
+                  Near You
                 </Text>
               </View>
               <TouchableOpacity
                 onPress={() => router.push('/nearme')}
                 style={{
-                  justifyContent: 'center',
+                  flexDirection: 'row',
                   alignItems: 'center',
+                  gap: 6,
                   backgroundColor: theme.card,
-                  padding: 12,
-                  borderRadius: 24,
+                  paddingHorizontal: 16,
+                  paddingVertical: 10,
+                  borderRadius: 16,
+                  shadowColor: '#000',
+                  shadowOffset: { width: 0, height: 2 },
+                  shadowOpacity: 0.08,
+                  shadowRadius: 4,
+                  elevation: 3,
                 }}
+                activeOpacity={0.7}
               >
-                <ArrowRight color={theme.text} size={15} />
                 <Text
                   style={{
-                    color: theme.text,
-                    fontFamily: 'FredokaMedium',
-                    fontSize: 10,
+                    color: theme.primary,
+                    fontFamily: 'PoppinsMedium',
+                    fontSize: 13,
                   }}
                 >
-                  see all
+                  See All
                 </Text>
+                <ArrowRight color={theme.primary} size={16} strokeWidth={2.5} />
               </TouchableOpacity>
             </View>
 
@@ -498,7 +729,7 @@ export default function HomeScreen(): JSX.Element {
               )}
               horizontal
               showsHorizontalScrollIndicator={false}
-              contentContainerStyle={{ paddingHorizontal: 20 }}
+              contentContainerStyle={{ paddingHorizontal: 20, gap: 16 }}
             />
           </View>
         ) : null}
@@ -515,20 +746,46 @@ export default function HomeScreen(): JSX.Element {
               style={{
                 flexDirection: 'row',
                 alignItems: 'center',
-                gap: 8,
+                gap: 10,
                 marginBottom: 16,
               }}
             >
-              <CalendarDays color={theme.primary} size={20} />
+              <View
+                style={{
+                  backgroundColor: theme.primary + '20',
+                  padding: 8,
+                  borderRadius: 12,
+                }}
+              >
+                <CalendarDays color={theme.primary} size={20} />
+              </View>
               <Text
                 style={{
-                  fontSize: 20,
+                  fontSize: 22,
                   fontFamily: 'FredokaMedium',
                   color: theme.text,
                 }}
               >
-                Pickup Today
+                Available Today
               </Text>
+              <View
+                style={{
+                  backgroundColor: theme.success + '20',
+                  paddingHorizontal: 10,
+                  paddingVertical: 4,
+                  borderRadius: 8,
+                }}
+              >
+                <Text
+                  style={{
+                    fontSize: 11,
+                    fontFamily: 'PoppinsMedium',
+                    color: theme.success,
+                  }}
+                >
+                  {todaysOffers.length} offers
+                </Text>
+              </View>
             </View>
             <FlatList
               data={todaysOffers}
@@ -545,7 +802,7 @@ export default function HomeScreen(): JSX.Element {
               )}
               horizontal
               showsHorizontalScrollIndicator={false}
-              contentContainerStyle={{ paddingHorizontal: 10, gap: 15 }}
+              contentContainerStyle={{ gap: 16 }}
             />
           </View>
         )}
@@ -557,20 +814,46 @@ export default function HomeScreen(): JSX.Element {
               style={{
                 flexDirection: 'row',
                 alignItems: 'center',
-                gap: 8,
+                gap: 10,
                 marginBottom: 16,
               }}
             >
-              <CalendarPlus color={theme.primary} size={20} />
+              <View
+                style={{
+                  backgroundColor: theme.primary + '20',
+                  padding: 8,
+                  borderRadius: 12,
+                }}
+              >
+                <CalendarPlus color={theme.primary} size={20} />
+              </View>
               <Text
                 style={{
-                  fontSize: 20,
+                  fontSize: 22,
                   fontFamily: 'FredokaMedium',
                   color: theme.text,
                 }}
               >
-                Pickup Tomorrow
+                Coming Tomorrow
               </Text>
+              <View
+                style={{
+                  backgroundColor: theme.warning + '20',
+                  paddingHorizontal: 10,
+                  paddingVertical: 4,
+                  borderRadius: 8,
+                }}
+              >
+                <Text
+                  style={{
+                    fontSize: 11,
+                    fontFamily: 'PoppinsMedium',
+                    color: theme.warning,
+                  }}
+                >
+                  {tomorrowsOffers.length} offers
+                </Text>
+              </View>
             </View>
             <FlatList
               data={tomorrowsOffers}
@@ -587,65 +870,87 @@ export default function HomeScreen(): JSX.Element {
               )}
               horizontal
               showsHorizontalScrollIndicator={false}
-              contentContainerStyle={{ paddingHorizontal: 20, gap: 15 }}
+              contentContainerStyle={{ gap: 16 }}
             />
           </View>
         )}
 
-        {/* Empty State */}
+        {/* Modern Empty State */}
         {!isLoading && offers.length === 0 && (
           <View
             style={{
               alignItems: 'center',
               justifyContent: 'center',
-              paddingVertical: 60,
-              paddingHorizontal: 20,
+              paddingVertical: 80,
+              paddingHorizontal: 32,
             }}
           >
             <View
               style={{
-                width: 120,
-                height: 120,
-                borderRadius: 60,
+                width: 140,
+                height: 140,
+                borderRadius: 70,
                 backgroundColor: theme.primary + '15',
                 justifyContent: 'center',
                 alignItems: 'center',
-                marginBottom: 20,
+                marginBottom: 24,
+                shadowColor: theme.primary,
+                shadowOffset: { width: 0, height: 8 },
+                shadowOpacity: 0.2,
+                shadowRadius: 16,
+                elevation: 8,
               }}
             >
-              <UtensilsCrossed color={theme.primary} size={60} />
+              <UtensilsCrossed
+                color={theme.primary}
+                size={70}
+                strokeWidth={1.5}
+              />
             </View>
             <Text
               style={{
-                fontSize: 22,
+                fontSize: 26,
                 fontFamily: 'FredokaMedium',
                 color: theme.text,
-                marginBottom: 8,
+                marginBottom: 10,
+                textAlign: 'center',
               }}
             >
-              No Offers Available
+              No Offers Yet
             </Text>
             <Text
               style={{
                 fontSize: 15,
                 color: theme.textSecondary,
                 textAlign: 'center',
-                marginBottom: 24,
+                marginBottom: 32,
+                lineHeight: 22,
+                fontFamily: 'PoppinsLight',
               }}
             >
               {isOffline
-                ? 'You appear to be offline. Please check your connection.'
-                : 'Check back later for amazing deals!'}
+                ? 'You appear to be offline.\nPlease check your connection.'
+                : 'Check back soon for amazing\nfood deals and discounts!'}
             </Text>
             <TouchableOpacity
               onPress={onRefresh}
               style={{
                 backgroundColor: theme.primary,
-                paddingHorizontal: 32,
-                paddingVertical: 14,
-                borderRadius: 24,
+                paddingHorizontal: 40,
+                paddingVertical: 16,
+                borderRadius: 16,
+                flexDirection: 'row',
+                alignItems: 'center',
+                gap: 10,
+                shadowColor: theme.primary,
+                shadowOffset: { width: 0, height: 4 },
+                shadowOpacity: 0.3,
+                shadowRadius: 8,
+                elevation: 6,
               }}
+              activeOpacity={0.8}
             >
+              <Zap color="#fff" size={20} fill="#fff" />
               <Text
                 style={{
                   color: '#fff',
@@ -664,7 +969,6 @@ export default function HomeScreen(): JSX.Element {
         visible={filterVisible}
         onClose={() => setFilterVisible(false)}
         onApply={(filters) => {
-          // Handle filter logic here
           setFilterVisible(false);
         }}
       />

@@ -1686,7 +1686,7 @@ export default function OfferDetailsScreen() {
               </Text>
             </View>
             <Text style={{ color: theme.text, fontFamily: 'PoppinsLight' }}>
-              Remaining offers ({offer.qty})
+              Remaining offers ({offer.qty <= 0 ? 0 : offer.qty})
             </Text>
           </View>
 
@@ -1867,24 +1867,36 @@ export default function OfferDetailsScreen() {
 
           <TouchableOpacity
             onPress={handleAddToCart}
-            className="flex-1 flex-row items-center justify-center px-6 py-4 rounded-2xl gap-2"
+            activeOpacity={0.85}
+            disabled={offer.qty <= 0}
+            className="flex-1 flex-row items-center justify-center px-6 py-4 rounded-2xl"
             style={{
-              backgroundColor: theme.primary,
+              backgroundColor: offer.qty <= 0 ? theme.disabled : theme.primary,
+              opacity: offer.qty <= 0 ? 0.7 : 1,
               shadowColor: theme.primary,
               shadowOffset: { width: 0, height: 4 },
-              shadowOpacity: 0.3,
+              shadowOpacity: offer.qty <= 0 ? 0 : 0.25,
               shadowRadius: 8,
-              elevation: 6,
+              elevation: offer.qty <= 0 ? 0 : 6,
             }}
-            activeOpacity={0.8}
           >
-            <Text className="text-white text-base">Add to Cart</Text>
-            <Text
-              className="text-white text-sm"
-              style={{ fontFamily: 'PoppinsMedium' }}
-            >
-              • ${totalPrice.toFixed(2)}
-            </Text>
+            <View className="flex-row items-center gap-2">
+              <Text
+                className="text-white text-base"
+                style={{ fontFamily: 'PoppinsMedium' }}
+              >
+                {offer.qty <= 0 ? 'Coming Back Soon' : 'Add to Cart'}
+              </Text>
+
+              {offer.qty > 0 && (
+                <Text
+                  className="text-white/90 text-sm"
+                  style={{ fontFamily: 'PoppinsRegular' }}
+                >
+                  • ${totalPrice.toFixed(2)}
+                </Text>
+              )}
+            </View>
           </TouchableOpacity>
         </View>
       </View>

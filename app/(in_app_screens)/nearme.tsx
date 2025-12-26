@@ -37,7 +37,7 @@ import { ArrowLeft } from 'lucide-react-native';
 
 const { width, height } = Dimensions.get('window');
 const CARD_WIDTH = width * 0.85;
-const NEAR_ME_RADIUS_KM = 9;
+const NEAR_ME_RADIUS_KM = 3;
 
 // Haversine formula to calculate distance between two coordinates in km
 const calculateDistance = (
@@ -366,7 +366,7 @@ export default function NearMeScreen() {
   const [activeCardIndex, setActiveCardIndex] = useState(0);
   const router = useRouter();
 
-  // Get restaurants within 9km radius (NEAR_ME_RADIUS_KM)
+  // FIXED: Get restaurants within NEAR_ME_RADIUS_KM by checking ALL addresses
   const getNearMeRestaurants = useCallback(
     (
       userLat: number,
@@ -374,19 +374,14 @@ export default function NearMeScreen() {
       allRestaurants: RestaurantMarker[]
     ): RestaurantMarker[] => {
       return allRestaurants.filter((restaurant) => {
-        const distance = calculateDistance(
-          userLat,
-          userLon,
-          restaurant.coordinate.latitude,
-          restaurant.coordinate.longitude
-        );
-        return distance <= NEAR_ME_RADIUS_KM;
+        // Check if this marker is already marked as near (calculated from closest address)
+        return restaurant.isNearMe;
       });
     },
     []
   );
 
-  // FIXED: Extract providers from offers and group offers by provider
+  // FIXED: Extract providers from offers and create markers for ALL addresses
   const restaurantsWithOffers = useMemo(() => {
     if (!offers || offers.length === 0) return [];
 
@@ -396,7 +391,6 @@ export default function NearMeScreen() {
     >();
 
     offers.forEach((offer) => {
-      // Validate offer has provider with valid ID
       if (!offer?.provider?.id) {
         console.warn('Offer missing provider or provider ID:', offer?.id);
         return;
@@ -405,7 +399,6 @@ export default function NearMeScreen() {
       const providerId = offer.provider.id;
       const providerData = offer.provider;
 
-      // Validate provider has basic required fields
       if (
         !providerData.name ||
         !providerData.addresses ||
@@ -415,21 +408,6 @@ export default function NearMeScreen() {
         return;
       }
 
-      // Get valid address with coordinates
-      const validAddress = providerData.addresses.find(
-        (addr) =>
-          addr.latitude &&
-          addr.longitude &&
-          !isNaN(addr.latitude) &&
-          !isNaN(addr.longitude)
-      );
-
-      if (!validAddress) {
-        console.warn('No valid address found for provider:', providerData.name);
-        return;
-      }
-
-      // Initialize provider in map if not exists
       if (!providerOffersMap.has(providerId)) {
         providerOffersMap.set(providerId, {
           provider: providerData,
@@ -437,7 +415,6 @@ export default function NearMeScreen() {
         });
       }
 
-      // Only add unique offers for this provider
       const existingOffers = providerOffersMap.get(providerId)!.offers;
       const offerExists = existingOffers.some(
         (existingOffer) => existingOffer.id === offer.id
@@ -454,7 +431,7 @@ export default function NearMeScreen() {
     return result;
   }, [offers]);
 
-  // Process restaurants to create markers with distance calculations
+  // FIXED: Process restaurants to create markers for ALL valid addresses
   useEffect(() => {
     if (!userLocation || restaurantsWithOffers.length === 0) {
       setRestaurantMarkers([]);
@@ -466,39 +443,45 @@ export default function NearMeScreen() {
     const markers: RestaurantMarker[] = [];
 
     restaurantsWithOffers.forEach(({ provider, offers: providerOffers }) => {
-      // Get valid address with coordinates
-      const validAddress = provider.addresses?.find(
-        (addr) =>
-          addr.latitude &&
-          addr.longitude &&
-          !isNaN(addr.latitude) &&
-          !isNaN(addr.longitude)
-      );
+      // Get ALL valid addresses with coordinates
+      const validAddresses =
+        provider.addresses?.filter(
+          (addr) =>
+            addr.latitude &&
+            addr.longitude &&
+            !isNaN(addr.latitude) &&
+            !isNaN(addr.longitude)
+        ) || [];
 
-      if (!validAddress) return;
+      if (validAddresses.length === 0) return;
 
-      const distance = calculateDistance(
-        userLocation.latitude,
-        userLocation.longitude,
-        validAddress.latitude,
-        validAddress.longitude
-      );
+      // Create a marker for EACH valid address
+      validAddresses.forEach((address) => {
+        const distance = calculateDistance(
+          userLocation.latitude,
+          userLocation.longitude,
+          address.latitude,
+          address.longitude
+        );
 
-      const isNearMe = distance <= NEAR_ME_RADIUS_KM;
+        // Check if ANY address is within the near me radius
+        const isNearMe = distance <= NEAR_ME_RADIUS_KM;
 
-      markers.push({
-        id: provider.id,
-        coordinate: {
-          latitude: validAddress.latitude,
-          longitude: validAddress.longitude,
-        },
-        title: provider.name || 'Unnamed Restaurant',
-        description: `${validAddress.street || ''}, ${validAddress.city || ''}`,
-        distance,
-        provider,
-        address: validAddress,
-        offers: providerOffers,
-        isNearMe,
+        markers.push({
+          // Create unique ID combining provider ID and address
+          id: `${provider.id}-${address.street}-${address.city}`,
+          coordinate: {
+            latitude: address.latitude,
+            longitude: address.longitude,
+          },
+          title: provider.name || 'Unnamed Restaurant',
+          description: `${address.street || ''}, ${address.city || ''}`,
+          distance,
+          provider,
+          address,
+          offers: providerOffers,
+          isNearMe,
+        });
       });
     });
 
@@ -507,7 +490,12 @@ export default function NearMeScreen() {
       (a, b) => (a.distance || 0) - (b.distance || 0)
     );
 
-    console.log('📍 Markers created:', sortedMarkers.length);
+    console.log('📍 Markers created (all addresses):', sortedMarkers.length);
+    console.log(
+      '📍 Near me markers:',
+      sortedMarkers.filter((m) => m.isNearMe).length
+    );
+
     setRestaurantMarkers(sortedMarkers);
 
     // Select the first marker if there are markers
@@ -523,7 +511,7 @@ export default function NearMeScreen() {
     return restaurantMarkers.filter((marker) => marker.isNearMe);
   }, [restaurantMarkers, showNearMeOnly]);
 
-  // Get restaurants within 9km radius for stats
+  // Get restaurants within NEAR_ME_RADIUS_KM for stats
   const nearMeRestaurants = useMemo(() => {
     if (!userLocation) return [];
     return getNearMeRestaurants(
@@ -662,7 +650,9 @@ export default function NearMeScreen() {
     showAlert(
       'Filter Updated',
       `Now showing ${
-        !showNearMeOnly ? 'only nearby restaurants (9km)' : 'all restaurants'
+        !showNearMeOnly
+          ? `only nearby locations (${NEAR_ME_RADIUS_KM}km)`
+          : 'all locations'
       }`,
       'info'
     );
@@ -753,7 +743,7 @@ export default function NearMeScreen() {
         showsCompass={true}
         loadingEnabled={true}
       >
-        {/* 9km radius circle */}
+        {/* Radius circle */}
         {userLocation && showNearMeOnly && (
           <Circle
             center={userLocation}
@@ -764,7 +754,7 @@ export default function NearMeScreen() {
           />
         )}
 
-        {/* Restaurant Markers with Custom Icons */}
+        {/* Restaurant Markers - Now shows ALL addresses */}
         {displayedMarkers.map((marker) => (
           <CustomMarker
             key={marker.id}
@@ -825,7 +815,7 @@ export default function NearMeScreen() {
             {displayedMarkers.length}
           </Text>
           <Text style={[styles.statLabel, { color: theme.textSecondary }]}>
-            Total
+            Locations
           </Text>
         </View>
         <View style={styles.statDivider} />
@@ -903,14 +893,14 @@ export default function NearMeScreen() {
               color={theme.textSecondary}
             />
             <Text style={[styles.noRestaurantsTitle, { color: theme.text }]}>
-              No Restaurants Found
+              No Locations Found
             </Text>
             <Text
               style={[styles.noRestaurantsText, { color: theme.textSecondary }]}
             >
               {showNearMeOnly
-                ? `No restaurants within ${NEAR_ME_RADIUS_KM}km of your location`
-                : 'No restaurants available in this area'}
+                ? `No restaurant locations within ${NEAR_ME_RADIUS_KM}km of your location`
+                : 'No restaurant locations available in this area'}
             </Text>
             {showNearMeOnly && (
               <TouchableOpacity
@@ -920,9 +910,7 @@ export default function NearMeScreen() {
                 ]}
                 onPress={toggleNearMeFilter}
               >
-                <Text style={styles.showAllButtonText}>
-                  Show All Restaurants
-                </Text>
+                <Text style={styles.showAllButtonText}>Show All Locations</Text>
               </TouchableOpacity>
             )}
           </View>
